@@ -1034,8 +1034,14 @@
     }
 
     function renderSummary() {
-      const activePhase = getActivePhase();
-      elements.activePhaseLabel.textContent = activePhase ? `${activePhase.name} active` : "No active phase";
+      const activePhases = getActivePhases();
+      if (!activePhases.length) {
+        elements.activePhaseLabel.textContent = "No active phases";
+      } else if (activePhases.length === 1) {
+        elements.activePhaseLabel.textContent = `${activePhases[0].name} active`;
+      } else {
+        elements.activePhaseLabel.textContent = `${activePhases.length} phases active`;
+      }
       elements.blockCountLabel.textContent = `${state.blocks.length} ${state.blocks.length === 1 ? "block" : "blocks"} planned`;
     }
 
@@ -1160,8 +1166,7 @@
         );
         state.ui.phaseToReveal = id;
       } else {
-        const shouldBeActive = !state.phases.some((phase) => phase.isActive);
-        state.phases.push({ id, name, color, isActive: shouldBeActive });
+        state.phases.push({ id, name, color, isActive: false });
         state.ui.phaseToReveal = id;
       }
 
@@ -1224,16 +1229,7 @@
 
       const targetId = state.ui.editingPhaseId;
       const remainingPhases = state.phases.filter((phase) => phase.id !== targetId);
-      const deletedPhaseWasActive = state.phases.some((phase) => phase.id === targetId && phase.isActive);
-
-      state.phases = remainingPhases.map((phase, index) => ({
-        ...phase,
-        isActive: deletedPhaseWasActive ? index === 0 : phase.isActive
-      }));
-
-      if (!state.phases.some((phase) => phase.isActive) && state.phases.length) {
-        state.phases[0].isActive = true;
-      }
+      state.phases = remainingPhases;
 
       state.blocks = state.blocks.filter((block) => block.phaseId !== targetId);
       state.ui.phaseToReveal = state.phases[0]?.id ?? null;
@@ -1255,10 +1251,9 @@
     }
 
     function setActivePhase(phaseId) {
-      state.phases = state.phases.map((phase) => ({
-        ...phase,
-        isActive: phase.id === phaseId
-      }));
+      state.phases = state.phases.map((phase) =>
+        phase.id === phaseId ? { ...phase, isActive: !phase.isActive } : phase
+      );
       state.ui.phaseToReveal = phaseId;
       persistState();
       render();
@@ -1284,7 +1279,7 @@
       }
 
       const block = blockId ? getBlockById(blockId) : null;
-      const activePhase = getActivePhase();
+      const activePhase = getActivePhases()[0];
       const defaultPhaseId = activePhase ? activePhase.id : state.phases[0].id;
 
       state.ui.blockModalMode = block ? "edit" : "create";
@@ -1326,8 +1321,8 @@
       }, 60000);
     }
 
-    function getActivePhase() {
-      return state.phases.find((phase) => phase.isActive) || null;
+    function getActivePhases() {
+      return state.phases.filter((phase) => phase.isActive);
     }
 
     function getPhaseById(phaseId) {
@@ -1385,10 +1380,6 @@
           color: typeof phase.color === "string" && phase.color ? phase.color : COLOR_OPTIONS[index % COLOR_OPTIONS.length].value,
           isActive: Boolean(phase.isActive)
         }));
-
-        if (!state.phases.some((phase) => phase.isActive)) {
-          state.phases[0].isActive = true;
-        }
       }
 
       state.blocks = savedBlocks
