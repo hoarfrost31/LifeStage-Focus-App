@@ -396,6 +396,15 @@
       align-items: flex-start;
     }
 
+    .block-main {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+      align-items: flex-start;
+    }
+
     .block-time {
       font-size: 0.7rem;
       color: #c8d8ef;
@@ -470,20 +479,27 @@
       gap: 4px;
     }
 
+    body.compact-mode .block-main {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+
     body.compact-mode .block-time {
       font-size: 0.58rem;
       letter-spacing: 0.08em;
+      flex: 0 0 auto;
     }
 
     body.compact-mode .block-title {
       font-size: 0.78rem;
       -webkit-line-clamp: 1;
+      flex: 1 1 auto;
     }
 
     body.compact-mode .block-phase-label,
     body.compact-mode .block-status {
-      padding: 3px 6px;
-      font-size: 0.6rem;
+      display: none;
     }
 
     .now-line {
@@ -1100,8 +1116,10 @@
         blockElement.innerHTML = `
           <div class="block-strip" aria-hidden="true"></div>
           <div class="block-content">
-            <div class="block-time">${formatBlockTimeRange(block.startTime, block.endTime, isOvernightSegment)}</div>
-            <div class="block-title">${escapeHtml(block.title)}</div>
+            <div class="block-main">
+              <div class="block-time">${formatBlockTimeRange(block.startTime, block.endTime, isOvernightSegment)}</div>
+              <div class="block-title">${escapeHtml(block.title)}</div>
+            </div>
             <div class="block-phase-label">
               <span class="block-phase-swatch" aria-hidden="true"></span>
               <span class="block-phase">${escapeHtml(phase.name)}</span>
