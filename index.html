@@ -14,17 +14,17 @@
   <title>LifeStage Focus App</title>
   <style>
     :root {
-      --bg-top: #071221;
-      --bg-bottom: #132b4a;
-      --panel: rgba(10, 20, 36, 0.9);
-      --panel-soft: rgba(19, 37, 63, 0.88);
-      --border: rgba(143, 181, 255, 0.14);
-      --text: #f4f8ff;
-      --muted: #9db0cb;
-      --accent: #84c5ff;
-      --danger: #ff7f8c;
-      --success: #77d7a3;
-      --shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+      --bg-top: #060606;
+      --bg-bottom: #111111;
+      --panel: rgba(18, 18, 18, 0.84);
+      --panel-soft: rgba(24, 24, 24, 0.9);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f7fbff;
+      --muted: #9b9b9f;
+      --accent: #d8dde6;
+      --danger: #ff8c98;
+      --success: #7ad8a5;
+      --shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
       --timeline-hour-height: 68px;
       --block-min-height: 64px;
       --timeline-padding-top: 18px;
@@ -43,9 +43,10 @@
     html, body {
       margin: 0;
       min-height: 100%;
-      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at top, rgba(77, 131, 204, 0.35), transparent 34%),
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.06), transparent 24%),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 20%),
         linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
       color: var(--text);
     }
@@ -53,7 +54,7 @@
     body {
       display: flex;
       justify-content: center;
-      padding: 16px;
+      padding: 14px;
     }
 
     .app-shell {
@@ -67,56 +68,12 @@
     }
 
     .card {
-      background: linear-gradient(180deg, rgba(18, 34, 58, 0.96), rgba(9, 18, 33, 0.96));
+      background:
+        linear-gradient(180deg, rgba(26, 26, 26, 0.94), rgba(15, 15, 15, 0.98));
       border: 1px solid var(--border);
-      border-radius: 24px;
+      border-radius: 22px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-    }
-
-    .hero {
-      padding: 18px 18px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -28px -34px auto;
-      width: 110px;
-      height: 110px;
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(132, 197, 255, 0.18), transparent 68%);
-      pointer-events: none;
-    }
-
-    .eyebrow {
-      margin: 0;
-      font-size: 0.68rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(173, 210, 255, 0.82);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 1.72rem;
-      line-height: 1.02;
-      letter-spacing: -0.03em;
-      text-wrap: balance;
-    }
-
-    .hero-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      position: relative;
-      z-index: 1;
+      backdrop-filter: blur(18px);
     }
 
     .section-header {
@@ -144,36 +101,38 @@
     }
 
     .tabs-card {
-      padding: 6px;
+      padding: 5px;
     }
 
     .tab-bar {
       display: inline-grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr auto;
       gap: 6px;
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
       padding: 4px;
     }
 
     .tab-button {
       border: 0;
-      border-radius: 14px;
+      border-radius: 12px;
       background: transparent;
       color: var(--muted);
       font: inherit;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 0.82rem;
-      padding: 9px 12px;
+      padding: 8px 11px;
       cursor: pointer;
     }
 
     .tab-button.active {
-      background: rgba(132, 197, 255, 0.18);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.07));
       color: var(--text);
-      box-shadow: inset 0 0 0 1px rgba(132, 197, 255, 0.18);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 6px 18px rgba(0, 0, 0, 0.16);
     }
 
     .ghost-button,
@@ -192,9 +151,10 @@
     }
 
     .ghost-button {
-      background: rgba(132, 197, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       color: var(--text);
-      padding: 10px 14px;
+      padding: 9px 13px;
     }
 
     .icon-button {
@@ -211,9 +171,9 @@
     }
 
     .primary-button {
-      background: linear-gradient(135deg, #75b7ff, #4a79ff);
-      color: #071221;
-      font-weight: 700;
+      background: linear-gradient(135deg, #f2f2f3, #c9cbd1);
+      color: #090909;
+      font-weight: 600;
       padding: 12px 16px;
     }
 
@@ -221,7 +181,7 @@
       background: rgba(255, 127, 140, 0.12);
       color: var(--danger);
       padding: 12px 16px;
-      font-weight: 600;
+      font-weight: 500;
     }
 
     .phases-card {
@@ -237,9 +197,9 @@
 
     .phase-chip {
       width: 100%;
-      padding: 14px;
+      padding: 15px;
       border-radius: 20px;
-      border: 1px solid transparent;
+      border: 1px solid rgba(255, 255, 255, 0.06);
       background: var(--panel-soft);
       color: var(--text);
       text-align: left;
@@ -261,8 +221,8 @@
     }
 
     .phase-chip:not(.active) {
-      background: rgba(17, 28, 44, 0.86);
-      border-color: rgba(255, 255, 255, 0.05);
+      background: rgba(20, 20, 20, 0.86);
+      border-color: rgba(255, 255, 255, 0.04);
     }
 
     .phase-chip:not(.active)::before {
@@ -270,8 +230,10 @@
     }
 
     .phase-chip.active {
-      border-color: rgba(255, 255, 255, 0.22);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 12px 24px rgba(0, 0, 0, 0.18);
     }
 
     .phase-topline {
@@ -303,7 +265,7 @@
 
     .phase-name {
       font-size: 0.98rem;
-      font-weight: 700;
+      font-weight: 600;
       line-height: 1.3;
     }
 
@@ -344,7 +306,7 @@
       border-radius: 999px;
       padding: 6px 10px;
       font-size: 0.72rem;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       background: rgba(255, 255, 255, 0.08);
       color: var(--muted);
@@ -370,11 +332,11 @@
       margin: 16px 10px 0;
       padding: 0 8px;
       overflow-y: auto;
-      max-height: min(68vh, 920px);
+      max-height: min(76vh, 1100px);
     }
 
     body.compact-mode .timeline-scroll {
-      max-height: calc(100vh - 250px);
+      max-height: calc(100vh - 138px);
     }
 
     .timeline {
@@ -460,8 +422,8 @@
       left: 72px;
       right: 6px;
       border-radius: 24px;
-      background: rgba(9, 19, 34, 0.74);
-      border: 1px solid rgba(132, 197, 255, 0.08);
+      background: rgba(10, 10, 10, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .timeline-block {
@@ -471,11 +433,11 @@
       display: grid;
       grid-template-columns: 10px 1fr;
       gap: 0;
-      background: rgba(20, 33, 52, 0.98);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 22px;
+      background: rgba(24, 24, 24, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
       box-shadow:
-        0 8px 18px rgba(0, 0, 0, 0.2),
+        0 10px 24px rgba(0, 0, 0, 0.2),
         0 0 0 1px rgba(255, 255, 255, 0.02) inset;
       overflow: hidden;
       cursor: pointer;
@@ -485,7 +447,7 @@
     .timeline-block:hover {
       transform: translateY(-1px);
       box-shadow:
-        0 12px 24px rgba(0, 0, 0, 0.24),
+        0 14px 28px rgba(0, 0, 0, 0.24),
         0 0 0 1px rgba(255, 255, 255, 0.03) inset;
     }
 
@@ -516,12 +478,12 @@
       color: #c8d8ef;
       text-transform: uppercase;
       letter-spacing: 0.11em;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .block-title {
       font-size: 0.94rem;
-      font-weight: 800;
+      font-weight: 600;
       line-height: 1.18;
       color: #ffffff;
       display: -webkit-box;
@@ -536,7 +498,7 @@
     .block-phase {
       font-size: 0.72rem;
       color: #eef5ff;
-      font-weight: 600;
+      font-weight: 500;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -572,7 +534,7 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       color: #d8e4f7;
       font-size: 0.68rem;
-      font-weight: 700;
+      font-weight: 600;
       letter-spacing: 0.03em;
     }
 
@@ -662,26 +624,27 @@
       align-self: flex-end;
       width: 58px;
       height: 58px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #9bd4ff, #5672ff);
-      color: #071221;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f1f1f2, #c7c8cd);
+      color: #090909;
       font-size: 2rem;
       line-height: 1;
-      font-weight: 300;
-      box-shadow: 0 12px 24px rgba(44, 89, 200, 0.28);
+      font-weight: 400;
+      box-shadow: 0 14px 30px rgba(44, 89, 200, 0.26);
     }
 
     .sync-badge {
       align-self: flex-start;
       padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       color: var(--muted);
       font-size: 0.68rem;
       letter-spacing: 0.04em;
       white-space: nowrap;
       backdrop-filter: blur(10px);
+      display: none;
     }
 
     .sync-badge.synced {
@@ -689,36 +652,35 @@
     }
 
     .sync-badge.error {
+      display: inline-flex;
       color: #ffb0b8;
     }
 
     .mode-toggle {
       border: 0;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       color: var(--muted);
       font: inherit;
       font-size: 0.72rem;
-      font-weight: 700;
+      font-weight: 600;
       padding: 7px 11px;
       cursor: pointer;
     }
 
     .mode-toggle.active {
-      background: rgba(132, 197, 255, 0.18);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
       color: var(--text);
-      box-shadow: inset 0 0 0 1px rgba(132, 197, 255, 0.16);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
 
-    .hero-badges {
-      display: flex;
+    .top-badges {
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
       justify-content: flex-end;
-      position: relative;
-      z-index: 1;
+      flex-wrap: wrap;
     }
 
     .install-button {
@@ -759,9 +721,9 @@
     .modal {
       width: 100%;
       max-width: 420px;
-      background: linear-gradient(180deg, #132845, #0b1628);
+      background: linear-gradient(180deg, rgba(28, 28, 28, 0.98), rgba(15, 15, 15, 0.98));
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 26px 26px 20px 20px;
+      border-radius: 24px 24px 18px 18px;
       padding: 20px;
       box-shadow: var(--shadow);
     }
@@ -776,7 +738,8 @@
 
     .modal-header h3 {
       margin: 0;
-      font-size: 1.1rem;
+      font-size: 1.02rem;
+      font-weight: 600;
     }
 
     .modal-subtitle {
@@ -857,7 +820,7 @@
     .phase-read-title {
       margin: 0;
       font-size: 1.05rem;
-      font-weight: 800;
+      font-weight: 600;
     }
 
     .phase-read-status {
@@ -907,21 +870,16 @@
 </head>
 <body>
   <main class="app-shell">
-    <section class="card hero">
-      <div class="hero-meta">
-        <p class="eyebrow">Phase-first planner</p>
-        <h1>LifeStage Focus</h1>
-      </div>
-      <div class="hero-badges">
-        <button class="install-button" id="install-app-button" type="button">Install app</button>
-        <span class="sync-badge" id="sync-status-label">Local only</span>
-      </div>
-    </section>
-
     <section class="card tabs-card">
       <div class="tab-bar" id="tab-bar">
-        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">Timeline</button>
-        <button class="tab-button" id="tab-phases" type="button" data-tab="phases">Phases</button>
+        <div class="header-actions">
+          <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">Timeline</button>
+          <button class="tab-button" id="tab-phases" type="button" data-tab="phases">Phases</button>
+        </div>
+        <div class="top-badges">
+          <button class="install-button" id="install-app-button" type="button">Install app</button>
+          <span class="sync-badge" id="sync-status-label">Local only</span>
+        </div>
       </div>
     </section>
 
@@ -936,10 +894,8 @@
 
     <section class="card timeline-card">
       <div class="section-header compact-header">
-        <div class="header-actions">
-          <button class="mode-toggle" id="toggle-compact-button" type="button">Compact</button>
-          <span id="active-phase-label" class="phase-badge">No active phase</span>
-        </div>
+        <button class="mode-toggle" id="toggle-compact-button" type="button">Compact</button>
+        <span id="active-phase-label" class="phase-badge">No active phases</span>
       </div>
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
@@ -1072,20 +1028,20 @@
       appId: "1:553614543776:web:f797298fafc579a7ac72c5"
     };
     const COLOR_OPTIONS = [
-      { value: "#6ee7ff", label: "Sky Cyan" },
-      { value: "#8b7cff", label: "Electric Violet" },
-      { value: "#ff9f68", label: "Warm Orange" },
-      { value: "#68f0b1", label: "Mint Green" },
-      { value: "#ff7ea8", label: "Rose Pink" },
-      { value: "#ffd66b", label: "Solar Gold" }
+      { value: "#b6c0d0", label: "Slate Silver" },
+      { value: "#8f95a3", label: "Graphite Mist" },
+      { value: "#c49b7a", label: "Muted Copper" },
+      { value: "#7e9b94", label: "Stone Sage" },
+      { value: "#a88ea2", label: "Dusty Mauve" },
+      { value: "#c7b48a", label: "Soft Brass" }
     ];
 
     const state = {
       phases: [
-        { id: crypto.randomUUID(), name: "Foundation", color: "#6ee7ff", isActive: true, details: "" },
-        { id: crypto.randomUUID(), name: "Build", color: "#8b7cff", isActive: false, details: "" },
-        { id: crypto.randomUUID(), name: "Business", color: "#ff9f68", isActive: false, details: "" },
-        { id: crypto.randomUUID(), name: "Financial Stability", color: "#68f0b1", isActive: false, details: "" }
+        { id: crypto.randomUUID(), name: "Foundation", color: "#b6c0d0", isActive: true, details: "" },
+        { id: crypto.randomUUID(), name: "Build", color: "#8f95a3", isActive: false, details: "" },
+        { id: crypto.randomUUID(), name: "Business", color: "#c49b7a", isActive: false, details: "" },
+        { id: crypto.randomUUID(), name: "Financial Stability", color: "#7e9b94", isActive: false, details: "" }
       ],
       blocks: [],
       ui: {
@@ -1277,7 +1233,7 @@
 
     function renderSyncStatus() {
       elements.syncStatusLabel.textContent = state.ui.syncStatus;
-      elements.syncStatusLabel.classList.toggle("synced", state.ui.syncStatus === "Synced");
+      elements.syncStatusLabel.classList.toggle("synced", false);
       elements.syncStatusLabel.classList.toggle("error", state.ui.syncStatus === "Cloud error");
     }
 
@@ -1430,6 +1386,12 @@
       }
 
       const nextBlock = { id, title, phaseId, startTime, endTime, isLocked };
+      const conflictingBlock = findConflictingBlock(nextBlock);
+
+      if (conflictingBlock) {
+        alert(`This time overlaps with "${conflictingBlock.title}" (${formatBlockTimeRange(conflictingBlock.startTime, conflictingBlock.endTime, timeToMinutes(conflictingBlock.endTime) <= timeToMinutes(conflictingBlock.startTime))}).`);
+        return;
+      }
 
       if (state.ui.blockModalMode === "edit") {
         state.blocks = state.blocks.map((block) => block.id === id ? nextBlock : block);
@@ -1600,6 +1562,27 @@
 
     function countBlocksForPhase(phaseId) {
       return state.blocks.filter((block) => block.phaseId === phaseId).length;
+    }
+
+    function findConflictingBlock(candidateBlock) {
+      const candidateSegments = createBlockSegments(candidateBlock);
+
+      return state.blocks.find((existingBlock) => {
+        if (existingBlock.id === candidateBlock.id) {
+          return false;
+        }
+
+        const existingSegments = createBlockSegments(existingBlock);
+        return candidateSegments.some((candidateSegment) =>
+          existingSegments.some((existingSegment) =>
+            segmentsOverlap(candidateSegment, existingSegment)
+          )
+        );
+      }) || null;
+    }
+
+    function segmentsOverlap(a, b) {
+      return a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
     }
 
     function persistState() {
