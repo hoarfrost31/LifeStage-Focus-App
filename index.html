@@ -317,6 +317,21 @@
       color: var(--text);
     }
 
+    .color-select-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-preview-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--phase-color, #b6c0d0);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      flex-shrink: 0;
+    }
+
     .timeline-card {
       padding-bottom: 18px;
       overflow: hidden;
@@ -923,7 +938,10 @@
           </label>
           <label>
             Color
-            <select id="phase-color" name="phaseColor" required></select>
+            <div class="color-select-row">
+              <span class="color-preview-dot" id="phase-color-preview" aria-hidden="true"></span>
+              <select id="phase-color" name="phaseColor" required></select>
+            </div>
           </label>
           <label>
             Details
@@ -1085,6 +1103,7 @@
       phaseId: document.getElementById("phase-id"),
       phaseName: document.getElementById("phase-name"),
       phaseColor: document.getElementById("phase-color"),
+      phaseColorPreview: document.getElementById("phase-color-preview"),
       phaseDetails: document.getElementById("phase-details"),
       deletePhaseButton: document.getElementById("delete-phase-button"),
       phaseReadTitle: document.getElementById("phase-read-title"),
@@ -1117,12 +1136,18 @@
       elements.phaseColor.innerHTML = COLOR_OPTIONS.map((option) =>
         `<option value="${option.value}">${option.label}</option>`
       ).join("");
+      updatePhaseColorPreview();
+    }
+
+    function updatePhaseColorPreview() {
+      elements.phaseColorPreview.style.setProperty("--phase-color", elements.phaseColor.value || COLOR_OPTIONS[0].value);
     }
 
     function bindEvents() {
       elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
       elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
       elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
+      elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
       elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
@@ -1143,6 +1168,12 @@
             backdrop.setAttribute("aria-hidden", "true");
           }
         });
+      });
+
+      window.addEventListener("pagehide", () => {
+        if (firestoreDb) {
+          void saveToCloud();
+        }
       });
     }
 
@@ -1357,7 +1388,7 @@
         state.ui.phaseToReveal = id;
       }
 
-      persistState();
+      persistState({ immediate: true });
       closeModal("phase");
       render();
     }
@@ -1399,7 +1430,7 @@
         state.blocks.push(nextBlock);
       }
 
-      persistState();
+      persistState({ immediate: true });
       closeModal("block");
       render();
     }
@@ -1426,7 +1457,7 @@
 
       state.blocks = state.blocks.filter((block) => block.phaseId !== targetId);
       state.ui.phaseToReveal = state.phases[0]?.id ?? null;
-      persistState();
+      persistState({ immediate: true });
       closeModal("phase");
       render();
     }
@@ -1438,7 +1469,7 @@
 
       const targetId = state.ui.editingBlockId;
       state.blocks = state.blocks.filter((block) => block.id !== targetId);
-      persistState();
+      persistState({ immediate: true });
       closeModal("block");
       render();
     }
@@ -1448,7 +1479,7 @@
         phase.id === phaseId ? { ...phase, isActive: !phase.isActive } : phase
       );
       state.ui.phaseToReveal = phaseId;
-      persistState();
+      persistState({ immediate: true });
       render();
     }
 
@@ -1460,6 +1491,7 @@
       elements.phaseId.value = phase ? phase.id : "";
       elements.phaseName.value = phase ? phase.name : "";
       elements.phaseColor.value = phase ? phase.color : COLOR_OPTIONS[0].value;
+      updatePhaseColorPreview();
       elements.phaseDetails.value = phase ? phase.details || "" : "";
       elements.deletePhaseButton.style.display = phase ? "inline-flex" : "none";
 
@@ -1533,6 +1565,7 @@
       if (type === "phase") {
         elements.phaseForm.reset();
         elements.phaseColor.value = COLOR_OPTIONS[0].value;
+        updatePhaseColorPreview();
         elements.phaseDetails.value = "";
       } else if (type === "phase-read") {
         state.ui.viewingPhaseId = null;
@@ -1585,10 +1618,10 @@
       return a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
     }
 
-    function persistState() {
+    function persistState(options = {}) {
       const payload = buildPersistedState();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      scheduleCloudSync();
+      scheduleCloudSync(Boolean(options.immediate));
     }
 
     function hydrateState() {
@@ -1696,7 +1729,7 @@
       }
     }
 
-    function scheduleCloudSync() {
+    function scheduleCloudSync(immediate = false) {
       if (!firestoreDb) {
         state.ui.syncStatus = isFirebaseConfigured() ? "Firebase ready" : "Firebase not set";
         renderSyncStatus();
@@ -1707,6 +1740,12 @@
       renderSyncStatus();
 
       window.clearTimeout(cloudSyncTimer);
+
+      if (immediate) {
+        void saveToCloud();
+        return;
+      }
+
       cloudSyncTimer = window.setTimeout(() => {
         void saveToCloud();
       }, 500);
