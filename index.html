@@ -808,8 +808,8 @@
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
     const STORAGE_KEY = "lifestage-focus-state-v1";
-    const DEVICE_ID_KEY = "lifestage-focus-device-id-v1";
     const FIREBASE_COLLECTION = "lifestageFocusStates";
+    const SHARED_DOCUMENT_ID = "shared";
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyBVsyW_oqgvHhPI02sTWVXdlZQ0iXHxYuY",
       authDomain: "lifestage-focus-app.firebaseapp.com",
@@ -851,7 +851,6 @@
 
     let cloudSyncTimer = null;
     let firestoreDb = null;
-    const deviceId = getOrCreateDeviceId();
     let deferredInstallPrompt = null;
 
     const elements = {
@@ -1370,14 +1369,14 @@
         state.ui.syncStatus = "Loading cloud";
         renderSyncStatus();
 
-        const snapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, deviceId));
+        const snapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, SHARED_DOCUMENT_ID));
 
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data?.payload) {
-            applyPersistedState(data.payload);
-            state.ui.lastSyncedAt = data.updatedAt || null;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+          applyPersistedState(data.payload);
+          state.ui.lastSyncedAt = data.updatedAt || null;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
             render();
           }
         }
@@ -1417,9 +1416,9 @@
 
       try {
         await setDoc(
-          doc(firestoreDb, FIREBASE_COLLECTION, deviceId),
+          doc(firestoreDb, FIREBASE_COLLECTION, SHARED_DOCUMENT_ID),
           {
-            deviceId,
+            scope: "shared",
             payload,
             updatedAt: payload.updatedAt
           },
@@ -1527,17 +1526,6 @@
       }
 
       return time;
-    }
-
-    function getOrCreateDeviceId() {
-      const existing = localStorage.getItem(DEVICE_ID_KEY);
-      if (existing) {
-        return existing;
-      }
-
-      const nextId = crypto.randomUUID();
-      localStorage.setItem(DEVICE_ID_KEY, nextId);
-      return nextId;
     }
 
     function registerServiceWorker() {
