@@ -51,6 +51,8 @@
         radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 20%),
         linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
       color: var(--text);
+      overscroll-behavior-y: none;
+      overscroll-behavior-x: none;
     }
 
     body {
@@ -60,6 +62,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      overflow-x: hidden;
     }
 
     .app-shell {
@@ -70,6 +73,40 @@
       flex-direction: column;
       gap: 10px;
       position: relative;
+    }
+
+    .phase-rail,
+    .timeline-scroll,
+    .saved-timeline-list {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.18) rgba(255, 255, 255, 0.04);
+    }
+
+    .phase-rail::-webkit-scrollbar,
+    .timeline-scroll::-webkit-scrollbar,
+    .saved-timeline-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .phase-rail::-webkit-scrollbar-track,
+    .timeline-scroll::-webkit-scrollbar-track,
+    .saved-timeline-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 999px;
+    }
+
+    .phase-rail::-webkit-scrollbar-thumb,
+    .timeline-scroll::-webkit-scrollbar-thumb,
+    .saved-timeline-list::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .phase-rail::-webkit-scrollbar-thumb:hover,
+    .timeline-scroll::-webkit-scrollbar-thumb:hover,
+    .saved-timeline-list::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.16));
     }
 
     .card {
@@ -105,40 +142,67 @@
       font-size: 1rem;
     }
 
-    .tabs-card {
-      padding: 4px;
+    .bottom-nav-card {
+      position: sticky;
+      bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+      padding: 5px;
+      z-index: 8;
+      background:
+        linear-gradient(180deg, rgba(28, 28, 28, 0.96), rgba(16, 16, 16, 0.98));
+      box-shadow:
+        0 18px 42px rgba(0, 0, 0, 0.34),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     }
 
-    .tab-bar {
-      display: inline-grid;
-      grid-template-columns: 1fr auto;
+    .bottom-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
       gap: 6px;
       width: 100%;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 16px;
-      padding: 3px;
+      align-items: center;
     }
 
     .tab-button {
       border: 0;
-      border-radius: 12px;
+      border-radius: 14px;
       background: transparent;
       color: var(--muted);
       font: inherit;
       font-weight: 600;
-      font-size: 0.82rem;
-      padding: 7px 10px;
+      font-size: 0.8rem;
+      padding: 10px 12px;
       cursor: pointer;
       touch-action: manipulation;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
     }
 
     .tab-button.active {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.07));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
       color: var(--text);
       box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.08),
         0 6px 18px rgba(0, 0, 0, 0.16);
+    }
+
+    .tab-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: currentColor;
+      opacity: 0.92;
+      flex-shrink: 0;
+    }
+
+    .tab-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .ghost-button,
@@ -205,6 +269,11 @@
     }
 
     .phases-card {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       padding-bottom: 12px;
     }
 
@@ -213,6 +282,9 @@
       flex-direction: column;
       gap: 10px;
       padding: 12px 14px 0;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
     }
 
     .phase-chip {
@@ -237,7 +309,7 @@
       position: absolute;
       inset: 0 auto 0 0;
       width: 6px;
-      background: var(--phase-color, #84c5ff);
+      background: var(--phase-color, #b6c0d0);
     }
 
     .phase-chip:not(.active) {
@@ -267,7 +339,7 @@
       width: 12px;
       height: 12px;
       border-radius: 999px;
-      background: var(--phase-color, #84c5ff);
+      background: var(--phase-color, #b6c0d0);
     }
 
     .phase-chip:not(.active) .phase-dot {
@@ -333,7 +405,7 @@
     }
 
     .phase-toggle.active {
-      background: rgba(132, 197, 255, 0.18);
+      background: rgba(255, 255, 255, 0.14);
       color: var(--text);
     }
 
@@ -386,7 +458,7 @@
       left: 0;
       right: 0;
       height: var(--timeline-hour-height);
-      border-top: 1px solid rgba(157, 176, 203, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       pointer-events: none;
     }
 
@@ -527,7 +599,7 @@
     }
 
     .block-strip {
-      background: var(--phase-color, #84c5ff);
+      background: var(--phase-color, #b6c0d0);
     }
 
     .block-content {
@@ -578,7 +650,7 @@
 
     .block-phase {
       font-size: 0.72rem;
-      color: #eef5ff;
+      color: #ececef;
       font-weight: 500;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -603,7 +675,7 @@
       width: 8px;
       height: 8px;
       border-radius: 999px;
-      background: var(--phase-color, #84c5ff);
+      background: var(--phase-color, #b6c0d0);
       flex-shrink: 0;
     }
 
@@ -682,8 +754,8 @@
       right: 10px;
       padding: 20px;
       border-radius: 20px;
-      border: 1px dashed rgba(157, 176, 203, 0.2);
-      background: rgba(12, 23, 39, 0.45);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: rgba(18, 18, 18, 0.42);
       color: var(--muted);
     }
 
@@ -741,14 +813,14 @@
       border: 0;
       border-radius: 999px;
       padding: 6px 11px;
-      background: rgba(132, 197, 255, 0.12);
+      background: rgba(255, 255, 255, 0.08);
       color: var(--text);
       font: inherit;
       font-size: 0.68rem;
       letter-spacing: 0.04em;
       cursor: pointer;
       display: none;
-      border: 1px solid rgba(132, 197, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     .install-button.visible {
@@ -876,7 +948,7 @@
       position: absolute;
       inset: 0 auto 0 0;
       width: 6px;
-      background: var(--phase-color, #84c5ff);
+      background: var(--phase-color, #b6c0d0);
     }
 
     .phase-read-title {
@@ -917,6 +989,114 @@
       flex: 1;
     }
 
+    .micro-button {
+      padding: 7px 11px;
+      font-size: 0.74rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .timeline-library-button {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .timeline-library-button svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .saved-timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .saved-timeline-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 13px;
+      border-radius: 16px;
+      background: rgba(18, 18, 18, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .saved-timeline-info {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .saved-timeline-title {
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .saved-timeline-meta {
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.4;
+    }
+
+    .saved-timeline-phase {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      margin-top: 2px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 0.7rem;
+      line-height: 1;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .saved-timeline-phase-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--phase-color, #b6c0d0);
+      flex-shrink: 0;
+    }
+
+    .saved-timeline-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .saved-timeline-actions button {
+      min-width: 72px;
+    }
+
+    .saved-timeline-empty {
+      padding: 14px;
+      border-radius: 16px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      text-align: center;
+      font-size: 0.82rem;
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -932,24 +1112,10 @@
 </head>
 <body>
   <main class="app-shell">
-    <section class="card tabs-card">
-      <div class="tab-bar" id="tab-bar">
-        <div class="header-actions">
-          <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">Timeline</button>
-          <button class="tab-button" id="tab-phases" type="button" data-tab="phases">Phases</button>
-        </div>
-        <div class="top-badges">
-          <button class="install-button" id="install-app-button" type="button">Install app</button>
-          <span class="sync-badge" id="sync-status-label">Local only</span>
-        </div>
-      </div>
-    </section>
-
     <section class="card phases-card">
       <div class="section-header compact-header">
-        <div class="header-actions">
-          <button class="ghost-button" id="add-phase-button" type="button">+ Add Phase</button>
-        </div>
+        <div class="header-actions"></div>
+        <button class="primary-button header-add-button" id="add-phase-button" type="button" aria-label="Add phase">+</button>
       </div>
       <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
     </section>
@@ -960,10 +1126,50 @@
           <button class="mode-toggle" id="toggle-compact-button" type="button">Compact</button>
           <span id="active-phase-label" class="phase-badge">No active phases</span>
         </div>
-        <button class="primary-button header-add-button" id="add-block-button" type="button" aria-label="Add block">+</button>
+        <div class="header-actions">
+          <button class="ghost-button timeline-library-button" id="save-timeline-button" type="button" aria-label="Open timelines">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2.5" y="3" width="11" height="2.2" rx="1.1" fill="currentColor"/>
+              <rect x="2.5" y="6.9" width="11" height="2.2" rx="1.1" fill="currentColor" opacity="0.82"/>
+              <rect x="2.5" y="10.8" width="7.2" height="2.2" rx="1.1" fill="currentColor" opacity="0.64"/>
+              <circle cx="11.9" cy="11.9" r="1.6" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+          </button>
+          <button class="primary-button header-add-button" id="add-block-button" type="button" aria-label="Add block">+</button>
+        </div>
       </div>
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+    <section class="card bottom-nav-card">
+      <div class="bottom-nav">
+        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 4.2h10M3 8h10M3 11.8h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="5.2" cy="4.2" r="1.2" fill="currentColor"/>
+              <circle cx="9.4" cy="8" r="1.2" fill="currentColor"/>
+              <circle cx="6.8" cy="11.8" r="1.2" fill="currentColor"/>
+            </svg>
+          </span>
+          <span>Timeline</span>
+        </button>
+        <button class="tab-button" id="tab-phases" type="button" data-tab="phases">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2.5" y="3" width="11" height="2.4" rx="1.2" fill="currentColor"/>
+              <rect x="2.5" y="6.8" width="11" height="2.4" rx="1.2" fill="currentColor" opacity="0.82"/>
+              <rect x="2.5" y="10.6" width="11" height="2.4" rx="1.2" fill="currentColor" opacity="0.66"/>
+            </svg>
+          </span>
+          <span>Phases</span>
+        </button>
+        <div class="top-badges">
+          <button class="install-button" id="install-app-button" type="button">Install app</button>
+          <span class="sync-badge" id="sync-status-label">Local only</span>
+        </div>
       </div>
     </section>
   </main>
@@ -1068,6 +1274,34 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="timeline-save-modal-backdrop" aria-hidden="true">
+    <section class="modal" aria-labelledby="timeline-save-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="timeline-save-title">Saved Timelines</h3>
+          <p class="modal-subtitle">Save the current phases and blocks, or load a saved timeline.</p>
+        </div>
+        <button class="close-button" type="button" data-close-modal="timeline-save">&times;</button>
+      </div>
+      <form id="timeline-save-form">
+        <label>
+          Timeline name
+          <input id="timeline-save-name" name="timelineName" type="text" maxlength="60" required placeholder="Weekday focus plan">
+        </label>
+        <label>
+          Phase label
+          <select id="timeline-save-phase" name="timelinePhase" required></select>
+        </label>
+        <div class="saved-timeline-list" id="saved-timeline-list"></div>
+        <div class="modal-actions">
+          <button class="ghost-button" id="new-timeline-button" type="button">New Timeline</button>
+          <button class="ghost-button" type="button" data-close-modal="timeline-save">Close</button>
+          <button class="primary-button" type="submit">Save Current</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
@@ -1103,6 +1337,7 @@
         { id: crypto.randomUUID(), name: "Financial Stability", color: "#7e9b94", isActive: false, details: "" }
       ],
       blocks: [],
+      savedTimelines: [],
       ui: {
         activeTab: "timeline",
         viewingPhaseId: null,
@@ -1136,10 +1371,12 @@
       syncStatusLabel: document.getElementById("sync-status-label"),
       toggleCompactButton: document.getElementById("toggle-compact-button"),
       installAppButton: document.getElementById("install-app-button"),
+      saveTimelineButton: document.getElementById("save-timeline-button"),
       addBlockButton: document.getElementById("add-block-button"),
       phaseModalBackdrop: document.getElementById("phase-modal-backdrop"),
       phaseReadModalBackdrop: document.getElementById("phase-read-modal-backdrop"),
       blockModalBackdrop: document.getElementById("block-modal-backdrop"),
+      timelineSaveModalBackdrop: document.getElementById("timeline-save-modal-backdrop"),
       phaseForm: document.getElementById("phase-form"),
       phaseId: document.getElementById("phase-id"),
       phaseName: document.getElementById("phase-name"),
@@ -1158,7 +1395,12 @@
       blockStartTime: document.getElementById("block-start-time"),
       blockEndTime: document.getElementById("block-end-time"),
       blockPhase: document.getElementById("block-phase"),
-      deleteBlockButton: document.getElementById("delete-block-button")
+      deleteBlockButton: document.getElementById("delete-block-button"),
+      timelineSaveForm: document.getElementById("timeline-save-form"),
+      timelineSaveName: document.getElementById("timeline-save-name"),
+      timelineSavePhase: document.getElementById("timeline-save-phase"),
+      savedTimelineList: document.getElementById("saved-timeline-list"),
+      newTimelineButton: document.getElementById("new-timeline-button")
     };
 
     async function initialize() {
@@ -1190,18 +1432,22 @@
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
       elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
+      elements.saveTimelineButton.addEventListener("click", openTimelineSaveModal);
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
       elements.deletePhaseButton.addEventListener("click", handlePhaseDelete);
       elements.blockForm.addEventListener("submit", handleBlockSubmit);
       elements.deleteBlockButton.addEventListener("click", handleBlockDelete);
+      elements.timelineSaveForm.addEventListener("submit", handleTimelineSaveSubmit);
+      elements.savedTimelineList.addEventListener("click", handleSavedTimelineListClick);
+      elements.newTimelineButton.addEventListener("click", handleNewTimeline);
 
       document.querySelectorAll("[data-close-modal]").forEach((button) => {
         button.addEventListener("click", () => closeModal(button.dataset.closeModal));
       });
 
-      [elements.phaseModalBackdrop, elements.phaseReadModalBackdrop, elements.blockModalBackdrop].forEach((backdrop) => {
+      [elements.phaseModalBackdrop, elements.phaseReadModalBackdrop, elements.blockModalBackdrop, elements.timelineSaveModalBackdrop].forEach((backdrop) => {
         backdrop.addEventListener("click", (event) => {
           if (event.target === backdrop) {
             backdrop.classList.remove("open");
@@ -1546,6 +1792,131 @@
       render();
     }
 
+    function openTimelineSaveModal() {
+      elements.timelineSaveName.value = buildDefaultTimelineName();
+      populateTimelineSavePhaseOptions();
+      renderSavedTimelineList();
+      openModal("timeline-save");
+    }
+
+    function handleTimelineSaveSubmit(event) {
+      event.preventDefault();
+
+      const name = elements.timelineSaveName.value.trim() || buildDefaultTimelineName();
+      const selectedPhaseId = elements.timelineSavePhase.value;
+      if (!selectedPhaseId) {
+        alert("Select one active phase for this saved timeline.");
+        return;
+      }
+
+      const snapshot = {
+        id: crypto.randomUUID(),
+        name,
+        savedAt: new Date().toISOString(),
+        selectedPhaseId,
+        phases: clonePhases(state.phases),
+        blocks: cloneBlocks(state.blocks)
+      };
+
+      state.savedTimelines.unshift(snapshot);
+      persistState({ immediate: true });
+      closeModal("timeline-save");
+      render();
+    }
+
+    function handleNewTimeline() {
+      state.blocks = [];
+      state.ui.activeTab = "timeline";
+      persistState({ immediate: true });
+      closeModal("timeline-save");
+      render();
+    }
+
+    function handleSavedTimelineListClick(event) {
+      const loadButton = event.target.closest("[data-load-timeline]");
+      if (loadButton) {
+        loadSavedTimeline(loadButton.dataset.loadTimeline);
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-timeline]");
+      if (deleteButton) {
+        deleteSavedTimeline(deleteButton.dataset.deleteTimeline);
+      }
+    }
+
+    function loadSavedTimeline(savedTimelineId) {
+      const snapshot = state.savedTimelines.find((item) => item.id === savedTimelineId);
+      if (!snapshot) {
+        return;
+      }
+
+      state.phases = clonePhases(snapshot.phases);
+      state.blocks = cloneBlocks(snapshot.blocks);
+      state.ui.activeTab = "timeline";
+      state.ui.phaseToReveal = state.phases[0]?.id ?? null;
+      persistState({ immediate: true });
+      closeModal("timeline-save");
+      render();
+    }
+
+    function deleteSavedTimeline(savedTimelineId) {
+      state.savedTimelines = state.savedTimelines.filter((item) => item.id !== savedTimelineId);
+      persistState({ immediate: true });
+      renderSavedTimelineList();
+    }
+
+    function renderSavedTimelineList() {
+      if (!state.savedTimelines.length) {
+        elements.savedTimelineList.innerHTML = `<div class="saved-timeline-empty">No saved timelines yet.</div>`;
+        return;
+      }
+
+      elements.savedTimelineList.innerHTML = state.savedTimelines.map((item) => `
+        <div class="saved-timeline-item">
+          <div class="saved-timeline-info">
+            <div class="saved-timeline-title">${escapeHtml(item.name)}</div>
+            ${renderSavedTimelinePhaseChip(item)}
+            <div class="saved-timeline-meta">${item.blocks.length} blocks - ${item.phases.length} phases - ${escapeHtml(formatSavedTimelineDate(item.savedAt))}</div>
+          </div>
+          <div class="saved-timeline-actions">
+            <button class="ghost-button micro-button" type="button" data-load-timeline="${item.id}">Load</button>
+            <button class="danger-button micro-button" type="button" data-delete-timeline="${item.id}">Delete</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function populateTimelineSavePhaseOptions() {
+      const activePhases = getActivePhases();
+      if (!activePhases.length) {
+        elements.timelineSavePhase.innerHTML = `<option value="">No active phases</option>`;
+        elements.timelineSavePhase.value = "";
+        return;
+      }
+
+      elements.timelineSavePhase.innerHTML = activePhases.map((phase) =>
+        `<option value="${phase.id}">${escapeHtml(phase.name)}</option>`
+      ).join("");
+      elements.timelineSavePhase.value = activePhases[0].id;
+    }
+
+    function renderSavedTimelinePhaseChip(item) {
+      const phase = item.phases.find((entry) => entry.id === item.selectedPhaseId)
+        || item.phases.find((entry) => entry.isActive)
+        || item.phases[0];
+      if (!phase) {
+        return "";
+      }
+
+      return `
+        <div class="saved-timeline-phase" style="--phase-color: ${escapeHtml(phase.color)};">
+          <span class="saved-timeline-phase-dot" aria-hidden="true"></span>
+          <span>${escapeHtml(phase.name)}</span>
+        </div>
+      `;
+    }
+
     function setActivePhase(phaseId) {
       state.phases = state.phases.map((phase) =>
         phase.id === phaseId ? { ...phase, isActive: !phase.isActive } : phase
@@ -1619,7 +1990,9 @@
         ? elements.phaseModalBackdrop
         : type === "phase-read"
           ? elements.phaseReadModalBackdrop
-          : elements.blockModalBackdrop;
+          : type === "timeline-save"
+            ? elements.timelineSaveModalBackdrop
+            : elements.blockModalBackdrop;
       backdrop.classList.add("open");
       backdrop.setAttribute("aria-hidden", "false");
     }
@@ -1629,7 +2002,9 @@
         ? elements.phaseModalBackdrop
         : type === "phase-read"
           ? elements.phaseReadModalBackdrop
-          : elements.blockModalBackdrop;
+          : type === "timeline-save"
+            ? elements.timelineSaveModalBackdrop
+            : elements.blockModalBackdrop;
       backdrop.classList.remove("open");
       backdrop.setAttribute("aria-hidden", "true");
 
@@ -1640,6 +2015,8 @@
         elements.phaseDetails.value = "";
       } else if (type === "phase-read") {
         state.ui.viewingPhaseId = null;
+      } else if (type === "timeline-save") {
+        elements.timelineSaveForm.reset();
       } else {
         elements.blockForm.reset();
       }
@@ -1666,6 +2043,71 @@
 
     function countBlocksForPhase(phaseId) {
       return state.blocks.filter((block) => block.phaseId === phaseId).length;
+    }
+
+    function clonePhases(phases) {
+      return phases.map((phase) => ({
+        id: phase.id,
+        name: phase.name,
+        color: phase.color,
+        isActive: Boolean(phase.isActive),
+        details: phase.details || ""
+      }));
+    }
+
+    function cloneBlocks(blocks) {
+      return blocks.map((block) => ({
+        id: block.id,
+        title: block.title,
+        phaseId: block.phaseId,
+        startTime: block.startTime,
+        endTime: block.endTime
+      }));
+    }
+
+    function normalizeSavedPhases(phases) {
+      return Array.isArray(phases)
+        ? phases.map((phase, index) => ({
+            id: typeof phase?.id === "string" && phase.id ? phase.id : crypto.randomUUID(),
+            name: typeof phase?.name === "string" && phase.name.trim() ? phase.name.trim() : `Phase ${index + 1}`,
+            color: typeof phase?.color === "string" && phase.color ? phase.color : COLOR_OPTIONS[index % COLOR_OPTIONS.length].value,
+            isActive: Boolean(phase?.isActive),
+            details: typeof phase?.details === "string" ? phase.details : ""
+          }))
+        : [];
+    }
+
+    function normalizeSavedBlocks(blocks, phases) {
+      return Array.isArray(blocks)
+        ? blocks
+            .filter((block) => typeof block?.phaseId === "string")
+            .map((block) => ({
+              id: typeof block.id === "string" && block.id ? block.id : crypto.randomUUID(),
+              title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
+              phaseId: block.phaseId,
+              startTime: normalizeTimeValue(block.startTime),
+              endTime: normalizeTimeValue(block.endTime)
+            }))
+            .filter((block) => phases.some((phase) => phase.id === block.phaseId))
+        : [];
+    }
+
+    function buildDefaultTimelineName() {
+      return `Timeline ${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}`;
+    }
+
+    function formatSavedTimelineDate(value) {
+      const date = value ? new Date(value) : new Date();
+      if (Number.isNaN(date.getTime())) {
+        return "Saved recently";
+      }
+
+      return date.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
     }
 
     function findConflictingBlock(candidateBlock) {
@@ -1713,6 +2155,7 @@
       return {
         phases: state.phases,
         blocks: state.blocks,
+        savedTimelines: state.savedTimelines,
         ui: {
           isCompactTimeline: state.ui.isCompactTimeline,
           activeTab: state.ui.activeTab
@@ -1724,6 +2167,7 @@
     function applyPersistedState(parsed) {
       const savedPhases = Array.isArray(parsed?.phases) ? parsed.phases : [];
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
+      const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
 
       if (savedPhases.length) {
         state.phases = savedPhases.map((phase, index) => ({
@@ -1745,6 +2189,25 @@
           endTime: normalizeTimeValue(block.endTime)
         }))
         .filter((block) => state.phases.some((phase) => phase.id === block.phaseId));
+
+      state.savedTimelines = savedTimelines
+        .map((item) => {
+          const phases = normalizeSavedPhases(item?.phases);
+          const blocks = normalizeSavedBlocks(item?.blocks, phases);
+          if (!phases.length) {
+            return null;
+          }
+
+          return {
+            id: typeof item?.id === "string" && item.id ? item.id : crypto.randomUUID(),
+            name: typeof item?.name === "string" && item.name.trim() ? item.name.trim() : "Saved timeline",
+            savedAt: typeof item?.savedAt === "string" && item.savedAt ? item.savedAt : new Date().toISOString(),
+            selectedPhaseId: typeof item?.selectedPhaseId === "string" ? item.selectedPhaseId : (phases.find((phase) => phase.isActive)?.id || phases[0]?.id || ""),
+            phases,
+            blocks
+          };
+        })
+        .filter(Boolean);
 
       state.ui.isCompactTimeline = Boolean(parsed?.ui?.isCompactTimeline);
       state.ui.activeTab = parsed?.ui?.activeTab === "phases" ? "phases" : "timeline";
