@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d1d33">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>LifeStage Focus App</title>
+  <style>
+    :root {
+      --bg-top: #071221;
+      --bg-bottom: #132b4a;
+      --panel: rgba(10, 20, 36, 0.9);
+      --panel-soft: rgba(19, 37, 63, 0.88);
+      --border: rgba(143, 181, 255, 0.14);
+      --text: #f4f8ff;
+      --muted: #9db0cb;
+      --accent: #84c5ff;
+      --danger: #ff7f8c;
+      --success: #77d7a3;
+      --shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+      --timeline-hour-height: 68px;
+      --block-min-height: 64px;
+      --timeline-padding-top: 18px;
+      --timeline-padding-bottom: 24px;
+    }
+
+    body.compact-mode {
+      --timeline-hour-height: 24px;
+      --block-min-height: 42px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(77, 131, 204, 0.35), transparent 34%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      color: var(--text);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 420px;
+      min-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(18, 34, 58, 0.96), rgba(9, 18, 33, 0.96));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero {
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.55rem;
+      line-height: 1.1;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 18px 0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .ghost-button,
+    .primary-button,
+    .fab,
+    .danger-button {
+      border: 0;
+      border-radius: 16px;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .ghost-button {
+      background: rgba(132, 197, 255, 0.12);
+      color: var(--text);
+      padding: 10px 14px;
+    }
+
+    .ghost-button.compact-active {
+      background: rgba(132, 197, 255, 0.26);
+      color: #ffffff;
+    }
+
+    .icon-button {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .primary-button {
+      background: linear-gradient(135deg, #75b7ff, #4a79ff);
+      color: #071221;
+      font-weight: 700;
+      padding: 12px 16px;
+    }
+
+    .danger-button {
+      background: rgba(255, 127, 140, 0.12);
+      color: var(--danger);
+      padding: 12px 16px;
+      font-weight: 600;
+    }
+
+    .phases-card {
+      padding-bottom: 18px;
+    }
+
+    .phase-rail {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 16px 18px 0;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+      overscroll-behavior-x: contain;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .phase-rail::-webkit-scrollbar {
+      display: none;
+    }
+
+    .phase-chip {
+      flex: 0 0 auto;
+      min-width: 132px;
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      background: var(--panel-soft);
+      color: var(--text);
+      text-align: left;
+      scroll-snap-align: start;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phase-chip::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: var(--phase-color, #84c5ff);
+    }
+
+    .phase-chip.active {
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .phase-topline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .phase-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--phase-color, #84c5ff);
+    }
+
+    .phase-badge {
+      margin-left: auto;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .phase-name {
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .phase-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .phase-edit {
+      border: 0;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.74rem;
+      cursor: pointer;
+    }
+
+    .timeline-card {
+      padding-bottom: 18px;
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .timeline-summary {
+      padding: 12px 18px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .timeline-scroll {
+      margin: 16px 10px 0;
+      padding: 0 8px;
+      overflow-y: auto;
+      max-height: min(68vh, 920px);
+    }
+
+    body.compact-mode .timeline-scroll {
+      max-height: calc(100vh - 250px);
+    }
+
+    .timeline {
+      position: relative;
+      min-height: calc(24 * var(--timeline-hour-height) + var(--timeline-padding-top) + var(--timeline-padding-bottom));
+      padding-top: var(--timeline-padding-top);
+      padding-bottom: var(--timeline-padding-bottom);
+    }
+
+    .hour-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: var(--timeline-hour-height);
+      border-top: 1px solid rgba(157, 176, 203, 0.12);
+      pointer-events: none;
+    }
+
+    .hour-label {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 62px;
+      transform: translateY(-0.7rem);
+      color: var(--muted);
+      font-size: 0.74rem;
+      letter-spacing: 0.04em;
+    }
+
+    .timeline-track {
+      position: absolute;
+      top: var(--timeline-padding-top);
+      bottom: var(--timeline-padding-bottom);
+      left: 72px;
+      right: 6px;
+      border-radius: 24px;
+      background: rgba(9, 19, 34, 0.74);
+      border: 1px solid rgba(132, 197, 255, 0.08);
+    }
+
+    .timeline-block {
+      position: absolute;
+      left: 82px;
+      right: 10px;
+      display: grid;
+      grid-template-columns: 10px 1fr;
+      gap: 0;
+      background: rgba(20, 33, 52, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 22px;
+      box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .timeline-block:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.24),
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    }
+
+    .block-strip {
+      background: var(--phase-color, #84c5ff);
+    }
+
+    .block-content {
+      padding: 11px 12px 11px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+      align-items: flex-start;
+    }
+
+    .block-time {
+      font-size: 0.7rem;
+      color: #c8d8ef;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      font-weight: 700;
+    }
+
+    .block-title {
+      font-size: 0.94rem;
+      font-weight: 800;
+      line-height: 1.18;
+      color: #ffffff;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    .block-phase {
+      font-size: 0.72rem;
+      color: #eef5ff;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .block-phase-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .block-phase-swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--phase-color, #84c5ff);
+      flex-shrink: 0;
+    }
+
+    .block-status {
+      align-self: flex-start;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #d8e4f7;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    body.compact-mode .timeline-block {
+      border-radius: 16px;
+    }
+
+    body.compact-mode .block-content {
+      padding: 7px 9px 7px 10px;
+      gap: 4px;
+    }
+
+    body.compact-mode .block-time {
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+    }
+
+    body.compact-mode .block-title {
+      font-size: 0.78rem;
+      -webkit-line-clamp: 1;
+    }
+
+    body.compact-mode .block-phase-label,
+    body.compact-mode .block-status {
+      padding: 3px 6px;
+      font-size: 0.6rem;
+    }
+
+    .now-line {
+      position: absolute;
+      left: 72px;
+      right: 6px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255, 150, 135, 0.95), rgba(255, 217, 117, 0.95));
+      box-shadow: 0 0 18px rgba(255, 191, 120, 0.5);
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .now-pill {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      transform: translate(-8px, -50%);
+      background: #ffd085;
+      color: #271500;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      position: absolute;
+      top: 130px;
+      left: 82px;
+      right: 10px;
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px dashed rgba(157, 176, 203, 0.2);
+      background: rgba(12, 23, 39, 0.45);
+      color: var(--muted);
+    }
+
+    .fab {
+      position: sticky;
+      bottom: 18px;
+      align-self: flex-end;
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #9bd4ff, #5672ff);
+      color: #071221;
+      font-size: 2rem;
+      line-height: 1;
+      font-weight: 300;
+      box-shadow: 0 12px 24px rgba(44, 89, 200, 0.28);
+    }
+
+    .sync-badge {
+      align-self: flex-start;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 0.72rem;
+      white-space: nowrap;
+    }
+
+    .sync-badge.synced {
+      color: var(--success);
+    }
+
+    .sync-badge.error {
+      color: #ffb0b8;
+    }
+
+    .hero-badges {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .install-button {
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 12px;
+      background: rgba(132, 197, 255, 0.14);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: none;
+    }
+
+    .install-button.visible {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 14, 0.7);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      z-index: 20;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: linear-gradient(180deg, #132845, #0b1628);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 26px 26px 20px 20px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .modal-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .close-button {
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      background: rgba(8, 16, 30, 0.95);
+      color: var(--text);
+      padding: 14px 14px;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: rgba(132, 197, 255, 0.5);
+      box-shadow: 0 0 0 3px rgba(132, 197, 255, 0.12);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .modal-actions > * {
+      flex: 1;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="card hero">
+      <div class="hero-meta">
+        <p class="eyebrow">Phase-first planner</p>
+        <h1>LifeStage Focus</h1>
+      </div>
+      <div class="hero-badges">
+        <button class="install-button" id="install-app-button" type="button">Install app</button>
+        <span class="sync-badge" id="sync-status-label">Local only</span>
+      </div>
+    </section>
+
+    <section class="card phases-card">
+      <div class="section-header">
+        <h2>Phases</h2>
+        <div class="header-actions">
+          <button class="icon-button" id="scroll-phases-left" type="button" aria-label="Scroll phases left">&#8249;</button>
+          <button class="icon-button" id="scroll-phases-right" type="button" aria-label="Scroll phases right">&#8250;</button>
+          <button class="ghost-button" id="add-phase-button" type="button">+ Add Phase</button>
+        </div>
+      </div>
+      <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
+    </section>
+
+    <section class="card timeline-card">
+      <div class="section-header">
+        <h2>Timeline</h2>
+        <div class="header-actions">
+          <button class="ghost-button" id="toggle-compact-button" type="button">Compact</button>
+          <span id="active-phase-label" class="phase-badge">No active phase</span>
+        </div>
+      </div>
+      <div class="timeline-summary">
+        <span id="block-count-label">0 blocks planned</span>
+        <span>12 AM to 11 PM</span>
+      </div>
+      <div class="timeline-scroll" id="timeline-scroll">
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+    <button class="fab" id="add-block-button" type="button" aria-label="Add block">+</button>
+  </main>
+
+  <div class="modal-backdrop" id="phase-modal-backdrop" aria-hidden="true">
+    <section class="modal" aria-labelledby="phase-modal-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="phase-modal-title">Phase</h3>
+          <p class="modal-subtitle">Create a new phase or update the selected one.</p>
+        </div>
+        <button class="close-button" type="button" data-close-modal="phase">&times;</button>
+      </div>
+      <form id="phase-form">
+        <input type="hidden" id="phase-id">
+        <div class="form-grid">
+          <label>
+            Phase name
+            <input id="phase-name" name="phaseName" type="text" maxlength="40" required placeholder="Foundation">
+          </label>
+          <label>
+            Color
+            <select id="phase-color" name="phaseColor" required></select>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="danger-button" id="delete-phase-button" type="button">Delete</button>
+          <button class="ghost-button" type="button" data-close-modal="phase">Cancel</button>
+          <button class="primary-button" type="submit">Save Phase</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="block-modal-backdrop" aria-hidden="true">
+    <section class="modal" aria-labelledby="block-modal-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="block-modal-title">Block</h3>
+          <p class="modal-subtitle">Plan a time block and attach it to a phase.</p>
+        </div>
+        <button class="close-button" type="button" data-close-modal="block">&times;</button>
+      </div>
+      <form id="block-form">
+        <input type="hidden" id="block-id">
+        <div class="form-grid">
+          <label>
+            Activity title
+            <input id="block-title" name="title" type="text" maxlength="60" required placeholder="Deep work session">
+          </label>
+          <div class="form-row">
+            <label>
+              Start time
+              <input id="block-start-time" name="startTime" type="time" required>
+            </label>
+            <label>
+              End time
+              <input id="block-end-time" name="endTime" type="time" required>
+            </label>
+          </div>
+          <label>
+            Phase
+            <select id="block-phase" name="phaseId" required></select>
+          </label>
+          <label>
+            Status
+            <select id="block-locked" name="isLocked" required>
+              <option value="false">Flexible</option>
+              <option value="true">Locked</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="danger-button" id="delete-block-button" type="button">Delete</button>
+          <button class="ghost-button" type="button" data-close-modal="block">Cancel</button>
+          <button class="primary-button" type="submit">Save Block</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    const HOURS_IN_DAY = 24;
+    const MINUTES_IN_DAY = 24 * 60;
+    const STORAGE_KEY = "lifestage-focus-state-v1";
+    const DEVICE_ID_KEY = "lifestage-focus-device-id-v1";
+    const FIREBASE_COLLECTION = "lifestageFocusStates";
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBVsyW_oqgvHhPI02sTWVXdlZQ0iXHxYuY",
+      authDomain: "lifestage-focus-app.firebaseapp.com",
+      projectId: "lifestage-focus-app",
+      storageBucket: "lifestage-focus-app.firebasestorage.app",
+      messagingSenderId: "553614543776",
+      appId: "1:553614543776:web:f797298fafc579a7ac72c5"
+    };
+    const COLOR_OPTIONS = [
+      { value: "#6ee7ff", label: "Sky Cyan" },
+      { value: "#8b7cff", label: "Electric Violet" },
+      { value: "#ff9f68", label: "Warm Orange" },
+      { value: "#68f0b1", label: "Mint Green" },
+      { value: "#ff7ea8", label: "Rose Pink" },
+      { value: "#ffd66b", label: "Solar Gold" }
+    ];
+
+    const state = {
+      phases: [
+        { id: crypto.randomUUID(), name: "Foundation", color: "#6ee7ff", isActive: true },
+        { id: crypto.randomUUID(), name: "Build", color: "#8b7cff", isActive: false },
+        { id: crypto.randomUUID(), name: "Business", color: "#ff9f68", isActive: false },
+        { id: crypto.randomUUID(), name: "Financial Stability", color: "#68f0b1", isActive: false }
+      ],
+      blocks: [],
+      ui: {
+        phaseModalMode: "create",
+        editingPhaseId: null,
+        blockModalMode: "create",
+        editingBlockId: null,
+        now: new Date(),
+        phaseToReveal: null,
+        isCompactTimeline: false,
+        syncStatus: "Local only",
+        syncError: "",
+        lastSyncedAt: null
+      }
+    };
+
+    let cloudSyncTimer = null;
+    let firestoreDb = null;
+    const deviceId = getOrCreateDeviceId();
+    let deferredInstallPrompt = null;
+
+    const elements = {
+      phaseRail: document.getElementById("phase-rail"),
+      activePhaseLabel: document.getElementById("active-phase-label"),
+      blockCountLabel: document.getElementById("block-count-label"),
+      timeline: document.getElementById("timeline"),
+      addPhaseButton: document.getElementById("add-phase-button"),
+      syncStatusLabel: document.getElementById("sync-status-label"),
+      toggleCompactButton: document.getElementById("toggle-compact-button"),
+      installAppButton: document.getElementById("install-app-button"),
+      scrollPhasesLeft: document.getElementById("scroll-phases-left"),
+      scrollPhasesRight: document.getElementById("scroll-phases-right"),
+      addBlockButton: document.getElementById("add-block-button"),
+      phaseModalBackdrop: document.getElementById("phase-modal-backdrop"),
+      blockModalBackdrop: document.getElementById("block-modal-backdrop"),
+      phaseForm: document.getElementById("phase-form"),
+      phaseId: document.getElementById("phase-id"),
+      phaseName: document.getElementById("phase-name"),
+      phaseColor: document.getElementById("phase-color"),
+      deletePhaseButton: document.getElementById("delete-phase-button"),
+      blockForm: document.getElementById("block-form"),
+      blockId: document.getElementById("block-id"),
+      blockTitle: document.getElementById("block-title"),
+      blockStartTime: document.getElementById("block-start-time"),
+      blockEndTime: document.getElementById("block-end-time"),
+      blockPhase: document.getElementById("block-phase"),
+      blockLocked: document.getElementById("block-locked"),
+      deleteBlockButton: document.getElementById("delete-block-button")
+    };
+
+    async function initialize() {
+      hydrateState();
+      initializeFirebase();
+      populateColorOptions();
+      bindEvents();
+      registerServiceWorker();
+      render();
+      await hydrateFromCloud();
+      scheduleNowUpdater();
+    }
+
+    function populateColorOptions() {
+      elements.phaseColor.innerHTML = COLOR_OPTIONS.map((option) =>
+        `<option value="${option.value}">${option.label}</option>`
+      ).join("");
+    }
+
+    function bindEvents() {
+      elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
+      elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
+      elements.installAppButton.addEventListener("click", handleInstallApp);
+      elements.scrollPhasesLeft.addEventListener("click", () => scrollPhaseRailBy(-220));
+      elements.scrollPhasesRight.addEventListener("click", () => scrollPhaseRailBy(220));
+      elements.addBlockButton.addEventListener("click", () => openBlockModal());
+      elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
+      elements.deletePhaseButton.addEventListener("click", handlePhaseDelete);
+      elements.blockForm.addEventListener("submit", handleBlockSubmit);
+      elements.deleteBlockButton.addEventListener("click", handleBlockDelete);
+
+      document.querySelectorAll("[data-close-modal]").forEach((button) => {
+        button.addEventListener("click", () => closeModal(button.dataset.closeModal));
+      });
+
+      [elements.phaseModalBackdrop, elements.blockModalBackdrop].forEach((backdrop) => {
+        backdrop.addEventListener("click", (event) => {
+          if (event.target === backdrop) {
+            backdrop.classList.remove("open");
+            backdrop.setAttribute("aria-hidden", "true");
+          }
+        });
+      });
+    }
+
+    function render() {
+      document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
+      elements.toggleCompactButton.classList.toggle("compact-active", state.ui.isCompactTimeline);
+      elements.toggleCompactButton.textContent = state.ui.isCompactTimeline ? "Expanded" : "Compact";
+      renderPhaseRail();
+      renderBlockPhaseOptions();
+      renderTimeline();
+      renderSummary();
+      renderSyncStatus();
+    }
+
+    function renderPhaseRail() {
+      elements.phaseRail.innerHTML = "";
+      let revealTarget = null;
+
+      state.phases.forEach((phase) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `phase-chip ${phase.isActive ? "active" : ""}`;
+        button.style.setProperty("--phase-color", phase.color);
+        button.innerHTML = `
+          <div class="phase-topline">
+            <span class="phase-dot" aria-hidden="true"></span>
+            <span class="phase-badge">${phase.isActive ? "Active" : "Phase"}</span>
+          </div>
+          <div class="phase-name">${escapeHtml(phase.name)}</div>
+          <div class="phase-meta">
+            <span>${countBlocksForPhase(phase.id)} blocks</span>
+            <span class="phase-edit">Edit</span>
+          </div>
+        `;
+
+        button.addEventListener("click", () => setActivePhase(phase.id));
+
+        const editTrigger = button.querySelector(".phase-edit");
+        editTrigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          openPhaseModal(phase.id);
+        });
+
+        elements.phaseRail.appendChild(button);
+
+        if (state.ui.phaseToReveal && state.ui.phaseToReveal === phase.id) {
+          revealTarget = button;
+        }
+      });
+
+      if (revealTarget) {
+        revealTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        state.ui.phaseToReveal = null;
+      }
+    }
+
+    function renderBlockPhaseOptions() {
+      elements.blockPhase.innerHTML = state.phases.map((phase) =>
+        `<option value="${phase.id}">${escapeHtml(phase.name)}</option>`
+      ).join("");
+    }
+
+    function renderSummary() {
+      const activePhase = getActivePhase();
+      elements.activePhaseLabel.textContent = activePhase ? `${activePhase.name} active` : "No active phase";
+      elements.blockCountLabel.textContent = `${state.blocks.length} ${state.blocks.length === 1 ? "block" : "blocks"} planned`;
+    }
+
+    function renderSyncStatus() {
+      elements.syncStatusLabel.textContent = state.ui.syncStatus;
+      elements.syncStatusLabel.classList.toggle("synced", state.ui.syncStatus === "Synced");
+      elements.syncStatusLabel.classList.toggle("error", state.ui.syncStatus === "Cloud error");
+    }
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      elements.installAppButton.classList.add("visible");
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      elements.installAppButton.classList.remove("visible");
+    });
+
+    async function handleInstallApp() {
+      if (!deferredInstallPrompt) {
+        return;
+      }
+
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      elements.installAppButton.classList.remove("visible");
+    }
+
+    function renderTimeline() {
+      const pixelsPerHour = getPixelsPerHour();
+      const timelineHeight = HOURS_IN_DAY * pixelsPerHour;
+      elements.timeline.innerHTML = `<div class="timeline-track" aria-hidden="true"></div>`;
+      elements.timeline.style.minHeight = `${timelineHeight + 42}px`;
+
+      for (let hour = 0; hour < HOURS_IN_DAY; hour += 1) {
+        const hourLine = document.createElement("div");
+        hourLine.className = "hour-line";
+        hourLine.style.top = `${timelineOffsetForMinute(hour * 60)}px`;
+        hourLine.innerHTML = `<span class="hour-label">${formatHour(hour)}</span>`;
+        elements.timeline.appendChild(hourLine);
+      }
+
+      const sortedBlocks = [...state.blocks].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+      const blockSegments = sortedBlocks.flatMap(createBlockSegments);
+
+      if (!blockSegments.length) {
+        const emptyState = document.createElement("div");
+        emptyState.className = "empty-state";
+        emptyState.textContent = "No blocks yet. Use the + button to add your first activity.";
+        elements.timeline.appendChild(emptyState);
+      }
+
+      blockSegments.forEach((segment) => {
+        const { block, startMinutes, endMinutes, isOvernightSegment } = segment;
+        const phase = getPhaseById(block.phaseId);
+        if (!phase) {
+          return;
+        }
+
+        const top = timelineOffsetForMinute(startMinutes);
+        const height = Math.max(((endMinutes - startMinutes) / 60) * pixelsPerHour, getMinBlockHeight());
+
+        const blockElement = document.createElement("button");
+        blockElement.type = "button";
+        blockElement.className = "timeline-block";
+        blockElement.style.top = `${top}px`;
+        blockElement.style.height = `${height}px`;
+        blockElement.style.setProperty("--phase-color", phase.color);
+        blockElement.innerHTML = `
+          <div class="block-strip" aria-hidden="true"></div>
+          <div class="block-content">
+            <div class="block-time">${formatBlockTimeRange(block.startTime, block.endTime, isOvernightSegment)}</div>
+            <div class="block-title">${escapeHtml(block.title)}</div>
+            <div class="block-phase-label">
+              <span class="block-phase-swatch" aria-hidden="true"></span>
+              <span class="block-phase">${escapeHtml(phase.name)}</span>
+            </div>
+            <div class="block-status">${block.isLocked ? "Locked" : "Flexible"}</div>
+          </div>
+        `;
+        blockElement.addEventListener("click", () => openBlockModal(block.id));
+        elements.timeline.appendChild(blockElement);
+      });
+
+      renderNowIndicator();
+    }
+
+    function renderNowIndicator() {
+      const nowMinutes = state.ui.now.getHours() * 60 + state.ui.now.getMinutes();
+      const nowLine = document.createElement("div");
+      nowLine.className = "now-line";
+      nowLine.style.top = `${timelineOffsetForMinute(nowMinutes)}px`;
+      nowLine.innerHTML = `<span class="now-pill">Now - ${formatDisplayTime(state.ui.now)}</span>`;
+      elements.timeline.appendChild(nowLine);
+    }
+
+    function handlePhaseSubmit(event) {
+      event.preventDefault();
+
+      const id = elements.phaseId.value || crypto.randomUUID();
+      const name = elements.phaseName.value.trim();
+      const color = elements.phaseColor.value;
+
+      if (!name) {
+        return;
+      }
+
+      if (state.ui.phaseModalMode === "edit") {
+        state.phases = state.phases.map((phase) =>
+          phase.id === id ? { ...phase, name, color } : phase
+        );
+        state.ui.phaseToReveal = id;
+      } else {
+        const shouldBeActive = !state.phases.some((phase) => phase.isActive);
+        state.phases.push({ id, name, color, isActive: shouldBeActive });
+        state.ui.phaseToReveal = id;
+      }
+
+      persistState();
+      closeModal("phase");
+      render();
+    }
+
+    function handleBlockSubmit(event) {
+      event.preventDefault();
+
+      if (!state.phases.length) {
+        return;
+      }
+
+      const id = elements.blockId.value || crypto.randomUUID();
+      const title = elements.blockTitle.value.trim();
+      const startTime = elements.blockStartTime.value;
+      const endTime = elements.blockEndTime.value;
+      const phaseId = elements.blockPhase.value;
+      const isLocked = elements.blockLocked.value === "true";
+
+      if (!title || !startTime || !endTime || !phaseId) {
+        return;
+      }
+
+      if (timeToMinutes(endTime) === timeToMinutes(startTime)) {
+        alert("Start time and end time cannot be the same.");
+        return;
+      }
+
+      const nextBlock = { id, title, phaseId, startTime, endTime, isLocked };
+
+      if (state.ui.blockModalMode === "edit") {
+        state.blocks = state.blocks.map((block) => block.id === id ? nextBlock : block);
+      } else {
+        state.blocks.push(nextBlock);
+      }
+
+      persistState();
+      closeModal("block");
+      render();
+    }
+
+    function handleCompactToggle() {
+      state.ui.isCompactTimeline = !state.ui.isCompactTimeline;
+      persistState();
+      render();
+    }
+
+    function handlePhaseDelete() {
+      if (state.ui.phaseModalMode !== "edit") {
+        return;
+      }
+
+      if (state.phases.length === 1) {
+        alert("You need at least one phase.");
+        return;
+      }
+
+      const targetId = state.ui.editingPhaseId;
+      const remainingPhases = state.phases.filter((phase) => phase.id !== targetId);
+      const deletedPhaseWasActive = state.phases.some((phase) => phase.id === targetId && phase.isActive);
+
+      state.phases = remainingPhases.map((phase, index) => ({
+        ...phase,
+        isActive: deletedPhaseWasActive ? index === 0 : phase.isActive
+      }));
+
+      if (!state.phases.some((phase) => phase.isActive) && state.phases.length) {
+        state.phases[0].isActive = true;
+      }
+
+      state.blocks = state.blocks.filter((block) => block.phaseId !== targetId);
+      state.ui.phaseToReveal = state.phases[0]?.id ?? null;
+      persistState();
+      closeModal("phase");
+      render();
+    }
+
+    function handleBlockDelete() {
+      if (state.ui.blockModalMode !== "edit") {
+        return;
+      }
+
+      const targetId = state.ui.editingBlockId;
+      state.blocks = state.blocks.filter((block) => block.id !== targetId);
+      persistState();
+      closeModal("block");
+      render();
+    }
+
+    function setActivePhase(phaseId) {
+      state.phases = state.phases.map((phase) => ({
+        ...phase,
+        isActive: phase.id === phaseId
+      }));
+      state.ui.phaseToReveal = phaseId;
+      persistState();
+      render();
+    }
+
+    function openPhaseModal(phaseId = null) {
+      const phase = phaseId ? getPhaseById(phaseId) : null;
+
+      state.ui.phaseModalMode = phase ? "edit" : "create";
+      state.ui.editingPhaseId = phase ? phase.id : null;
+      elements.phaseId.value = phase ? phase.id : "";
+      elements.phaseName.value = phase ? phase.name : "";
+      elements.phaseColor.value = phase ? phase.color : COLOR_OPTIONS[0].value;
+      elements.deletePhaseButton.style.display = phase ? "inline-flex" : "none";
+
+      openModal("phase");
+    }
+
+    function openBlockModal(blockId = null) {
+      if (!state.phases.length) {
+        alert("Create at least one phase before adding a block.");
+        return;
+      }
+
+      const block = blockId ? getBlockById(blockId) : null;
+      const activePhase = getActivePhase();
+      const defaultPhaseId = activePhase ? activePhase.id : state.phases[0].id;
+
+      state.ui.blockModalMode = block ? "edit" : "create";
+      state.ui.editingBlockId = block ? block.id : null;
+      elements.blockId.value = block ? block.id : "";
+      elements.blockTitle.value = block ? block.title : "";
+      elements.blockStartTime.value = block ? block.startTime : "09:00";
+      elements.blockEndTime.value = block ? block.endTime : "10:00";
+      elements.blockPhase.value = block ? block.phaseId : defaultPhaseId;
+      elements.blockLocked.value = block ? String(block.isLocked) : "false";
+      elements.deleteBlockButton.style.display = block ? "inline-flex" : "none";
+
+      openModal("block");
+    }
+
+    function openModal(type) {
+      const backdrop = type === "phase" ? elements.phaseModalBackdrop : elements.blockModalBackdrop;
+      backdrop.classList.add("open");
+      backdrop.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal(type) {
+      const backdrop = type === "phase" ? elements.phaseModalBackdrop : elements.blockModalBackdrop;
+      backdrop.classList.remove("open");
+      backdrop.setAttribute("aria-hidden", "true");
+
+      if (type === "phase") {
+        elements.phaseForm.reset();
+        elements.phaseColor.value = COLOR_OPTIONS[0].value;
+      } else {
+        elements.blockForm.reset();
+      }
+    }
+
+    function scheduleNowUpdater() {
+      setInterval(() => {
+        state.ui.now = new Date();
+        renderTimeline();
+      }, 60000);
+    }
+
+    function getActivePhase() {
+      return state.phases.find((phase) => phase.isActive) || null;
+    }
+
+    function getPhaseById(phaseId) {
+      return state.phases.find((phase) => phase.id === phaseId) || null;
+    }
+
+    function getBlockById(blockId) {
+      return state.blocks.find((block) => block.id === blockId) || null;
+    }
+
+    function countBlocksForPhase(phaseId) {
+      return state.blocks.filter((block) => block.phaseId === phaseId).length;
+    }
+
+    function persistState() {
+      const payload = buildPersistedState();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      scheduleCloudSync();
+    }
+
+    function hydrateState() {
+      const rawState = localStorage.getItem(STORAGE_KEY);
+      if (!rawState) {
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(rawState);
+        applyPersistedState(parsed);
+      } catch (error) {
+        console.error("Failed to restore local app state", error);
+      }
+    }
+
+    function buildPersistedState() {
+      return {
+        phases: state.phases,
+        blocks: state.blocks,
+        ui: {
+          isCompactTimeline: state.ui.isCompactTimeline
+        },
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function applyPersistedState(parsed) {
+      const savedPhases = Array.isArray(parsed?.phases) ? parsed.phases : [];
+      const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
+
+      if (savedPhases.length) {
+        state.phases = savedPhases.map((phase, index) => ({
+          id: typeof phase.id === "string" && phase.id ? phase.id : crypto.randomUUID(),
+          name: typeof phase.name === "string" && phase.name.trim() ? phase.name.trim() : `Phase ${index + 1}`,
+          color: typeof phase.color === "string" && phase.color ? phase.color : COLOR_OPTIONS[index % COLOR_OPTIONS.length].value,
+          isActive: Boolean(phase.isActive)
+        }));
+
+        if (!state.phases.some((phase) => phase.isActive)) {
+          state.phases[0].isActive = true;
+        }
+      }
+
+      state.blocks = savedBlocks
+        .filter((block) => typeof block?.phaseId === "string")
+        .map((block) => ({
+          id: typeof block.id === "string" && block.id ? block.id : crypto.randomUUID(),
+          title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
+          phaseId: block.phaseId,
+          startTime: normalizeTimeValue(block.startTime),
+          endTime: normalizeTimeValue(block.endTime),
+          isLocked: Boolean(block.isLocked)
+        }))
+        .filter((block) => state.phases.some((phase) => phase.id === block.phaseId));
+
+      state.ui.isCompactTimeline = Boolean(parsed?.ui?.isCompactTimeline);
+    }
+
+    function initializeFirebase() {
+      if (!isFirebaseConfigured()) {
+        state.ui.syncStatus = "Firebase not set";
+        return;
+      }
+
+      const firebaseApp = initializeApp(FIREBASE_CONFIG);
+      firestoreDb = getFirestore(firebaseApp);
+      state.ui.syncStatus = "Firebase ready";
+    }
+
+    async function hydrateFromCloud() {
+      if (!firestoreDb) {
+        renderSyncStatus();
+        return;
+      }
+
+      try {
+        state.ui.syncStatus = "Loading cloud";
+        renderSyncStatus();
+
+        const snapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, deviceId));
+
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          if (data?.payload) {
+            applyPersistedState(data.payload);
+            state.ui.lastSyncedAt = data.updatedAt || null;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+            render();
+          }
+        }
+
+        state.ui.syncStatus = "Synced";
+        renderSyncStatus();
+      } catch (error) {
+        console.error("Cloud restore failed", error);
+        state.ui.syncStatus = "Cloud error";
+        state.ui.syncError = String(error?.message || error);
+        renderSyncStatus();
+      }
+    }
+
+    function scheduleCloudSync() {
+      if (!firestoreDb) {
+        state.ui.syncStatus = isFirebaseConfigured() ? "Firebase ready" : "Firebase not set";
+        renderSyncStatus();
+        return;
+      }
+
+      state.ui.syncStatus = "Syncing";
+      renderSyncStatus();
+
+      window.clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = window.setTimeout(() => {
+        void saveToCloud();
+      }, 500);
+    }
+
+    async function saveToCloud() {
+      if (!firestoreDb) {
+        return;
+      }
+
+      const payload = buildPersistedState();
+
+      try {
+        await setDoc(
+          doc(firestoreDb, FIREBASE_COLLECTION, deviceId),
+          {
+            deviceId,
+            payload,
+            updatedAt: payload.updatedAt
+          },
+          { merge: true }
+        );
+
+        state.ui.lastSyncedAt = payload.updatedAt;
+        state.ui.syncStatus = "Synced";
+        renderSyncStatus();
+      } catch (error) {
+        console.error("Cloud save failed", error);
+        state.ui.syncStatus = "Cloud error";
+        state.ui.syncError = String(error?.message || error);
+        renderSyncStatus();
+      }
+    }
+
+    function isFirebaseConfigured() {
+      return Object.values(FIREBASE_CONFIG).every((value) => typeof value === "string" && value.trim());
+    }
+
+    function scrollPhaseRailBy(offset) {
+      elements.phaseRail.scrollBy({
+        left: offset,
+        behavior: "smooth"
+      });
+    }
+
+    function createBlockSegments(block) {
+      const startMinutes = timeToMinutes(block.startTime);
+      const endMinutes = timeToMinutes(block.endTime);
+
+      if (endMinutes > startMinutes) {
+        return [{
+          block,
+          startMinutes,
+          endMinutes,
+          isOvernightSegment: false
+        }];
+      }
+
+      return [
+        {
+          block,
+          startMinutes: 0,
+          endMinutes,
+          isOvernightSegment: true
+        },
+        {
+          block,
+          startMinutes,
+          endMinutes: MINUTES_IN_DAY,
+          isOvernightSegment: true
+        }
+      ];
+    }
+
+    function timeToMinutes(time) {
+      const [hours, minutes] = time.split(":").map(Number);
+      return hours * 60 + minutes;
+    }
+
+    function timelineOffsetForMinute(minutes) {
+      return 18 + (minutes / 60) * getPixelsPerHour();
+    }
+
+    function getPixelsPerHour() {
+      return state.ui.isCompactTimeline ? 24 : 68;
+    }
+
+    function getMinBlockHeight() {
+      return state.ui.isCompactTimeline ? 42 : 64;
+    }
+
+    function formatHour(hour) {
+      const suffix = hour >= 12 ? "PM" : "AM";
+      const normalizedHour = hour % 12 === 0 ? 12 : hour % 12;
+      return `${normalizedHour} ${suffix}`;
+    }
+
+    function formatBlockTimeRange(startTime, endTime, isOvernight = false) {
+      const overnightSuffix = isOvernight ? " - Overnight" : "";
+      return `${formatTimeValue(startTime)} - ${formatTimeValue(endTime)}${overnightSuffix}`;
+    }
+
+    function formatTimeRange(startTime, endTime, isOvernight = false) {
+      const overnightSuffix = isOvernight ? " · Overnight" : "";
+      return `${formatTimeValue(startTime)} - ${formatTimeValue(endTime)}${overnightSuffix}`;
+    }
+
+    function formatTimeValue(time) {
+      const [rawHour, rawMinute] = time.split(":").map(Number);
+      const suffix = rawHour >= 12 ? "PM" : "AM";
+      const hour = rawHour % 12 === 0 ? 12 : rawHour % 12;
+      return `${hour}:${String(rawMinute).padStart(2, "0")} ${suffix}`;
+    }
+
+    function formatDisplayTime(date) {
+      return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function normalizeTimeValue(time) {
+      if (typeof time !== "string" || !/^\d{2}:\d{2}$/.test(time)) {
+        return "09:00";
+      }
+
+      return time;
+    }
+
+    function getOrCreateDeviceId() {
+      const existing = localStorage.getItem(DEVICE_ID_KEY);
+      if (existing) {
+        return existing;
+      }
+
+      const nextId = crypto.randomUUID();
+      localStorage.setItem(DEVICE_ID_KEY, nextId);
+      return nextId;
+    }
+
+    function registerServiceWorker() {
+      if (!("serviceWorker" in navigator)) {
+        return;
+      }
+
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((error) => {
+          console.error("Service worker registration failed", error);
+        });
+      });
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    void initialize();
+  </script>
+</body>
+</html>
