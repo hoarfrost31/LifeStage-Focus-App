@@ -808,6 +808,7 @@
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
     const STORAGE_KEY = "lifestage-focus-state-v1";
+    const LEGACY_DEVICE_ID_KEY = "lifestage-focus-device-id-v1";
     const FIREBASE_COLLECTION = "lifestageFocusStates";
     const SHARED_DOCUMENT_ID = "shared";
     const FIREBASE_CONFIG = {
@@ -1374,9 +1375,14 @@
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data?.payload) {
-          applyPersistedState(data.payload);
+            applyPersistedState(data.payload);
           state.ui.lastSyncedAt = data.updatedAt || null;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+            render();
+          }
+        } else {
+          const migrated = await migrateLegacyStateToShared();
+          if (migrated) {
             render();
           }
         }
@@ -1434,6 +1440,78 @@
         state.ui.syncError = String(error?.message || error);
         renderSyncStatus();
       }
+    }
+
+    async function migrateLegacyStateToShared() {
+      const localPayload = readLocalPayloadForMigration();
+      if (hasMeaningfulState(localPayload)) {
+        applyPersistedState(localPayload);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(localPayload));
+        await savePayloadToShared(localPayload);
+        return true;
+      }
+
+      const legacyDeviceId = localStorage.getItem(LEGACY_DEVICE_ID_KEY);
+      if (!legacyDeviceId) {
+        return false;
+      }
+
+      try {
+        const legacySnapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, legacyDeviceId));
+        if (!legacySnapshot.exists()) {
+          return false;
+        }
+
+        const legacyData = legacySnapshot.data();
+        if (!hasMeaningfulState(legacyData?.payload)) {
+          return false;
+        }
+
+        applyPersistedState(legacyData.payload);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(legacyData.payload));
+        await savePayloadToShared(legacyData.payload);
+        return true;
+      } catch (error) {
+        console.error("Legacy migration failed", error);
+        return false;
+      }
+    }
+
+    function readLocalPayloadForMigration() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return null;
+        }
+
+        return JSON.parse(raw);
+      } catch (error) {
+        console.error("Local migration payload read failed", error);
+        return null;
+      }
+    }
+
+    function hasMeaningfulState(payload) {
+      if (!payload || typeof payload !== "object") {
+        return false;
+      }
+
+      const phases = Array.isArray(payload.phases) ? payload.phases : [];
+      const blocks = Array.isArray(payload.blocks) ? payload.blocks : [];
+
+      return phases.length > 0 || blocks.length > 0;
+    }
+
+    async function savePayloadToShared(payload) {
+      await setDoc(
+        doc(firestoreDb, FIREBASE_COLLECTION, SHARED_DOCUMENT_ID),
+        {
+          scope: "shared",
+          payload,
+          updatedAt: payload.updatedAt || new Date().toISOString()
+        },
+        { merge: true }
+      );
     }
 
     function isFirebaseConfigured() {
