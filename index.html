@@ -38,12 +38,14 @@
 
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
 
     html, body {
       margin: 0;
       min-height: 100%;
       font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #0a0a0a;
       background:
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.06), transparent 24%),
         radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 20%),
@@ -54,7 +56,10 @@
     body {
       display: flex;
       justify-content: center;
-      padding: 14px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .app-shell {
@@ -63,7 +68,7 @@
       min-height: calc(100vh - 32px);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 10px;
       position: relative;
     }
 
@@ -81,11 +86,11 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 18px 18px 0;
+      padding: 12px 14px 0;
     }
 
     .section-header.compact-header {
-      padding-top: 14px;
+      padding-top: 10px;
     }
 
     .header-actions {
@@ -101,7 +106,7 @@
     }
 
     .tabs-card {
-      padding: 5px;
+      padding: 4px;
     }
 
     .tab-bar {
@@ -112,7 +117,7 @@
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.05);
       border-radius: 16px;
-      padding: 4px;
+      padding: 3px;
     }
 
     .tab-button {
@@ -123,8 +128,9 @@
       font: inherit;
       font-weight: 600;
       font-size: 0.82rem;
-      padding: 8px 11px;
+      padding: 7px 10px;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .tab-button.active {
@@ -144,6 +150,7 @@
       cursor: pointer;
       font: inherit;
       transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+      touch-action: manipulation;
     }
 
     button:active {
@@ -198,14 +205,14 @@
     }
 
     .phases-card {
-      padding-bottom: 18px;
+      padding-bottom: 12px;
     }
 
     .phase-rail {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 16px 18px 0;
+      gap: 10px;
+      padding: 12px 14px 0;
     }
 
     .phase-chip {
@@ -346,7 +353,7 @@
     }
 
     .timeline-card {
-      padding-bottom: 18px;
+      padding-bottom: 12px;
       overflow: hidden;
       flex: 1;
       min-height: 0;
@@ -357,7 +364,7 @@
     }
 
     .timeline-scroll {
-      margin: 16px 10px 0;
+      margin: 12px 8px 0;
       padding: 0 8px;
       overflow-y: auto;
       max-height: min(76vh, 1100px);
@@ -405,7 +412,11 @@
     }
 
     .hour-icon {
-      font-size: 0.78rem;
+      width: 14px;
+      height: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       line-height: 1;
     }
 
@@ -433,6 +444,13 @@
       color: #a89fb2;
     }
 
+    .hour-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
     body.compact-mode .hour-label {
       font-size: 0.64rem;
       gap: 4px;
@@ -440,7 +458,8 @@
     }
 
     body.compact-mode .hour-icon {
-      font-size: 0.68rem;
+      width: 11px;
+      height: 11px;
     }
 
     .timeline-track {
@@ -479,6 +498,34 @@
         0 0 0 1px rgba(255, 255, 255, 0.03) inset;
     }
 
+    .timeline-gap {
+      position: absolute;
+      left: 86px;
+      right: 14px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      background:
+        repeating-linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.015) 0,
+          rgba(255, 255, 255, 0.015) 8px,
+          rgba(255, 255, 255, 0.005) 8px,
+          rgba(255, 255, 255, 0.005) 16px
+        );
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .timeline-gap-label {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      color: rgba(255, 255, 255, 0.28);
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
     .block-strip {
       background: var(--phase-color, #84c5ff);
     }
@@ -503,10 +550,16 @@
 
     .block-time {
       font-size: 0.7rem;
-      color: #c8d8ef;
+      color: #d6d7db;
       text-transform: uppercase;
       letter-spacing: 0.11em;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
     }
 
     .block-title {
@@ -554,18 +607,6 @@
       flex-shrink: 0;
     }
 
-    .block-status {
-      align-self: flex-start;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #d8e4f7;
-      font-size: 0.68rem;
-      font-weight: 600;
-      letter-spacing: 0.03em;
-    }
-
     body.compact-mode .timeline-block {
       border-radius: 16px;
     }
@@ -587,6 +628,7 @@
       letter-spacing: 0.08em;
       align-self: start;
       white-space: nowrap;
+      padding: 3px 6px;
     }
 
     body.compact-mode .block-title {
@@ -595,8 +637,7 @@
       align-self: start;
     }
 
-    body.compact-mode .block-phase-label,
-    body.compact-mode .block-status {
+    body.compact-mode .block-phase-label {
       display: none;
     }
 
@@ -718,7 +759,7 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(3, 7, 14, 0.7);
+      background: rgba(0, 0, 0, 0.76);
       backdrop-filter: blur(10px);
       display: none;
       align-items: flex-end;
@@ -729,6 +770,14 @@
 
     .modal-backdrop.open {
       display: flex;
+    }
+
+    input,
+    textarea,
+    select {
+      user-select: text;
+      -webkit-user-select: text;
+      -webkit-touch-callout: default;
     }
 
     .modal {
@@ -1009,13 +1058,6 @@
             Phase
             <select id="block-phase" name="phaseId" required></select>
           </label>
-          <label>
-            Status
-            <select id="block-locked" name="isLocked" required>
-              <option value="false">Flexible</option>
-              <option value="true">Locked</option>
-            </select>
-          </label>
         </div>
         <div class="modal-actions">
           <button class="danger-button" id="delete-block-button" type="button">Delete</button>
@@ -1116,7 +1158,6 @@
       blockStartTime: document.getElementById("block-start-time"),
       blockEndTime: document.getElementById("block-end-time"),
       blockPhase: document.getElementById("block-phase"),
-      blockLocked: document.getElementById("block-locked"),
       deleteBlockButton: document.getElementById("delete-block-button")
     };
 
@@ -1310,13 +1351,17 @@
       }
 
       const sortedBlocks = [...state.blocks].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
-      const blockSegments = sortedBlocks.flatMap(createBlockSegments);
+      const blockSegments = sortedBlocks
+        .flatMap(createBlockSegments)
+        .sort((a, b) => a.startMinutes - b.startMinutes);
 
       if (!blockSegments.length) {
         const emptyState = document.createElement("div");
         emptyState.className = "empty-state";
         emptyState.textContent = "No blocks yet. Use the + button to add your first activity.";
         elements.timeline.appendChild(emptyState);
+      } else {
+        renderTimelineGaps(blockSegments, pixelsPerHour);
       }
 
       blockSegments.forEach((segment) => {
@@ -1346,7 +1391,6 @@
               <span class="block-phase-swatch" aria-hidden="true"></span>
               <span class="block-phase">${escapeHtml(phase.name)}</span>
             </div>
-            <div class="block-status">${block.isLocked ? "Locked" : "Flexible"}</div>
           </div>
         `;
         blockElement.addEventListener("click", () => openBlockModal(block.id));
@@ -1354,6 +1398,36 @@
       });
 
       renderNowIndicator();
+    }
+
+    function renderTimelineGaps(blockSegments, pixelsPerHour) {
+      let cursor = 0;
+
+      blockSegments.forEach((segment) => {
+        if (segment.startMinutes > cursor) {
+          appendTimelineGap(cursor, segment.startMinutes, pixelsPerHour);
+        }
+
+        cursor = Math.max(cursor, segment.endMinutes);
+      });
+
+      if (cursor < MINUTES_IN_DAY) {
+        appendTimelineGap(cursor, MINUTES_IN_DAY, pixelsPerHour);
+      }
+    }
+
+    function appendTimelineGap(startMinutes, endMinutes, pixelsPerHour) {
+      const durationMinutes = endMinutes - startMinutes;
+      if (durationMinutes < 30) {
+        return;
+      }
+
+      const gapElement = document.createElement("div");
+      gapElement.className = "timeline-gap";
+      gapElement.style.top = `${timelineOffsetForMinute(startMinutes)}px`;
+      gapElement.style.height = `${Math.max((durationMinutes / 60) * pixelsPerHour, 18)}px`;
+      gapElement.innerHTML = `<span class="timeline-gap-label">Open</span>`;
+      elements.timeline.appendChild(gapElement);
     }
 
     function renderNowIndicator() {
@@ -1404,7 +1478,6 @@
       const startTime = elements.blockStartTime.value;
       const endTime = elements.blockEndTime.value;
       const phaseId = elements.blockPhase.value;
-      const isLocked = elements.blockLocked.value === "true";
 
       if (!title || !startTime || !endTime || !phaseId) {
         return;
@@ -1415,7 +1488,7 @@
         return;
       }
 
-      const nextBlock = { id, title, phaseId, startTime, endTime, isLocked };
+      const nextBlock = { id, title, phaseId, startTime, endTime };
       const conflictingBlock = findConflictingBlock(nextBlock);
 
       if (conflictingBlock) {
@@ -1536,7 +1609,6 @@
       elements.blockStartTime.value = block ? block.startTime : "09:00";
       elements.blockEndTime.value = block ? block.endTime : "10:00";
       elements.blockPhase.value = block ? block.phaseId : defaultPhaseId;
-      elements.blockLocked.value = block ? String(block.isLocked) : "false";
       elements.deleteBlockButton.style.display = block ? "inline-flex" : "none";
 
       openModal("block");
@@ -1670,8 +1742,7 @@
           title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
           phaseId: block.phaseId,
           startTime: normalizeTimeValue(block.startTime),
-          endTime: normalizeTimeValue(block.endTime),
-          isLocked: Boolean(block.isLocked)
+          endTime: normalizeTimeValue(block.endTime)
         }))
         .filter((block) => state.phases.some((phase) => phase.id === block.phaseId));
 
@@ -1943,8 +2014,8 @@
     function formatHour(hour) {
       const suffix = hour >= 12 ? "PM" : "AM";
       const normalizedHour = hour % 12 === 0 ? 12 : hour % 12;
-      const icon = getHourIcon(hour);
-      return `<span class="hour-label"><span class="hour-icon ${icon.className}">${icon.symbol}</span><span>${normalizedHour} ${suffix}</span></span>`;
+      const icon = getPremiumHourIcon(hour);
+      return `<span class="hour-label"><span class="hour-icon ${icon.className}" aria-hidden="true">${icon.svg}</span><span>${normalizedHour} ${suffix}</span></span>`;
     }
 
     function getHourIcon(hour) {
@@ -1973,6 +2044,88 @@
       }
 
       return { symbol: "☾", className: "night" };
+    }
+
+    function getPremiumHourIcon(hour) {
+      if (hour >= 0 && hour < 4) {
+        return { className: "night", svg: getMoonIconSvg() };
+      }
+
+      if (hour >= 4 && hour < 6) {
+        return { className: "dawn", svg: getDawnIconSvg() };
+      }
+
+      if (hour >= 6 && hour < 11) {
+        return { className: "sunrise", svg: getSunriseIconSvg() };
+      }
+
+      if (hour >= 11 && hour < 16) {
+        return { className: "day", svg: getSunIconSvg() };
+      }
+
+      if (hour >= 16 && hour < 18) {
+        return { className: "sunset", svg: getSunsetIconSvg() };
+      }
+
+      if (hour >= 18 && hour < 20) {
+        return { className: "dusk", svg: getDuskIconSvg() };
+      }
+
+      return { className: "night", svg: getMoonIconSvg() };
+    }
+
+    function getMoonIconSvg() {
+      return `
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10.7 2.2C8.6 2.7 7 4.6 7 6.9c0 2.7 2.2 4.9 4.9 4.9.4 0 .8 0 1.2-.1-.9 1.3-2.4 2.1-4.1 2.1-2.9 0-5.2-2.3-5.2-5.2 0-2.9 2.3-5.2 5.2-5.2.6 0 1.2.1 1.7.3Z" fill="currentColor"/>
+        </svg>`;
+    }
+
+    function getDawnIconSvg() {
+      return `
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 10.8h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M5.1 8.9A3 3 0 0 1 8 7a3 3 0 0 1 2.9 1.9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M8 3.3v1.4M4.9 4.3l.9 1M11.1 4.3l-.9 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>`;
+    }
+
+    function getSunriseIconSvg() {
+      return `
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M5 9a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M8 8.6V4.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M6.6 5.4 8 4.1l1.4 1.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+    }
+
+    function getSunIconSvg() {
+      return `
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8" cy="8" r="2.6" fill="currentColor"/>
+          <path d="M8 1.8v1.8M8 12.4v1.8M14.2 8h-1.8M3.6 8H1.8M12.4 3.6l-1.3 1.3M4.9 11.1l-1.3 1.3M12.4 12.4l-1.3-1.3M4.9 4.9 3.6 3.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>`;
+    }
+
+    function getSunsetIconSvg() {
+      return `
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M5 9a3 3 0 0 1 6 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M8 4.2v4.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="m6.6 7.4 1.4 1.3 1.4-1.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`;
+    }
+
+    function getDuskIconSvg() {
+      return `
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 11.2h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M4.6 9.1c.8-1 2-1.5 3.4-1.5 1.4 0 2.6.5 3.4 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="11.8" cy="4.6" r="1.1" fill="currentColor"/>
+          <path d="M4.5 4.2h1.8M5.4 3.3v1.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>`;
     }
 
     function formatBlockTimeRange(startTime, endTime, isOvernight = false) {
