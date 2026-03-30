@@ -122,6 +122,33 @@
       font-size: 1rem;
     }
 
+    .tabs-card {
+      padding: 8px;
+    }
+
+    .tab-bar {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tab-button {
+      border: 0;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font: inherit;
+      font-weight: 700;
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: rgba(132, 197, 255, 0.18);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(132, 197, 255, 0.18);
+    }
+
     .ghost-button,
     .primary-button,
     .fab,
@@ -181,25 +208,13 @@
 
     .phase-rail {
       display: flex;
+      flex-direction: column;
       gap: 12px;
-      overflow-x: auto;
-      overflow-y: hidden;
       padding: 16px 18px 0;
-      scroll-snap-type: x proximity;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x;
-      overscroll-behavior-x: contain;
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-
-    .phase-rail::-webkit-scrollbar {
-      display: none;
     }
 
     .phase-chip {
-      flex: 0 0 auto;
-      min-width: 132px;
+      width: 100%;
       padding: 14px;
       border-radius: 20px;
       border: 1px solid transparent;
@@ -209,6 +224,10 @@
       scroll-snap-align: start;
       position: relative;
       overflow: hidden;
+    }
+
+    .panel-hidden {
+      display: none;
     }
 
     .phase-chip::before {
@@ -692,12 +711,17 @@
       </div>
     </section>
 
+    <section class="card tabs-card">
+      <div class="tab-bar" id="tab-bar">
+        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">Timeline</button>
+        <button class="tab-button" id="tab-phases" type="button" data-tab="phases">Phases</button>
+      </div>
+    </section>
+
     <section class="card phases-card">
       <div class="section-header">
         <h2>Phases</h2>
         <div class="header-actions">
-          <button class="icon-button" id="scroll-phases-left" type="button" aria-label="Scroll phases left">&#8249;</button>
-          <button class="icon-button" id="scroll-phases-right" type="button" aria-label="Scroll phases right">&#8250;</button>
           <button class="ghost-button" id="add-phase-button" type="button">+ Add Phase</button>
         </div>
       </div>
@@ -837,6 +861,7 @@
       ],
       blocks: [],
       ui: {
+        activeTab: "timeline",
         phaseModalMode: "create",
         editingPhaseId: null,
         blockModalMode: "create",
@@ -859,12 +884,14 @@
       activePhaseLabel: document.getElementById("active-phase-label"),
       blockCountLabel: document.getElementById("block-count-label"),
       timeline: document.getElementById("timeline"),
+      tabPhases: document.getElementById("tab-phases"),
+      tabTimeline: document.getElementById("tab-timeline"),
+      phasesCard: document.querySelector(".phases-card"),
+      timelineCard: document.querySelector(".timeline-card"),
       addPhaseButton: document.getElementById("add-phase-button"),
       syncStatusLabel: document.getElementById("sync-status-label"),
       toggleCompactButton: document.getElementById("toggle-compact-button"),
       installAppButton: document.getElementById("install-app-button"),
-      scrollPhasesLeft: document.getElementById("scroll-phases-left"),
-      scrollPhasesRight: document.getElementById("scroll-phases-right"),
       addBlockButton: document.getElementById("add-block-button"),
       phaseModalBackdrop: document.getElementById("phase-modal-backdrop"),
       blockModalBackdrop: document.getElementById("block-modal-backdrop"),
@@ -901,11 +928,11 @@
     }
 
     function bindEvents() {
+      elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
+      elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
       elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
       elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
-      elements.scrollPhasesLeft.addEventListener("click", () => scrollPhaseRailBy(-220));
-      elements.scrollPhasesRight.addEventListener("click", () => scrollPhaseRailBy(220));
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
       elements.deletePhaseButton.addEventListener("click", handlePhaseDelete);
@@ -930,6 +957,11 @@
       document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
       elements.toggleCompactButton.classList.toggle("compact-active", state.ui.isCompactTimeline);
       elements.toggleCompactButton.textContent = state.ui.isCompactTimeline ? "Expanded" : "Compact";
+      elements.tabPhases.classList.toggle("active", state.ui.activeTab === "phases");
+      elements.tabTimeline.classList.toggle("active", state.ui.activeTab === "timeline");
+      elements.phasesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "phases");
+      elements.timelineCard.classList.toggle("panel-hidden", state.ui.activeTab !== "timeline");
+      elements.addBlockButton.style.display = state.ui.activeTab === "timeline" ? "block" : "none";
       renderPhaseRail();
       renderBlockPhaseOptions();
       renderTimeline();
@@ -995,6 +1027,12 @@
       elements.syncStatusLabel.textContent = state.ui.syncStatus;
       elements.syncStatusLabel.classList.toggle("synced", state.ui.syncStatus === "Synced");
       elements.syncStatusLabel.classList.toggle("error", state.ui.syncStatus === "Cloud error");
+    }
+
+    function setActiveTab(tab) {
+      state.ui.activeTab = tab;
+      persistState();
+      render();
     }
 
     window.addEventListener("beforeinstallprompt", (event) => {
@@ -1311,7 +1349,8 @@
         phases: state.phases,
         blocks: state.blocks,
         ui: {
-          isCompactTimeline: state.ui.isCompactTimeline
+          isCompactTimeline: state.ui.isCompactTimeline,
+          activeTab: state.ui.activeTab
         },
         updatedAt: new Date().toISOString()
       };
@@ -1347,6 +1386,7 @@
         .filter((block) => state.phases.some((phase) => phase.id === block.phaseId));
 
       state.ui.isCompactTimeline = Boolean(parsed?.ui?.isCompactTimeline);
+      state.ui.activeTab = parsed?.ui?.activeTab === "phases" ? "phases" : "timeline";
     }
 
     function initializeFirebase() {
