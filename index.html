@@ -75,31 +75,48 @@
     }
 
     .hero {
-      padding: 16px 18px;
+      padding: 18px 18px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -28px -34px auto;
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(132, 197, 255, 0.18), transparent 68%);
+      pointer-events: none;
     }
 
     .eyebrow {
-      margin: 0 0 6px;
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
+      margin: 0;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: rgba(173, 210, 255, 0.82);
     }
 
     h1 {
       margin: 0;
-      font-size: 1.55rem;
-      line-height: 1.1;
+      font-size: 1.72rem;
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+      text-wrap: balance;
     }
 
     .hero-meta {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
     }
 
     .section-header {
@@ -108,6 +125,10 @@
       justify-content: space-between;
       gap: 12px;
       padding: 18px 18px 0;
+    }
+
+    .section-header.compact-header {
+      padding-top: 14px;
     }
 
     .header-actions {
@@ -123,23 +144,29 @@
     }
 
     .tabs-card {
-      padding: 8px;
+      padding: 6px;
     }
 
     .tab-bar {
-      display: grid;
+      display: inline-grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 4px;
     }
 
     .tab-button {
       border: 0;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      background: transparent;
       color: var(--muted);
       font: inherit;
       font-weight: 700;
-      padding: 12px 14px;
+      font-size: 0.82rem;
+      padding: 9px 12px;
       cursor: pointer;
     }
 
@@ -168,11 +195,6 @@
       background: rgba(132, 197, 255, 0.12);
       color: var(--text);
       padding: 10px 14px;
-    }
-
-    .ghost-button.compact-active {
-      background: rgba(132, 197, 255, 0.26);
-      color: #ffffff;
     }
 
     .icon-button {
@@ -238,6 +260,15 @@
       background: var(--phase-color, #84c5ff);
     }
 
+    .phase-chip:not(.active) {
+      background: rgba(17, 28, 44, 0.86);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .phase-chip:not(.active)::before {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
     .phase-chip.active {
       border-color: rgba(255, 255, 255, 0.22);
       box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -257,6 +288,10 @@
       background: var(--phase-color, #84c5ff);
     }
 
+    .phase-chip:not(.active) .phase-dot {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
     .phase-badge {
       margin-left: auto;
       font-size: 0.68rem;
@@ -265,10 +300,23 @@
       color: var(--muted);
     }
 
+
     .phase-name {
       font-size: 0.98rem;
       font-weight: 700;
       line-height: 1.3;
+    }
+
+    .phase-description {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .phase-meta {
@@ -291,6 +339,22 @@
       cursor: pointer;
     }
 
+    .phase-toggle {
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+    }
+
+    .phase-toggle.active {
+      background: rgba(132, 197, 255, 0.18);
+      color: var(--text);
+    }
+
     .timeline-card {
       padding-bottom: 18px;
       overflow: hidden;
@@ -299,14 +363,7 @@
     }
 
     .timeline-summary {
-      padding: 12px 18px 0;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 0.8rem;
-      align-items: center;
-      flex-wrap: wrap;
+      display: none;
     }
 
     .timeline-scroll {
@@ -345,6 +402,55 @@
       color: var(--muted);
       font-size: 0.74rem;
       letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(8, 17, 30, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      width: auto;
+      min-width: 62px;
+      white-space: nowrap;
+    }
+
+    .hour-icon {
+      font-size: 0.78rem;
+      line-height: 1;
+    }
+
+    .hour-icon.day {
+      color: #ffd66b;
+    }
+
+    .hour-icon.night {
+      color: #aebfff;
+    }
+
+    .hour-icon.dawn {
+      color: #ffb274;
+    }
+
+    .hour-icon.sunrise {
+      color: #ffd37c;
+    }
+
+    .hour-icon.sunset {
+      color: #ff9f68;
+    }
+
+    .hour-icon.dusk {
+      color: #c29aff;
+    }
+
+    body.compact-mode .hour-label {
+      font-size: 0.64rem;
+      gap: 4px;
+      padding: 2px 6px;
+    }
+
+    body.compact-mode .hour-icon {
+      font-size: 0.68rem;
     }
 
     .timeline-track {
@@ -480,21 +586,23 @@
     }
 
     body.compact-mode .block-main {
-      flex-direction: row;
-      align-items: center;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
       gap: 8px;
     }
 
     body.compact-mode .block-time {
       font-size: 0.58rem;
       letter-spacing: 0.08em;
-      flex: 0 0 auto;
+      align-self: start;
+      white-space: nowrap;
     }
 
     body.compact-mode .block-title {
       font-size: 0.78rem;
-      -webkit-line-clamp: 1;
-      flex: 1 1 auto;
+      -webkit-line-clamp: 2;
+      align-self: start;
     }
 
     body.compact-mode .block-phase-label,
@@ -508,7 +616,7 @@
       right: 6px;
       height: 2px;
       background: linear-gradient(90deg, rgba(255, 150, 135, 0.95), rgba(255, 217, 117, 0.95));
-      box-shadow: 0 0 18px rgba(255, 191, 120, 0.5);
+      box-shadow: 0 0 12px rgba(255, 191, 120, 0.35);
       z-index: 4;
       pointer-events: none;
     }
@@ -516,17 +624,24 @@
     .now-pill {
       position: absolute;
       top: 50%;
-      left: 0;
-      transform: translate(-8px, -50%);
-      background: #ffd085;
-      color: #271500;
+      left: -66px;
+      transform: translateY(-50%);
+      background: rgba(255, 208, 133, 0.14);
+      color: #ffd085;
+      border: 1px solid rgba(255, 208, 133, 0.28);
       border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 0.68rem;
+      padding: 4px 8px;
+      font-size: 0.62rem;
       font-weight: 800;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       white-space: nowrap;
+    }
+
+    body.compact-mode .now-pill {
+      left: -60px;
+      padding: 3px 6px;
+      font-size: 0.56rem;
     }
 
     .empty-state {
@@ -560,11 +675,13 @@
       align-self: flex-start;
       padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.07);
       color: var(--muted);
-      font-size: 0.72rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
       white-space: nowrap;
+      backdrop-filter: blur(10px);
     }
 
     .sync-badge.synced {
@@ -575,24 +692,47 @@
       color: #ffb0b8;
     }
 
+    .mode-toggle {
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 7px 11px;
+      cursor: pointer;
+    }
+
+    .mode-toggle.active {
+      background: rgba(132, 197, 255, 0.18);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(132, 197, 255, 0.16);
+    }
+
     .hero-badges {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+      position: relative;
+      z-index: 1;
     }
 
     .install-button {
       border: 0;
       border-radius: 999px;
-      padding: 6px 12px;
-      background: rgba(132, 197, 255, 0.14);
+      padding: 6px 11px;
+      background: rgba(132, 197, 255, 0.12);
       color: var(--text);
       font: inherit;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
       cursor: pointer;
       display: none;
+      border: 1px solid rgba(132, 197, 255, 0.1);
     }
 
     .install-button.visible {
@@ -668,7 +808,8 @@
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
@@ -680,9 +821,59 @@
     }
 
     input:focus,
-    select:focus {
+    select:focus,
+    textarea:focus {
       border-color: rgba(132, 197, 255, 0.5);
       box-shadow: 0 0 0 3px rgba(132, 197, 255, 0.12);
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .phase-read-content {
+      display: grid;
+      gap: 14px;
+    }
+
+    .phase-read-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(9, 19, 34, 0.72);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phase-read-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: var(--phase-color, #84c5ff);
+    }
+
+    .phase-read-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .phase-read-status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .phase-read-body {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
     }
 
     .form-row {
@@ -735,8 +926,7 @@
     </section>
 
     <section class="card phases-card">
-      <div class="section-header">
-        <h2>Phases</h2>
+      <div class="section-header compact-header">
         <div class="header-actions">
           <button class="ghost-button" id="add-phase-button" type="button">+ Add Phase</button>
         </div>
@@ -745,16 +935,11 @@
     </section>
 
     <section class="card timeline-card">
-      <div class="section-header">
-        <h2>Timeline</h2>
+      <div class="section-header compact-header">
         <div class="header-actions">
-          <button class="ghost-button" id="toggle-compact-button" type="button">Compact</button>
+          <button class="mode-toggle" id="toggle-compact-button" type="button">Compact</button>
           <span id="active-phase-label" class="phase-badge">No active phase</span>
         </div>
-      </div>
-      <div class="timeline-summary">
-        <span id="block-count-label">0 blocks planned</span>
-        <span>12 AM to 11 PM</span>
       </div>
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
@@ -784,6 +969,10 @@
             Color
             <select id="phase-color" name="phaseColor" required></select>
           </label>
+          <label>
+            Details
+            <textarea id="phase-details" name="phaseDetails" maxlength="600" placeholder="What does this phase represent? What matters most here?"></textarea>
+          </label>
         </div>
         <div class="modal-actions">
           <button class="danger-button" id="delete-phase-button" type="button">Delete</button>
@@ -791,6 +980,29 @@
           <button class="primary-button" type="submit">Save Phase</button>
         </div>
       </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="phase-read-modal-backdrop" aria-hidden="true">
+    <section class="modal" aria-labelledby="phase-read-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="phase-read-modal-title">Phase Details</h3>
+          <p class="modal-subtitle">Read the current context for this phase.</p>
+        </div>
+        <button class="close-button" type="button" data-close-modal="phase-read">&times;</button>
+      </div>
+      <div class="phase-read-content">
+        <div class="phase-read-card" id="phase-read-card">
+          <h4 class="phase-read-title" id="phase-read-title"></h4>
+          <div class="phase-read-status" id="phase-read-status"></div>
+        </div>
+        <p class="phase-read-body" id="phase-read-body"></p>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-button" type="button" data-close-modal="phase-read">Close</button>
+        <button class="primary-button" id="phase-read-edit-button" type="button">Edit Phase</button>
+      </div>
     </section>
   </div>
 
@@ -870,14 +1082,15 @@
 
     const state = {
       phases: [
-        { id: crypto.randomUUID(), name: "Foundation", color: "#6ee7ff", isActive: true },
-        { id: crypto.randomUUID(), name: "Build", color: "#8b7cff", isActive: false },
-        { id: crypto.randomUUID(), name: "Business", color: "#ff9f68", isActive: false },
-        { id: crypto.randomUUID(), name: "Financial Stability", color: "#68f0b1", isActive: false }
+        { id: crypto.randomUUID(), name: "Foundation", color: "#6ee7ff", isActive: true, details: "" },
+        { id: crypto.randomUUID(), name: "Build", color: "#8b7cff", isActive: false, details: "" },
+        { id: crypto.randomUUID(), name: "Business", color: "#ff9f68", isActive: false, details: "" },
+        { id: crypto.randomUUID(), name: "Financial Stability", color: "#68f0b1", isActive: false, details: "" }
       ],
       blocks: [],
       ui: {
         activeTab: "timeline",
+        viewingPhaseId: null,
         phaseModalMode: "create",
         editingPhaseId: null,
         blockModalMode: "create",
@@ -898,7 +1111,6 @@
     const elements = {
       phaseRail: document.getElementById("phase-rail"),
       activePhaseLabel: document.getElementById("active-phase-label"),
-      blockCountLabel: document.getElementById("block-count-label"),
       timeline: document.getElementById("timeline"),
       tabPhases: document.getElementById("tab-phases"),
       tabTimeline: document.getElementById("tab-timeline"),
@@ -910,12 +1122,19 @@
       installAppButton: document.getElementById("install-app-button"),
       addBlockButton: document.getElementById("add-block-button"),
       phaseModalBackdrop: document.getElementById("phase-modal-backdrop"),
+      phaseReadModalBackdrop: document.getElementById("phase-read-modal-backdrop"),
       blockModalBackdrop: document.getElementById("block-modal-backdrop"),
       phaseForm: document.getElementById("phase-form"),
       phaseId: document.getElementById("phase-id"),
       phaseName: document.getElementById("phase-name"),
       phaseColor: document.getElementById("phase-color"),
+      phaseDetails: document.getElementById("phase-details"),
       deletePhaseButton: document.getElementById("delete-phase-button"),
+      phaseReadTitle: document.getElementById("phase-read-title"),
+      phaseReadStatus: document.getElementById("phase-read-status"),
+      phaseReadBody: document.getElementById("phase-read-body"),
+      phaseReadCard: document.getElementById("phase-read-card"),
+      phaseReadEditButton: document.getElementById("phase-read-edit-button"),
       blockForm: document.getElementById("block-form"),
       blockId: document.getElementById("block-id"),
       blockTitle: document.getElementById("block-title"),
@@ -949,6 +1168,7 @@
       elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
       elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
+      elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
       elements.deletePhaseButton.addEventListener("click", handlePhaseDelete);
@@ -959,7 +1179,7 @@
         button.addEventListener("click", () => closeModal(button.dataset.closeModal));
       });
 
-      [elements.phaseModalBackdrop, elements.blockModalBackdrop].forEach((backdrop) => {
+      [elements.phaseModalBackdrop, elements.phaseReadModalBackdrop, elements.blockModalBackdrop].forEach((backdrop) => {
         backdrop.addEventListener("click", (event) => {
           if (event.target === backdrop) {
             backdrop.classList.remove("open");
@@ -971,7 +1191,7 @@
 
     function render() {
       document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
-      elements.toggleCompactButton.classList.toggle("compact-active", state.ui.isCompactTimeline);
+      elements.toggleCompactButton.classList.toggle("active", state.ui.isCompactTimeline);
       elements.toggleCompactButton.textContent = state.ui.isCompactTimeline ? "Expanded" : "Compact";
       elements.tabPhases.classList.toggle("active", state.ui.activeTab === "phases");
       elements.tabTimeline.classList.toggle("active", state.ui.activeTab === "timeline");
@@ -1000,18 +1220,28 @@
             <span class="phase-badge">${phase.isActive ? "Active" : "Phase"}</span>
           </div>
           <div class="phase-name">${escapeHtml(phase.name)}</div>
+          <div class="phase-description">${escapeHtml(phase.details?.trim() || "No details added yet.")}</div>
           <div class="phase-meta">
             <span>${countBlocksForPhase(phase.id)} blocks</span>
-            <span class="phase-edit">Edit</span>
+            <div class="header-actions">
+              <button class="phase-toggle ${phase.isActive ? "active" : ""}" type="button">${phase.isActive ? "Active" : "Inactive"}</button>
+              <span class="phase-edit">Edit</span>
+            </div>
           </div>
         `;
 
-        button.addEventListener("click", () => setActivePhase(phase.id));
+        button.addEventListener("click", () => openPhaseReadModal(phase.id));
 
         const editTrigger = button.querySelector(".phase-edit");
         editTrigger.addEventListener("click", (event) => {
           event.stopPropagation();
           openPhaseModal(phase.id);
+        });
+
+        const toggleTrigger = button.querySelector(".phase-toggle");
+        toggleTrigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          setActivePhase(phase.id);
         });
 
         elements.phaseRail.appendChild(button);
@@ -1042,7 +1272,6 @@
       } else {
         elements.activePhaseLabel.textContent = `${activePhases.length} phases active`;
       }
-      elements.blockCountLabel.textContent = `${state.blocks.length} ${state.blocks.length === 1 ? "block" : "blocks"} planned`;
     }
 
     function renderSyncStatus() {
@@ -1089,7 +1318,7 @@
         const hourLine = document.createElement("div");
         hourLine.className = "hour-line";
         hourLine.style.top = `${timelineOffsetForMinute(hour * 60)}px`;
-        hourLine.innerHTML = `<span class="hour-label">${formatHour(hour)}</span>`;
+        hourLine.innerHTML = formatHour(hour);
         elements.timeline.appendChild(hourLine);
       }
 
@@ -1155,6 +1384,7 @@
       const id = elements.phaseId.value || crypto.randomUUID();
       const name = elements.phaseName.value.trim();
       const color = elements.phaseColor.value;
+      const details = elements.phaseDetails.value.trim();
 
       if (!name) {
         return;
@@ -1162,11 +1392,11 @@
 
       if (state.ui.phaseModalMode === "edit") {
         state.phases = state.phases.map((phase) =>
-          phase.id === id ? { ...phase, name, color } : phase
+          phase.id === id ? { ...phase, name, color, details } : phase
         );
         state.ui.phaseToReveal = id;
       } else {
-        state.phases.push({ id, name, color, isActive: false });
+        state.phases.push({ id, name, color, details, isActive: false });
         state.ui.phaseToReveal = id;
       }
 
@@ -1267,9 +1497,32 @@
       elements.phaseId.value = phase ? phase.id : "";
       elements.phaseName.value = phase ? phase.name : "";
       elements.phaseColor.value = phase ? phase.color : COLOR_OPTIONS[0].value;
+      elements.phaseDetails.value = phase ? phase.details || "" : "";
       elements.deletePhaseButton.style.display = phase ? "inline-flex" : "none";
 
       openModal("phase");
+    }
+
+    function openPhaseReadModal(phaseId) {
+      const phase = getPhaseById(phaseId);
+      if (!phase) {
+        return;
+      }
+
+      state.ui.viewingPhaseId = phaseId;
+      elements.phaseReadTitle.textContent = phase.name;
+      elements.phaseReadStatus.textContent = phase.isActive ? "Active phase" : "Inactive phase";
+      elements.phaseReadBody.textContent = phase.details?.trim() || "No details added yet.";
+      elements.phaseReadCard.style.setProperty("--phase-color", phase.color);
+      openModal("phase-read");
+    }
+
+    function handlePhaseReadEdit() {
+      const phaseId = state.ui.viewingPhaseId;
+      closeModal("phase-read");
+      if (phaseId) {
+        openPhaseModal(phaseId);
+      }
     }
 
     function openBlockModal(blockId = null) {
@@ -1296,19 +1549,30 @@
     }
 
     function openModal(type) {
-      const backdrop = type === "phase" ? elements.phaseModalBackdrop : elements.blockModalBackdrop;
+      const backdrop = type === "phase"
+        ? elements.phaseModalBackdrop
+        : type === "phase-read"
+          ? elements.phaseReadModalBackdrop
+          : elements.blockModalBackdrop;
       backdrop.classList.add("open");
       backdrop.setAttribute("aria-hidden", "false");
     }
 
     function closeModal(type) {
-      const backdrop = type === "phase" ? elements.phaseModalBackdrop : elements.blockModalBackdrop;
+      const backdrop = type === "phase"
+        ? elements.phaseModalBackdrop
+        : type === "phase-read"
+          ? elements.phaseReadModalBackdrop
+          : elements.blockModalBackdrop;
       backdrop.classList.remove("open");
       backdrop.setAttribute("aria-hidden", "true");
 
       if (type === "phase") {
         elements.phaseForm.reset();
         elements.phaseColor.value = COLOR_OPTIONS[0].value;
+        elements.phaseDetails.value = "";
+      } else if (type === "phase-read") {
+        state.ui.viewingPhaseId = null;
       } else {
         elements.blockForm.reset();
       }
@@ -1378,6 +1642,7 @@
           id: typeof phase.id === "string" && phase.id ? phase.id : crypto.randomUUID(),
           name: typeof phase.name === "string" && phase.name.trim() ? phase.name.trim() : `Phase ${index + 1}`,
           color: typeof phase.color === "string" && phase.color ? phase.color : COLOR_OPTIONS[index % COLOR_OPTIONS.length].value,
+          details: typeof phase.details === "string" ? phase.details.trim() : "",
           isActive: Boolean(phase.isActive)
         }));
       }
@@ -1623,7 +1888,36 @@
     function formatHour(hour) {
       const suffix = hour >= 12 ? "PM" : "AM";
       const normalizedHour = hour % 12 === 0 ? 12 : hour % 12;
-      return `${normalizedHour} ${suffix}`;
+      const icon = getHourIcon(hour);
+      return `<span class="hour-label"><span class="hour-icon ${icon.className}">${icon.symbol}</span><span>${normalizedHour} ${suffix}</span></span>`;
+    }
+
+    function getHourIcon(hour) {
+      if (hour >= 0 && hour < 4) {
+        return { symbol: "☾", className: "night" };
+      }
+
+      if (hour >= 4 && hour < 6) {
+        return { symbol: "◔", className: "dawn" };
+      }
+
+      if (hour >= 6 && hour < 11) {
+        return { symbol: "🌅", className: "sunrise" };
+      }
+
+      if (hour >= 11 && hour < 16) {
+        return { symbol: "☀", className: "day" };
+      }
+
+      if (hour >= 16 && hour < 18) {
+        return { symbol: "🌇", className: "sunset" };
+      }
+
+      if (hour >= 18 && hour < 20) {
+        return { symbol: "◕", className: "dusk" };
+      }
+
+      return { symbol: "☾", className: "night" };
     }
 
     function formatBlockTimeRange(startTime, endTime, isOvernight = false) {
