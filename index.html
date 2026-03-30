@@ -1055,7 +1055,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
@@ -1107,6 +1107,7 @@
     let cloudSyncTimer = null;
     let firestoreDb = null;
     let deferredInstallPrompt = null;
+    let sharedDocUnsubscribe = null;
 
     const elements = {
       phaseRail: document.getElementById("phase-rail"),
@@ -1703,6 +1704,7 @@
 
         state.ui.syncStatus = "Synced";
         renderSyncStatus();
+        subscribeToSharedCloudState();
       } catch (error) {
         console.error("Cloud restore failed", error);
         state.ui.syncStatus = "Cloud error";
@@ -1754,6 +1756,38 @@
         state.ui.syncError = String(error?.message || error);
         renderSyncStatus();
       }
+    }
+
+    function subscribeToSharedCloudState() {
+      if (!firestoreDb || sharedDocUnsubscribe) {
+        return;
+      }
+
+      sharedDocUnsubscribe = onSnapshot(
+        doc(firestoreDb, FIREBASE_COLLECTION, SHARED_DOCUMENT_ID),
+        (snapshot) => {
+          const data = snapshot.data();
+          if (!data?.payload) {
+            return;
+          }
+
+          if (data.updatedAt && state.ui.lastSyncedAt === data.updatedAt) {
+            return;
+          }
+
+          applyPersistedState(data.payload);
+          state.ui.lastSyncedAt = data.updatedAt || null;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+          state.ui.syncStatus = "Synced";
+          render();
+        },
+        (error) => {
+          console.error("Cloud subscription failed", error);
+          state.ui.syncStatus = "Cloud error";
+          state.ui.syncError = String(error?.message || error);
+          renderSyncStatus();
+        }
+      );
     }
 
     async function migrateLegacyStateToShared() {
