@@ -77,27 +77,35 @@
 
     .phase-rail,
     .timeline-scroll,
-    .saved-timeline-list {
+    .saved-timeline-list,
+    .tasks-list,
+    .block-notes-stack {
       scrollbar-width: thin;
       scrollbar-color: rgba(255, 255, 255, 0.18) rgba(255, 255, 255, 0.04);
     }
 
     .phase-rail::-webkit-scrollbar,
     .timeline-scroll::-webkit-scrollbar,
-    .saved-timeline-list::-webkit-scrollbar {
+    .saved-timeline-list::-webkit-scrollbar,
+    .tasks-list::-webkit-scrollbar,
+    .block-notes-stack::-webkit-scrollbar {
       width: 8px;
     }
 
     .phase-rail::-webkit-scrollbar-track,
     .timeline-scroll::-webkit-scrollbar-track,
-    .saved-timeline-list::-webkit-scrollbar-track {
+    .saved-timeline-list::-webkit-scrollbar-track,
+    .tasks-list::-webkit-scrollbar-track,
+    .block-notes-stack::-webkit-scrollbar-track {
       background: rgba(255, 255, 255, 0.03);
       border-radius: 999px;
     }
 
     .phase-rail::-webkit-scrollbar-thumb,
     .timeline-scroll::-webkit-scrollbar-thumb,
-    .saved-timeline-list::-webkit-scrollbar-thumb {
+    .saved-timeline-list::-webkit-scrollbar-thumb,
+    .tasks-list::-webkit-scrollbar-thumb,
+    .block-notes-stack::-webkit-scrollbar-thumb {
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12));
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -105,7 +113,9 @@
 
     .phase-rail::-webkit-scrollbar-thumb:hover,
     .timeline-scroll::-webkit-scrollbar-thumb:hover,
-    .saved-timeline-list::-webkit-scrollbar-thumb:hover {
+    .saved-timeline-list::-webkit-scrollbar-thumb:hover,
+    .tasks-list::-webkit-scrollbar-thumb:hover,
+    .block-notes-stack::-webkit-scrollbar-thumb:hover {
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.16));
     }
 
@@ -156,7 +166,7 @@
 
     .bottom-nav {
       display: grid;
-      grid-template-columns: 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr 1fr auto;
       gap: 6px;
       width: 100%;
       align-items: center;
@@ -275,6 +285,383 @@
       display: flex;
       flex-direction: column;
       padding-bottom: 12px;
+    }
+
+    .tasks-card {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 12px;
+    }
+
+    .tasks-wrap {
+      padding: 10px 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .tasks-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      min-height: 0;
+      padding-right: 2px;
+      flex: 1;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 12px 12px 10px;
+      border-radius: 18px;
+      background: rgba(20, 20, 20, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding-left: calc(10px + (var(--task-depth, 0) * 16px));
+    }
+
+    .task-item.dragging {
+      opacity: 0.92;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+      z-index: 3;
+      position: relative;
+      pointer-events: none;
+    }
+
+    .task-toggle {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #111;
+      flex-shrink: 0;
+    }
+
+    .task-expand {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 999px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .task-expand svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+      transition: transform 0.18s ease;
+    }
+
+    .task-expand.expanded svg {
+      transform: rotate(90deg);
+    }
+
+    .task-expand-placeholder {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .task-toggle.done {
+      background: linear-gradient(135deg, #f2f2f3, #c9cbd1);
+      border-color: transparent;
+    }
+
+    .task-toggle svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+      opacity: 0;
+    }
+
+    .task-toggle.done svg {
+      opacity: 1;
+    }
+
+    .task-main-button {
+      all: unset;
+      display: block;
+      min-width: 0;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .task-title {
+      min-width: 0;
+      font-size: 0.92rem;
+      line-height: 1.35;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .task-item.done .task-title {
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: line-through;
+      text-decoration-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .task-meta {
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .task-subtask-badge {
+      color: rgba(255, 255, 255, 0.54);
+    }
+
+    .task-block-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #ececef;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.72rem;
+    }
+
+    .task-delete {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .task-delete svg {
+      width: 15px;
+      height: 15px;
+      display: block;
+    }
+
+    .tasks-empty {
+      padding: 18px 14px;
+      border-radius: 18px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      background: rgba(16, 16, 16, 0.6);
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .linked-tasks-panel {
+      margin-top: auto;
+      padding: 10px 0 0;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .linked-tasks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .linked-tasks-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.46);
+    }
+
+    .linked-tasks-add {
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .linked-tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .linked-task-inline-form {
+      display: none;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .linked-task-inline-form.open {
+      display: grid;
+    }
+
+    .linked-task-inline-input {
+      min-width: 0;
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .linked-task-inline-action {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .linked-task-inline-action svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .linked-task-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 9px;
+      border-radius: 14px;
+      background: rgba(12, 12, 12, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .linked-task-item.dragging {
+      opacity: 0.92;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+      z-index: 3;
+      position: relative;
+      pointer-events: none;
+    }
+
+    .linked-task-item.done .linked-task-text {
+      color: rgba(255, 255, 255, 0.46);
+      text-decoration: line-through;
+      text-decoration-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .linked-task-toggle,
+    .linked-task-edit {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .linked-task-toggle svg,
+    .linked-task-edit svg {
+      width: 13px;
+      height: 13px;
+      display: block;
+    }
+
+    .linked-task-toggle.done {
+      background: linear-gradient(135deg, #f2f2f3, #c9cbd1);
+      color: #101010;
+      border-color: transparent;
+    }
+
+    .linked-task-toggle:not(.done) svg {
+      opacity: 0;
+    }
+
+    .linked-task-text {
+      min-width: 0;
+      font-size: 0.84rem;
+      color: var(--text);
+      line-height: 1.35;
+      word-break: break-word;
+      touch-action: none;
+    }
+
+    .linked-tasks-empty {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      padding: 4px 2px 0;
+    }
+
+    .block-notes-stack,
+    .task-notes-stack {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      background: rgba(18, 18, 18, 0.96);
+      padding: 0 14px 14px;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
+
+    .block-notes-editor,
+    .task-notes-editor {
+      min-height: 190px;
+      padding: 14px 0 0;
+      color: var(--text);
+      font: inherit;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      outline: none;
+      flex: 0 0 auto;
+    }
+
+    .block-notes-editor:empty::before,
+    .task-notes-editor:empty::before {
+      content: attr(data-placeholder);
+      color: var(--muted);
+      pointer-events: none;
     }
 
     .phase-rail {
@@ -581,6 +968,7 @@
       overflow: hidden;
       cursor: pointer;
       z-index: 2;
+      touch-action: none;
     }
 
     .timeline-block:hover {
@@ -588,6 +976,14 @@
       box-shadow:
         0 14px 28px rgba(0, 0, 0, 0.24),
         0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    }
+
+    .timeline-block.dragging {
+      box-shadow:
+        0 18px 34px rgba(0, 0, 0, 0.34),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+      z-index: 6;
+      pointer-events: none;
     }
 
     .timeline-gap {
@@ -882,6 +1278,13 @@
       box-shadow: var(--shadow);
     }
 
+    #block-modal-backdrop .modal,
+    #task-modal-backdrop .modal {
+      max-height: calc(100vh - 16px);
+      display: flex;
+      flex-direction: column;
+    }
+
     .modal-header {
       display: flex;
       justify-content: space-between;
@@ -915,6 +1318,34 @@
     .form-grid {
       display: grid;
       gap: 14px;
+    }
+
+    #block-form {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #task-form {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #block-form .form-grid {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding-right: 4px;
+    }
+
+    #task-form .form-grid {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding-right: 4px;
     }
 
     label {
@@ -1007,6 +1438,82 @@
 
     .modal-actions > * {
       flex: 1;
+    }
+
+    .modal-icon-button {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .modal-icon-button svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .block-modal-actions,
+    .phase-modal-actions {
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .block-modal-actions > *,
+    .phase-modal-actions > * {
+      flex: 0 0 auto;
+    }
+
+    .phase-modal-actions {
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .phase-color-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      flex: 0 0 auto;
+    }
+
+    .phase-color-action select {
+      width: auto;
+      min-width: 110px;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    .block-settings-panel,
+    .task-settings-panel,
+    .phase-settings-panel {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .block-settings-panel.open,
+    .task-settings-panel.open,
+    .phase-settings-panel.open {
+      display: block;
+    }
+
+    .block-notes,
+    .task-notes {
+      display: none;
     }
 
     .micro-button {
@@ -1132,6 +1639,18 @@
 </head>
 <body>
   <main class="app-shell">
+    <section class="card tasks-card panel-hidden">
+      <div class="section-header compact-header">
+        <div class="header-actions"></div>
+      </div>
+      <div class="tasks-wrap">
+        <div class="tasks-actions">
+          <button class="primary-button header-add-button" id="add-task-button" type="button" aria-label="Add task">+</button>
+        </div>
+        <div class="tasks-list" id="tasks-list" aria-label="Tasks"></div>
+      </div>
+    </section>
+
     <section class="card phases-card">
       <div class="section-header compact-header">
         <div class="header-actions"></div>
@@ -1165,6 +1684,18 @@
 
     <section class="card bottom-nav-card">
       <div class="bottom-nav">
+        <button class="tab-button" id="tab-tasks" type="button" data-tab="tasks">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2.4" y="3.1" width="2.2" height="2.2" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+              <path d="m3.1 4.1.5.5 1-.9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="2.4" y="6.9" width="2.2" height="2.2" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+              <rect x="2.4" y="10.7" width="2.2" height="2.2" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M6.6 4.2h6.9M6.6 8h6.9M6.6 11.8h6.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span>Tasks</span>
+        </button>
         <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">
           <span class="tab-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1211,21 +1742,40 @@
             <input id="phase-name" name="phaseName" type="text" maxlength="40" required placeholder="Foundation">
           </label>
           <label>
-            Color
-            <div class="color-select-row">
-              <span class="color-preview-dot" id="phase-color-preview" aria-hidden="true"></span>
-              <select id="phase-color" name="phaseColor" required></select>
-            </div>
-          </label>
-          <label>
             Details
             <textarea id="phase-details" name="phaseDetails" maxlength="600" placeholder="What does this phase represent? What matters most here?"></textarea>
           </label>
+          <div class="phase-settings-panel" id="phase-settings-panel">
+            <label>
+              Color
+              <div class="color-select-row">
+                <span class="color-preview-dot" id="phase-color-preview" aria-hidden="true"></span>
+                <select id="phase-color" name="phaseColor" required></select>
+              </div>
+            </label>
+          </div>
         </div>
-        <div class="modal-actions">
-          <button class="danger-button" id="delete-phase-button" type="button">Delete</button>
-          <button class="ghost-button" type="button" data-close-modal="phase">Cancel</button>
-          <button class="primary-button" type="submit">Save Phase</button>
+        <div class="modal-actions phase-modal-actions">
+          <button class="ghost-button modal-icon-button" id="phase-settings-button" type="button" aria-label="Open phase settings">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+          <div class="phase-color-action">
+            <span class="color-preview-dot" id="phase-color-preview-action" aria-hidden="true"></span>
+            <select id="phase-color-action-select" aria-label="Phase color quick select"></select>
+          </div>
+          <button class="danger-button modal-icon-button" id="delete-phase-button" type="button" aria-label="Delete phase">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="primary-button modal-icon-button" type="submit" aria-label="Save phase">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </form>
     </section>
@@ -1259,36 +1809,124 @@
       <div class="modal-header">
         <div>
           <h3 id="block-modal-title">Block</h3>
-          <p class="modal-subtitle">Plan a time block and attach it to a phase.</p>
         </div>
         <button class="close-button" type="button" data-close-modal="block">&times;</button>
       </div>
       <form id="block-form">
         <input type="hidden" id="block-id">
         <div class="form-grid">
-          <label>
-            Activity title
-            <input id="block-title" name="title" type="text" maxlength="60" required placeholder="Deep work session">
-          </label>
-          <div class="form-row">
+          <input id="block-title" name="title" type="text" maxlength="60" required placeholder="Deep work session">
+          <div class="block-notes-stack">
+            <div class="block-notes-editor" id="block-notes-editor" contenteditable="true" data-placeholder="Write anything important here..."></div>
+            <textarea class="block-notes" id="block-notes" name="notes" maxlength="2500" placeholder="Write anything important here..."></textarea>
+            <div class="linked-tasks-panel" id="linked-tasks-panel">
+              <div class="linked-tasks-header">
+                <div class="linked-tasks-title">Tasks</div>
+                <button class="ghost-button linked-tasks-add" id="add-linked-task-button" type="button" aria-label="Add task">+</button>
+              </div>
+              <div class="linked-tasks-list" id="linked-tasks-list"></div>
+            </div>
+          </div>
+          <div class="block-settings-panel" id="block-settings-panel">
+            <div class="form-row">
+              <label>
+                Start time
+                <input id="block-start-time" name="startTime" type="time" required>
+              </label>
+              <label>
+                End time
+                <input id="block-end-time" name="endTime" type="time" required>
+              </label>
+            </div>
             <label>
-              Start time
-              <input id="block-start-time" name="startTime" type="time" required>
-            </label>
-            <label>
-              End time
-              <input id="block-end-time" name="endTime" type="time" required>
+              Phase
+              <select id="block-phase" name="phaseId" required></select>
             </label>
           </div>
-          <label>
-            Phase
-            <select id="block-phase" name="phaseId" required></select>
-          </label>
         </div>
-        <div class="modal-actions">
-          <button class="danger-button" id="delete-block-button" type="button">Delete</button>
-          <button class="ghost-button" type="button" data-close-modal="block">Cancel</button>
-          <button class="primary-button" type="submit">Save Block</button>
+        <div class="modal-actions block-modal-actions">
+          <button class="ghost-button modal-icon-button" id="block-settings-button" type="button" aria-label="Open block settings">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+          <button class="danger-button modal-icon-button" id="delete-block-button" type="button" aria-label="Delete block">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="primary-button modal-icon-button" type="submit" aria-label="Save block">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="task-modal-backdrop" aria-hidden="true">
+    <section class="modal" aria-labelledby="task-modal-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="task-modal-title">Task</h3>
+        </div>
+        <button class="close-button" type="button" data-close-modal="task">&times;</button>
+      </div>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+        <input type="hidden" id="task-parent-id">
+        <div class="form-grid">
+          <input id="task-title-input" name="taskTitle" type="text" maxlength="120" required placeholder="Task">
+          <div class="block-notes-stack task-notes-stack">
+            <div class="block-notes-editor task-notes-editor" id="task-notes-editor" contenteditable="true" data-placeholder="Write anything important here..."></div>
+            <textarea class="block-notes task-notes" id="task-notes" name="taskNotes" maxlength="2500" placeholder="Write anything important here..."></textarea>
+            <div class="linked-tasks-panel task-subtasks-panel" id="task-subtasks-panel">
+              <div class="linked-tasks-header">
+                <div class="linked-tasks-title">Subtasks</div>
+                <button class="ghost-button linked-tasks-add" id="add-subtask-button" type="button" aria-label="Add subtask">+</button>
+              </div>
+              <div class="linked-task-inline-form" id="task-subtask-inline-form">
+                <input class="linked-task-inline-input" id="task-subtask-inline-input" type="text" maxlength="120" placeholder="Subtask">
+                <button class="primary-button linked-task-inline-action" id="save-subtask-inline-button" type="button" aria-label="Save subtask">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="ghost-button linked-task-inline-action" id="cancel-subtask-inline-button" type="button" aria-label="Cancel subtask">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 4 12 12M12 4 4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="linked-tasks-list" id="task-subtasks-list"></div>
+            </div>
+          </div>
+          <div class="block-settings-panel task-settings-panel" id="task-settings-panel">
+            <label>
+              Linked block
+              <select id="task-block-select" name="taskBlockId"></select>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions block-modal-actions">
+          <button class="ghost-button modal-icon-button" id="task-settings-button" type="button" aria-label="Open task settings">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
+            </svg>
+          </button>
+          <button class="danger-button modal-icon-button" id="delete-task-button" type="button" aria-label="Delete task">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="primary-button modal-icon-button" type="submit" aria-label="Save task">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </form>
     </section>
@@ -1357,6 +1995,7 @@
         { id: crypto.randomUUID(), name: "Financial Stability", color: "#7e9b94", isActive: false, details: "" }
       ],
       blocks: [],
+      tasks: [],
       savedTimelines: [],
       ui: {
         activeTab: "timeline",
@@ -1365,6 +2004,9 @@
         editingPhaseId: null,
         blockModalMode: "create",
         editingBlockId: null,
+        taskModalMode: "create",
+        editingTaskId: null,
+        taskModalParentId: null,
         now: new Date(),
         phaseToReveal: null,
         isCompactTimeline: false,
@@ -1378,13 +2020,25 @@
     let firestoreDb = null;
     let deferredInstallPrompt = null;
     let sharedDocUnsubscribe = null;
+    let activeTaskDrag = null;
+    let activeLinkedTaskDrag = null;
+    let activeBlockDrag = null;
+    let suppressClickUntil = 0;
 
     const elements = {
       phaseRail: document.getElementById("phase-rail"),
       activePhaseLabel: document.getElementById("active-phase-label"),
+      tasksList: document.getElementById("tasks-list"),
+      addTaskButton: document.getElementById("add-task-button"),
+      addLinkedTaskButton: document.getElementById("add-linked-task-button"),
+      linkedTasksList: document.getElementById("linked-tasks-list"),
+      linkedTasksPanel: document.getElementById("linked-tasks-panel"),
       timeline: document.getElementById("timeline"),
+      timelineScroll: document.getElementById("timeline-scroll"),
+      tabTasks: document.getElementById("tab-tasks"),
       tabPhases: document.getElementById("tab-phases"),
       tabTimeline: document.getElementById("tab-timeline"),
+      tasksCard: document.querySelector(".tasks-card"),
       phasesCard: document.querySelector(".phases-card"),
       timelineCard: document.querySelector(".timeline-card"),
       addPhaseButton: document.getElementById("add-phase-button"),
@@ -1396,14 +2050,19 @@
       phaseModalBackdrop: document.getElementById("phase-modal-backdrop"),
       phaseReadModalBackdrop: document.getElementById("phase-read-modal-backdrop"),
       blockModalBackdrop: document.getElementById("block-modal-backdrop"),
+      taskModalBackdrop: document.getElementById("task-modal-backdrop"),
       timelineSaveModalBackdrop: document.getElementById("timeline-save-modal-backdrop"),
       phaseForm: document.getElementById("phase-form"),
       phaseId: document.getElementById("phase-id"),
       phaseName: document.getElementById("phase-name"),
       phaseColor: document.getElementById("phase-color"),
       phaseColorPreview: document.getElementById("phase-color-preview"),
+      phaseColorPreviewAction: document.getElementById("phase-color-preview-action"),
+      phaseColorActionSelect: document.getElementById("phase-color-action-select"),
       phaseDetails: document.getElementById("phase-details"),
       deletePhaseButton: document.getElementById("delete-phase-button"),
+      phaseSettingsButton: document.getElementById("phase-settings-button"),
+      phaseSettingsPanel: document.getElementById("phase-settings-panel"),
       phaseReadTitle: document.getElementById("phase-read-title"),
       phaseReadStatus: document.getElementById("phase-read-status"),
       phaseReadBody: document.getElementById("phase-read-body"),
@@ -1412,10 +2071,31 @@
       blockForm: document.getElementById("block-form"),
       blockId: document.getElementById("block-id"),
       blockTitle: document.getElementById("block-title"),
+      blockNotesEditor: document.getElementById("block-notes-editor"),
+      blockNotes: document.getElementById("block-notes"),
       blockStartTime: document.getElementById("block-start-time"),
       blockEndTime: document.getElementById("block-end-time"),
       blockPhase: document.getElementById("block-phase"),
       deleteBlockButton: document.getElementById("delete-block-button"),
+      blockSettingsButton: document.getElementById("block-settings-button"),
+      blockSettingsPanel: document.getElementById("block-settings-panel"),
+      taskForm: document.getElementById("task-form"),
+      taskId: document.getElementById("task-id"),
+      taskParentId: document.getElementById("task-parent-id"),
+      taskTitleInput: document.getElementById("task-title-input"),
+      taskNotesEditor: document.getElementById("task-notes-editor"),
+      taskNotes: document.getElementById("task-notes"),
+      taskBlockSelect: document.getElementById("task-block-select"),
+      taskSettingsButton: document.getElementById("task-settings-button"),
+      taskSettingsPanel: document.getElementById("task-settings-panel"),
+      addSubtaskButton: document.getElementById("add-subtask-button"),
+      taskSubtaskInlineForm: document.getElementById("task-subtask-inline-form"),
+      taskSubtaskInlineInput: document.getElementById("task-subtask-inline-input"),
+      saveSubtaskInlineButton: document.getElementById("save-subtask-inline-button"),
+      cancelSubtaskInlineButton: document.getElementById("cancel-subtask-inline-button"),
+      taskSubtasksPanel: document.getElementById("task-subtasks-panel"),
+      taskSubtasksList: document.getElementById("task-subtasks-list"),
+      deleteTaskButton: document.getElementById("delete-task-button"),
       timelineSaveForm: document.getElementById("timeline-save-form"),
       timelineSaveName: document.getElementById("timeline-save-name"),
       timelineSavePhase: document.getElementById("timeline-save-phase"),
@@ -1428,6 +2108,8 @@
       initializeFirebase();
       populateColorOptions();
       bindEvents();
+      syncBlockNotesFieldToEditor();
+      syncTaskNotesFieldToEditor();
       registerServiceWorker();
       render();
       await hydrateFromCloud();
@@ -1435,30 +2117,61 @@
     }
 
     function populateColorOptions() {
-      elements.phaseColor.innerHTML = COLOR_OPTIONS.map((option) =>
+      const colorOptionsMarkup = COLOR_OPTIONS.map((option) =>
         `<option value="${option.value}">${option.label}</option>`
       ).join("");
+      elements.phaseColor.innerHTML = colorOptionsMarkup;
+      elements.phaseColorActionSelect.innerHTML = colorOptionsMarkup;
       updatePhaseColorPreview();
     }
 
     function updatePhaseColorPreview() {
-      elements.phaseColorPreview.style.setProperty("--phase-color", elements.phaseColor.value || COLOR_OPTIONS[0].value);
+      const value = elements.phaseColor.value || COLOR_OPTIONS[0].value;
+      elements.phaseColorPreview.style.setProperty("--phase-color", value);
+      elements.phaseColorPreviewAction.style.setProperty("--phase-color", value);
+      elements.phaseColorActionSelect.value = value;
     }
 
     function bindEvents() {
+      elements.tabTasks.addEventListener("click", () => setActiveTab("tasks"));
       elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
       elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
+      elements.addTaskButton.addEventListener("click", () => openTaskModal());
+      elements.addLinkedTaskButton.addEventListener("click", handleAddLinkedTask);
+      elements.tasksList.addEventListener("click", handleTaskListClick);
+      elements.tasksList.addEventListener("pointerdown", handleTaskDragStart);
+      elements.tasksList.addEventListener("pointermove", handleTaskDragMove);
+      elements.tasksList.addEventListener("pointerup", handleTaskDragEnd);
+      elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
+      elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
+      elements.linkedTasksList.addEventListener("pointerdown", handleLinkedTaskDragStart);
+      elements.linkedTasksList.addEventListener("pointermove", handleLinkedTaskDragMove);
+      elements.linkedTasksList.addEventListener("pointerup", handleLinkedTaskDragEnd);
+      elements.linkedTasksList.addEventListener("pointercancel", handleLinkedTaskDragEnd);
       elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
+      elements.phaseColorActionSelect.addEventListener("change", handlePhaseQuickColorChange);
+      elements.phaseSettingsButton.addEventListener("click", handlePhaseSettingsToggle);
       elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
       elements.saveTimelineButton.addEventListener("click", openTimelineSaveModal);
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
+      elements.blockNotesEditor.addEventListener("input", handleBlockNotesEditorInput);
+      elements.taskNotesEditor.addEventListener("input", handleTaskNotesEditorInput);
       elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
       elements.deletePhaseButton.addEventListener("click", handlePhaseDelete);
       elements.blockForm.addEventListener("submit", handleBlockSubmit);
       elements.deleteBlockButton.addEventListener("click", handleBlockDelete);
+      elements.blockSettingsButton.addEventListener("click", handleBlockSettingsToggle);
+      elements.taskForm.addEventListener("submit", handleTaskSubmit);
+      elements.deleteTaskButton.addEventListener("click", handleTaskDelete);
+      elements.taskSettingsButton.addEventListener("click", handleTaskSettingsToggle);
+      elements.addSubtaskButton.addEventListener("click", handleAddSubtask);
+      elements.saveSubtaskInlineButton.addEventListener("click", handleInlineSubtaskSave);
+      elements.cancelSubtaskInlineButton.addEventListener("click", closeInlineSubtaskComposer);
+      elements.taskSubtaskInlineInput.addEventListener("keydown", handleInlineSubtaskKeydown);
+      elements.taskSubtasksList.addEventListener("click", handleTaskSubtasksListClick);
       elements.timelineSaveForm.addEventListener("submit", handleTimelineSaveSubmit);
       elements.savedTimelineList.addEventListener("click", handleSavedTimelineListClick);
       elements.newTimelineButton.addEventListener("click", handleNewTimeline);
@@ -1467,11 +2180,13 @@
         button.addEventListener("click", () => closeModal(button.dataset.closeModal));
       });
 
-      [elements.phaseModalBackdrop, elements.phaseReadModalBackdrop, elements.blockModalBackdrop, elements.timelineSaveModalBackdrop].forEach((backdrop) => {
+      [elements.phaseModalBackdrop, elements.phaseReadModalBackdrop, elements.blockModalBackdrop, elements.taskModalBackdrop, elements.timelineSaveModalBackdrop].forEach((backdrop) => {
         backdrop.addEventListener("click", (event) => {
           if (event.target === backdrop) {
-            backdrop.classList.remove("open");
-            backdrop.setAttribute("aria-hidden", "true");
+            const type = getModalTypeFromBackdrop(backdrop.id);
+            if (type) {
+              closeModal(type);
+            }
           }
         });
       });
@@ -1487,13 +2202,19 @@
       document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
       elements.toggleCompactButton.classList.toggle("active", state.ui.isCompactTimeline);
       elements.toggleCompactButton.textContent = state.ui.isCompactTimeline ? "Expanded" : "Compact";
+      elements.tabTasks.classList.toggle("active", state.ui.activeTab === "tasks");
       elements.tabPhases.classList.toggle("active", state.ui.activeTab === "phases");
       elements.tabTimeline.classList.toggle("active", state.ui.activeTab === "timeline");
+      elements.tasksCard.classList.toggle("panel-hidden", state.ui.activeTab !== "tasks");
       elements.phasesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "phases");
       elements.timelineCard.classList.toggle("panel-hidden", state.ui.activeTab !== "timeline");
       elements.addBlockButton.style.display = state.ui.activeTab === "timeline" ? "block" : "none";
+      renderTasks();
       renderPhaseRail();
       renderBlockPhaseOptions();
+      renderTaskBlockOptions();
+      renderLinkedTasks();
+      renderTaskSubtasks();
       renderTimeline();
       renderSummary();
       renderSyncStatus();
@@ -1562,6 +2283,119 @@
       elements.blockPhase.innerHTML = state.phases.map((phase) =>
         `<option value="${phase.id}">${escapeHtml(phase.name)}</option>`
       ).join("");
+    }
+
+    function renderTaskBlockOptions() {
+      elements.taskBlockSelect.innerHTML = [
+        `<option value="">No linked block</option>`,
+        ...state.blocks
+          .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime))
+          .map((block) => `<option value="${block.id}">${escapeHtml(block.title)} · ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, timeToMinutes(block.endTime) <= timeToMinutes(block.startTime)))}</option>`)
+      ].join("");
+    }
+
+    function renderTasks() {
+      const rootTasks = getChildTasks(null);
+      if (!rootTasks.length) {
+        elements.tasksList.innerHTML = `<div class="tasks-empty">No tasks yet. Add one here, or add tasks inside a block.</div>`;
+        return;
+      }
+
+      elements.tasksList.innerHTML = rootTasks.map((task) => renderTaskItem(task)).join("");
+    }
+
+    function renderTaskItem(task, depth = 0) {
+      const block = task.blockId ? getBlockById(task.blockId) : null;
+      const overnight = block ? timeToMinutes(block.endTime) <= timeToMinutes(block.startTime) : false;
+      const subtasks = getChildTasks(task.id);
+      const isExpanded = subtasks.length ? !task.isCollapsed : false;
+      const subtaskCountLabel = subtasks.length ? `${subtasks.length} subtask${subtasks.length === 1 ? "" : "s"}` : "";
+      const showScheduleMeta = depth === 0;
+
+      return `
+        <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}" style="--task-depth:${depth};">
+          ${subtasks.length ? `
+            <button class="task-expand ${isExpanded ? "expanded" : ""}" type="button" data-toggle-task-collapse="${task.id}" aria-label="${isExpanded ? "Collapse subtasks" : "Expand subtasks"}">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="m6 3.5 4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          ` : `<span class="task-expand-placeholder" aria-hidden="true"></span>`}
+          <button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="task-main-button" type="button" data-edit-task="${task.id}" data-drag-task-handle="${task.id}">
+            <div class="task-title">${escapeHtml(task.title)}</div>
+            <div class="task-meta">
+              ${showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : ""}
+              ${showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
+              ${subtaskCountLabel ? `<span class="task-subtask-badge">${escapeHtml(subtaskCountLabel)}</span>` : ""}
+            </div>
+          </button>
+          <button class="danger-button task-delete" type="button" data-delete-task="${task.id}" aria-label="Delete task">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        ${isExpanded ? subtasks.map((childTask) => renderTaskItem(childTask, depth + 1)).join("") : ""}
+      `;
+    }
+
+    function renderLinkedTasks() {
+      elements.linkedTasksPanel.style.display = state.ui.blockModalMode === "edit" ? "flex" : "none";
+      if (state.ui.blockModalMode !== "edit") {
+        return;
+      }
+
+      const linkedTasks = getTasksForBlock(state.ui.editingBlockId, { topLevelOnly: true });
+      if (!linkedTasks.length) {
+        elements.linkedTasksList.innerHTML = `<div class="linked-tasks-empty">No tasks linked yet.</div>`;
+        return;
+      }
+
+      elements.linkedTasksList.innerHTML = linkedTasks.map((task) => `
+        <div class="linked-task-item ${task.isDone ? "done" : ""}" data-linked-task-id="${task.id}">
+          <button class="ghost-button linked-task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-linked-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="linked-task-text" data-drag-linked-task-handle="${task.id}">${escapeHtml(task.title)}</div>
+          <button class="ghost-button linked-task-edit" type="button" data-edit-linked-task="${task.id}" aria-label="Edit task">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.2 11.6 11 3.8l1.2 1.2-7.8 7.8-2 .8.8-2Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      `).join("");
+    }
+
+    function renderTaskSubtasks() {
+      elements.taskSubtasksPanel.style.display = state.ui.taskModalMode === "edit" ? "flex" : "none";
+      if (state.ui.taskModalMode !== "edit") {
+        closeInlineSubtaskComposer();
+        return;
+      }
+
+      const subtasks = getChildTasks(state.ui.editingTaskId);
+      if (!subtasks.length) {
+        elements.taskSubtasksList.innerHTML = `<div class="linked-tasks-empty">No subtasks yet.</div>`;
+        return;
+      }
+
+      elements.taskSubtasksList.innerHTML = subtasks.map((task) => `
+        <div class="linked-task-item ${task.isDone ? "done" : ""}" data-task-subtask-id="${task.id}" data-open-task-subtask="${task.id}">
+          <button class="ghost-button linked-task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task-subtask="${task.id}" aria-label="${task.isDone ? "Mark subtask incomplete" : "Mark subtask complete"}">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="linked-task-text">${escapeHtml(task.title)}</div>
+        </div>
+      `).join("");
     }
 
     function renderSummary() {
@@ -1650,6 +2484,7 @@
         const blockElement = document.createElement("button");
         blockElement.type = "button";
         blockElement.className = "timeline-block";
+        blockElement.dataset.blockId = block.id;
         blockElement.style.top = `${top}px`;
         blockElement.style.height = `${height}px`;
         blockElement.style.setProperty("--phase-color", phase.color);
@@ -1666,7 +2501,7 @@
             </div>
           </div>
         `;
-        blockElement.addEventListener("click", () => openBlockModal(block.id));
+        blockElement.addEventListener("pointerdown", handleBlockDragStart);
         elements.timeline.appendChild(blockElement);
       });
 
@@ -1748,6 +2583,7 @@
 
       const id = elements.blockId.value || crypto.randomUUID();
       const title = elements.blockTitle.value.trim();
+      const notes = elements.blockNotes.value.trim();
       const startTime = elements.blockStartTime.value;
       const endTime = elements.blockEndTime.value;
       const phaseId = elements.blockPhase.value;
@@ -1761,19 +2597,8 @@
         return;
       }
 
-      const nextBlock = { id, title, phaseId, startTime, endTime };
-      const conflictingBlock = findConflictingBlock(nextBlock);
-
-      if (conflictingBlock) {
-        alert(`This time overlaps with "${conflictingBlock.title}" (${formatBlockTimeRange(conflictingBlock.startTime, conflictingBlock.endTime, timeToMinutes(conflictingBlock.endTime) <= timeToMinutes(conflictingBlock.startTime))}).`);
-        return;
-      }
-
-      if (state.ui.blockModalMode === "edit") {
-        state.blocks = state.blocks.map((block) => block.id === id ? nextBlock : block);
-      } else {
-        state.blocks.push(nextBlock);
-      }
+      const nextBlock = { id, title, notes, phaseId, startTime, endTime };
+      applyBlockOverride(nextBlock);
 
       persistState({ immediate: true });
       closeModal("block");
@@ -1783,6 +2608,807 @@
     function handleCompactToggle() {
       state.ui.isCompactTimeline = !state.ui.isCompactTimeline;
       persistState();
+      render();
+    }
+
+    function handlePhaseQuickColorChange() {
+      elements.phaseColor.value = elements.phaseColorActionSelect.value;
+      updatePhaseColorPreview();
+    }
+
+    function handlePhaseSettingsToggle() {
+      elements.phaseSettingsPanel.classList.toggle("open");
+    }
+
+    function handleBlockSettingsToggle() {
+      elements.blockSettingsPanel.classList.toggle("open");
+    }
+
+    function handleBlockNotesEditorInput() {
+      syncBlockNotesEditorToField();
+    }
+
+    function syncBlockNotesEditorToField() {
+      elements.blockNotes.value = elements.blockNotesEditor.textContent || "";
+    }
+
+    function syncBlockNotesFieldToEditor() {
+      elements.blockNotesEditor.textContent = elements.blockNotes.value || "";
+    }
+
+    function handleTaskNotesEditorInput() {
+      elements.taskNotes.value = elements.taskNotesEditor.textContent || "";
+    }
+
+    function syncTaskNotesFieldToEditor() {
+      elements.taskNotesEditor.textContent = elements.taskNotes.value || "";
+    }
+
+    function handleTaskDragStart(event) {
+      const handle = event.target.closest("[data-drag-task-handle]");
+      if (!handle) {
+        return;
+      }
+
+      const item = handle.closest(".task-item");
+      if (!item) {
+        return;
+      }
+
+      activeTaskDrag = {
+        taskId: handle.dataset.dragTaskHandle,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        item,
+        hoverTaskId: null
+      };
+
+      item.setPointerCapture(event.pointerId);
+    }
+
+    function handleTaskDragMove(event) {
+      if (!activeTaskDrag || activeTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      activeTaskDrag.deltaY = event.clientY - activeTaskDrag.startY;
+      if (!activeTaskDrag.moved && Math.abs(activeTaskDrag.deltaY) < 8) {
+        return;
+      }
+
+      activeTaskDrag.moved = true;
+      activeTaskDrag.item.classList.add("dragging");
+      activeTaskDrag.item.style.transform = `translateY(${activeTaskDrag.deltaY}px)`;
+      const hoverTaskId = getTaskHoverTargetId(event.clientX, event.clientY, activeTaskDrag);
+      activeTaskDrag.hoverTaskId = hoverTaskId;
+      updateTaskDragPreview(hoverTaskId);
+      event.preventDefault();
+    }
+
+    function handleTaskDragEnd(event) {
+      if (!activeTaskDrag || activeTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const { taskId, item, moved, hoverTaskId } = activeTaskDrag;
+      item.style.transform = "";
+      item.classList.remove("dragging");
+      clearTaskDragPreview();
+      item.releasePointerCapture(event.pointerId);
+
+      if (moved) {
+        suppressClickUntil = Date.now() + 300;
+        const targetIndex = hoverTaskId
+          ? getTaskTargetIndex(taskId, hoverTaskId)
+          : getTaskDropIndex(event.clientY, taskId);
+        reorderTask(taskId, targetIndex);
+      }
+
+      activeTaskDrag = null;
+    }
+
+    function getTaskHoverTargetId(clientX, clientY, dragState) {
+      if (dragState?.hoverTaskId) {
+        const lockedItem = elements.tasksList.querySelector(`.task-item[data-task-id="${dragState.hoverTaskId}"]`);
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverTaskId;
+          }
+        }
+      }
+
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".task-item");
+      if (hoveredItem?.dataset.taskId && hoveredItem.dataset.taskId !== dragState?.taskId) {
+        return hoveredItem.dataset.taskId;
+      }
+
+      return null;
+    }
+
+    function getTaskDropIndex(clientY, sourceTaskId) {
+      const items = [...elements.tasksList.querySelectorAll(".task-item")].filter((item) => item.dataset.taskId !== sourceTaskId);
+      if (!items.length) {
+        return 0;
+      }
+
+      for (let index = 0; index < items.length; index += 1) {
+        const rect = items[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
+        }
+      }
+
+      return items.length;
+    }
+
+    function getTaskTargetIndex(taskId, hoverTaskId) {
+      const sourceIndex = state.tasks.findIndex((task) => task.id === taskId);
+      const hoverIndex = state.tasks.findIndex((task) => task.id === hoverTaskId);
+      if (sourceIndex < 0 || hoverIndex < 0) {
+        return sourceIndex < 0 ? 0 : sourceIndex;
+      }
+
+      return hoverIndex;
+    }
+
+    function updateTaskDragPreview(hoverTaskId) {
+      clearTaskDragPreview();
+      if (!activeTaskDrag?.moved || !hoverTaskId) {
+        return;
+      }
+
+      const hoverItem = elements.tasksList.querySelector(`.task-item[data-task-id="${hoverTaskId}"]`);
+      if (!hoverItem) {
+        return;
+      }
+
+      const direction = activeTaskDrag.deltaY < 0 ? 1 : -1;
+      hoverItem.style.transform = `translateY(${direction * (activeTaskDrag.item.getBoundingClientRect().height + 8)}px)`;
+    }
+
+    function clearTaskDragPreview() {
+      elements.tasksList.querySelectorAll(".task-item").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+    }
+
+    function reorderTask(taskId, targetIndex) {
+      const nextTasks = [...state.tasks];
+      const taskIndex = nextTasks.findIndex((task) => task.id === taskId);
+      if (taskIndex < 0) {
+        return;
+      }
+
+      const [movedTask] = nextTasks.splice(taskIndex, 1);
+      const safeIndex = Math.max(0, Math.min(targetIndex, nextTasks.length));
+      nextTasks.splice(safeIndex, 0, movedTask);
+      if (taskIndex === safeIndex) {
+        return;
+      }
+      state.tasks = nextTasks;
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleBlockDragStart(event) {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const blockElement = event.currentTarget;
+      const blockId = blockElement.dataset.blockId;
+      const block = getBlockById(blockId);
+      if (!block) {
+        return;
+      }
+
+      activeBlockDrag = {
+        blockId,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        blockElement,
+        block,
+        hoverBlockId: null
+      };
+
+      blockElement.setPointerCapture(event.pointerId);
+      blockElement.addEventListener("pointermove", handleBlockDragMove);
+      blockElement.addEventListener("pointerup", handleBlockDragEnd);
+      blockElement.addEventListener("pointercancel", handleBlockDragEnd);
+    }
+
+    function handleBlockDragMove(event) {
+      if (!activeBlockDrag || activeBlockDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      activeBlockDrag.deltaY = event.clientY - activeBlockDrag.startY;
+      if (!activeBlockDrag.moved && Math.abs(activeBlockDrag.deltaY) < 8) {
+        return;
+      }
+
+      activeBlockDrag.moved = true;
+      activeBlockDrag.blockElement.classList.add("dragging");
+      activeBlockDrag.blockElement.style.transform = `translateY(${activeBlockDrag.deltaY}px)`;
+      const hoverBlockId = getBlockDropTargetId(event.clientX, event.clientY, activeBlockDrag);
+      activeBlockDrag.hoverBlockId = hoverBlockId;
+      updateBlockDragPreview(hoverBlockId, activeBlockDrag.deltaY);
+      event.preventDefault();
+    }
+
+    function handleBlockDragEnd(event) {
+      if (!activeBlockDrag || activeBlockDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const { blockElement, moved, blockId } = activeBlockDrag;
+      blockElement.style.transform = "";
+      blockElement.classList.remove("dragging");
+      clearBlockDragPreview();
+      blockElement.releasePointerCapture(event.pointerId);
+      blockElement.removeEventListener("pointermove", handleBlockDragMove);
+      blockElement.removeEventListener("pointerup", handleBlockDragEnd);
+      blockElement.removeEventListener("pointercancel", handleBlockDragEnd);
+
+      if (!moved) {
+        activeBlockDrag = null;
+        openBlockModal(blockId);
+        return;
+      }
+
+      suppressClickUntil = Date.now() + 300;
+      const targetBlockId = activeBlockDrag.hoverBlockId;
+      if (targetBlockId && targetBlockId !== blockId) {
+        swapBlockSchedule(blockId, targetBlockId);
+      } else {
+        const minuteDelta = getCappedStandaloneBlockDelta(activeBlockDrag.deltaY);
+        if (minuteDelta !== 0) {
+          moveBlockByMinutes(blockId, minuteDelta);
+        } else {
+          render();
+        }
+      }
+
+      activeBlockDrag = null;
+    }
+
+    function getBlockDropTargetId(clientX, clientY, dragState) {
+      if (dragState?.hoverBlockId) {
+        const lockedElement = elements.timeline.querySelector(`.timeline-block[data-block-id="${dragState.hoverBlockId}"]`);
+        if (lockedElement) {
+          const rect = lockedElement.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverBlockId;
+          }
+        }
+      }
+
+      const sourceBlockId = dragState?.blockId;
+      const targetElement = document.elementFromPoint(clientX, clientY)?.closest(".timeline-block");
+      if (targetElement?.dataset.blockId && targetElement.dataset.blockId !== sourceBlockId) {
+        return targetElement.dataset.blockId;
+      }
+
+      const blocks = [...elements.timeline.querySelectorAll(".timeline-block")].filter((element) => element.dataset.blockId !== sourceBlockId);
+      if (!blocks.length) {
+        return null;
+      }
+
+      const nearestBlock = blocks.reduce((closest, element) => {
+        const rect = element.getBoundingClientRect();
+        const centerY = rect.top + (rect.height / 2);
+        const distance = Math.abs(clientY - centerY);
+        if (!closest || distance < closest.distance) {
+          return { id: element.dataset.blockId, distance };
+        }
+        return closest;
+      }, null);
+
+      return nearestBlock?.id || null;
+    }
+
+    function updateBlockDragPreview(hoverBlockId, deltaY) {
+      clearBlockDragPreview();
+      if (!activeBlockDrag?.moved) {
+        return;
+      }
+
+      const sourceTimeElement = activeBlockDrag.blockElement.querySelector(".block-time");
+      const draggedBlock = getBlockById(activeBlockDrag.blockId);
+      if (!draggedBlock || !sourceTimeElement) {
+        return;
+      }
+
+      if (hoverBlockId) {
+        const targetElement = elements.timeline.querySelector(`.timeline-block[data-block-id="${hoverBlockId}"]`);
+        const targetTimeElement = targetElement?.querySelector(".block-time");
+        const hoveredBlock = getBlockById(hoverBlockId);
+        if (!targetElement || !hoveredBlock || !targetTimeElement) {
+          return;
+        }
+
+        targetElement.style.transform = `translateY(${activeBlockDrag.blockElement.getBoundingClientRect().height + 8}px)`;
+        const draggedDuration = getBlockDurationMinutes(draggedBlock);
+        const hoveredDuration = getBlockDurationMinutes(hoveredBlock);
+        const hoveredStartMinutes = timeToMinutes(hoveredBlock.startTime);
+        sourceTimeElement.textContent = formatBlockTimeRange(
+          minutesToTime(hoveredStartMinutes),
+          minutesToTime(hoveredStartMinutes + draggedDuration),
+          hoveredStartMinutes + draggedDuration >= MINUTES_IN_DAY
+        );
+        targetTimeElement.textContent = formatBlockTimeRange(
+          minutesToTime(hoveredStartMinutes + draggedDuration),
+          minutesToTime(hoveredStartMinutes + draggedDuration + hoveredDuration),
+          hoveredStartMinutes + draggedDuration + hoveredDuration >= MINUTES_IN_DAY
+        );
+        return;
+      }
+
+      const minuteDelta = getCappedStandaloneBlockDelta(deltaY);
+      if (minuteDelta === 0) {
+        return;
+      }
+
+      const startMinutes = timeToMinutes(draggedBlock.startTime);
+      const duration = getBlockDurationMinutes(draggedBlock);
+      const nextStartMinutes = clampMinutes(startMinutes + minuteDelta);
+      sourceTimeElement.textContent = formatBlockTimeRange(
+        minutesToTime(nextStartMinutes),
+        minutesToTime(nextStartMinutes + duration),
+        nextStartMinutes + duration >= MINUTES_IN_DAY
+      );
+    }
+
+    function clearBlockDragPreview() {
+      elements.timeline.querySelectorAll(".timeline-block").forEach((element) => {
+        if (!element.classList.contains("dragging")) {
+          element.style.transform = "";
+        }
+        const blockId = element.dataset.blockId;
+        const block = blockId ? getBlockById(blockId) : null;
+        const timeElement = element.querySelector(".block-time");
+        if (block && timeElement) {
+          const isOvernight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
+          timeElement.textContent = formatBlockTimeRange(block.startTime, block.endTime, isOvernight);
+        }
+      });
+    }
+
+    function swapBlockSchedule(sourceBlockId, targetBlockId) {
+      const sourceBlock = getBlockById(sourceBlockId);
+      const targetBlock = getBlockById(targetBlockId);
+      if (!sourceBlock || !targetBlock) {
+        render();
+        return;
+      }
+
+      const sourceDuration = getBlockDurationMinutes(sourceBlock);
+      const targetDuration = getBlockDurationMinutes(targetBlock);
+      const targetStartMinutes = timeToMinutes(targetBlock.startTime);
+      const updatedSourceBlock = {
+        ...sourceBlock,
+        startTime: minutesToTime(targetStartMinutes),
+        endTime: minutesToTime(targetStartMinutes + sourceDuration)
+      };
+      const updatedTargetBlock = {
+        ...targetBlock,
+        startTime: minutesToTime(targetStartMinutes + sourceDuration),
+        endTime: minutesToTime(targetStartMinutes + sourceDuration + targetDuration)
+      };
+
+      const preservedBlocks = state.blocks.filter((block) => block.id !== sourceBlockId && block.id !== targetBlockId);
+      state.blocks = preservedBlocks;
+      applyBlockOverride(updatedSourceBlock);
+      applyBlockOverride(updatedTargetBlock);
+
+      persistState({ immediate: true });
+      render();
+    }
+
+    function getBlockDurationMinutes(block) {
+      const startMinutes = timeToMinutes(block.startTime);
+      const endMinutes = timeToMinutes(block.endTime);
+      return endMinutes > startMinutes
+        ? endMinutes - startMinutes
+        : (MINUTES_IN_DAY - startMinutes) + endMinutes;
+    }
+
+    function getCappedStandaloneBlockDelta(deltaY) {
+      const rawMinutes = (deltaY / getPixelsPerHour()) * 60;
+      const cappedMinutes = Math.max(-30, Math.min(30, rawMinutes));
+      return Math.round(cappedMinutes / 15) * 15;
+    }
+
+    function moveBlockByMinutes(blockId, minuteDelta) {
+      const block = getBlockById(blockId);
+      if (!block) {
+        render();
+        return;
+      }
+
+      const startMinutes = timeToMinutes(block.startTime);
+      const duration = getBlockDurationMinutes(block);
+      const nextStartMinutes = clampMinutes(startMinutes + minuteDelta);
+      const nextEndMinutes = (nextStartMinutes + duration) % MINUTES_IN_DAY;
+      const candidateBlock = {
+        ...block,
+        startTime: minutesToTime(nextStartMinutes),
+        endTime: minutesToTime(nextEndMinutes)
+      };
+
+      applyBlockOverride(candidateBlock);
+      persistState({ immediate: true });
+      render();
+    }
+
+    function clampMinutes(minutes) {
+      if (minutes < 0) {
+        return 0;
+      }
+      if (minutes >= MINUTES_IN_DAY) {
+        return MINUTES_IN_DAY - 1;
+      }
+      return minutes;
+    }
+
+    function handleTaskListClick(event) {
+      if (Date.now() < suppressClickUntil) {
+        return;
+      }
+
+      const collapseButton = event.target.closest("[data-toggle-task-collapse]");
+      if (collapseButton) {
+        toggleTaskCollapse(collapseButton.dataset.toggleTaskCollapse);
+        return;
+      }
+
+      const toggleButton = event.target.closest("[data-toggle-task]");
+      if (toggleButton) {
+        toggleTask(toggleButton.dataset.toggleTask);
+        return;
+      }
+
+      const editButton = event.target.closest("[data-edit-task]");
+      if (editButton) {
+        openTaskModal(editButton.dataset.editTask);
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-task]");
+      if (deleteButton) {
+        deleteTask(deleteButton.dataset.deleteTask);
+        return;
+      }
+
+      const taskItem = event.target.closest("[data-open-task]");
+      if (taskItem) {
+        openTaskModal(taskItem.dataset.openTask);
+      }
+    }
+
+    function handleLinkedTaskListClick(event) {
+      if (Date.now() < suppressClickUntil) {
+        return;
+      }
+
+      const toggleButton = event.target.closest("[data-toggle-linked-task]");
+      if (toggleButton) {
+        toggleTask(toggleButton.dataset.toggleLinkedTask);
+        return;
+      }
+
+      const editButton = event.target.closest("[data-edit-linked-task]");
+      if (editButton) {
+        openTaskModal(editButton.dataset.editLinkedTask);
+      }
+    }
+
+    function handleTaskSubtasksListClick(event) {
+      const toggleButton = event.target.closest("[data-toggle-task-subtask]");
+      if (toggleButton) {
+        toggleTask(toggleButton.dataset.toggleTaskSubtask);
+        return;
+      }
+
+      const subtaskItem = event.target.closest("[data-open-task-subtask]");
+      if (subtaskItem) {
+        openTaskModal(subtaskItem.dataset.openTaskSubtask);
+      }
+    }
+
+    function handleLinkedTaskDragStart(event) {
+      const handle = event.target.closest("[data-drag-linked-task-handle]");
+      if (!handle) {
+        return;
+      }
+
+      const item = handle.closest(".linked-task-item");
+      if (!item) {
+        return;
+      }
+
+      activeLinkedTaskDrag = {
+        taskId: handle.dataset.dragLinkedTaskHandle,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        item,
+        hoverTaskId: null
+      };
+
+      item.setPointerCapture(event.pointerId);
+    }
+
+    function handleLinkedTaskDragMove(event) {
+      if (!activeLinkedTaskDrag || activeLinkedTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      activeLinkedTaskDrag.deltaY = event.clientY - activeLinkedTaskDrag.startY;
+      if (!activeLinkedTaskDrag.moved && Math.abs(activeLinkedTaskDrag.deltaY) < 8) {
+        return;
+      }
+
+      activeLinkedTaskDrag.moved = true;
+      activeLinkedTaskDrag.item.classList.add("dragging");
+      activeLinkedTaskDrag.item.style.transform = `translateY(${activeLinkedTaskDrag.deltaY}px)`;
+      const hoverTaskId = getLinkedTaskHoverTargetId(event.clientX, event.clientY, activeLinkedTaskDrag);
+      activeLinkedTaskDrag.hoverTaskId = hoverTaskId;
+      updateLinkedTaskDragPreview(hoverTaskId);
+      event.preventDefault();
+    }
+
+    function handleLinkedTaskDragEnd(event) {
+      if (!activeLinkedTaskDrag || activeLinkedTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const { taskId, item, moved, hoverTaskId } = activeLinkedTaskDrag;
+      item.style.transform = "";
+      item.classList.remove("dragging");
+      clearLinkedTaskDragPreview();
+      item.releasePointerCapture(event.pointerId);
+
+      if (moved) {
+        suppressClickUntil = Date.now() + 300;
+        const targetIndex = hoverTaskId
+          ? getLinkedTaskTargetIndex(taskId, hoverTaskId)
+          : getLinkedTaskDropIndex(event.clientY, taskId);
+        reorderLinkedTask(taskId, targetIndex);
+      }
+
+      activeLinkedTaskDrag = null;
+    }
+
+    function getLinkedTaskHoverTargetId(clientX, clientY, dragState) {
+      if (dragState?.hoverTaskId) {
+        const lockedItem = elements.linkedTasksList.querySelector(`.linked-task-item[data-linked-task-id="${dragState.hoverTaskId}"]`);
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverTaskId;
+          }
+        }
+      }
+
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".linked-task-item");
+      if (hoveredItem?.dataset.linkedTaskId && hoveredItem.dataset.linkedTaskId !== dragState?.taskId) {
+        return hoveredItem.dataset.linkedTaskId;
+      }
+
+      return null;
+    }
+
+    function getLinkedTaskDropIndex(clientY, sourceTaskId) {
+      const items = [...elements.linkedTasksList.querySelectorAll(".linked-task-item")].filter((item) => item.dataset.linkedTaskId !== sourceTaskId);
+      if (!items.length) {
+        return 0;
+      }
+
+      for (let index = 0; index < items.length; index += 1) {
+        const rect = items[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
+        }
+      }
+
+      return items.length;
+    }
+
+    function getLinkedTaskTargetIndex(taskId, hoverTaskId) {
+      const linkedTasks = getTasksForBlock(state.ui.editingBlockId, { topLevelOnly: true });
+      const sourceIndex = linkedTasks.findIndex((task) => task.id === taskId);
+      const hoverIndex = linkedTasks.findIndex((task) => task.id === hoverTaskId);
+      if (sourceIndex < 0 || hoverIndex < 0) {
+        return sourceIndex < 0 ? 0 : sourceIndex;
+      }
+
+      return hoverIndex;
+    }
+
+    function updateLinkedTaskDragPreview(hoverTaskId) {
+      clearLinkedTaskDragPreview();
+      if (!activeLinkedTaskDrag?.moved || !hoverTaskId) {
+        return;
+      }
+
+      const hoverItem = elements.linkedTasksList.querySelector(`.linked-task-item[data-linked-task-id="${hoverTaskId}"]`);
+      if (!hoverItem) {
+        return;
+      }
+
+      const direction = activeLinkedTaskDrag.deltaY < 0 ? 1 : -1;
+      hoverItem.style.transform = `translateY(${direction * (activeLinkedTaskDrag.item.getBoundingClientRect().height + 8)}px)`;
+    }
+
+    function clearLinkedTaskDragPreview() {
+      elements.linkedTasksList.querySelectorAll(".linked-task-item").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+    }
+
+    function reorderLinkedTask(taskId, targetIndex) {
+      const linkedTasks = getTasksForBlock(state.ui.editingBlockId, { topLevelOnly: true });
+      const linkedTaskIds = new Set(linkedTasks.map((task) => task.id));
+      const otherTasks = state.tasks.filter((task) => !linkedTaskIds.has(task.id));
+      const taskIndex = linkedTasks.findIndex((task) => task.id === taskId);
+      if (taskIndex < 0) {
+        return;
+      }
+
+      const [movedTask] = linkedTasks.splice(taskIndex, 1);
+      const safeIndex = Math.max(0, Math.min(targetIndex, linkedTasks.length));
+      linkedTasks.splice(safeIndex, 0, movedTask);
+      state.tasks = [...otherTasks, ...linkedTasks];
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleAddLinkedTask() {
+      if (!state.ui.editingBlockId) {
+        return;
+      }
+
+      openTaskModal(null, state.ui.editingBlockId);
+    }
+
+    function handleAddSubtask() {
+      if (!state.ui.editingTaskId) {
+        return;
+      }
+      elements.taskSubtaskInlineForm.classList.add("open");
+      elements.taskSubtaskInlineInput.value = "";
+      elements.taskSubtaskInlineInput.focus();
+    }
+
+    function closeInlineSubtaskComposer() {
+      elements.taskSubtaskInlineForm.classList.remove("open");
+      elements.taskSubtaskInlineInput.value = "";
+    }
+
+    function handleInlineSubtaskKeydown(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleInlineSubtaskSave();
+        return;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeInlineSubtaskComposer();
+      }
+    }
+
+    function handleInlineSubtaskSave() {
+      if (!state.ui.editingTaskId) {
+        return;
+      }
+
+      const title = elements.taskSubtaskInlineInput.value.trim();
+      if (!title) {
+        return;
+      }
+
+      const parentTask = getTaskById(state.ui.editingTaskId);
+      const nextTask = {
+        id: crypto.randomUUID(),
+        title,
+        notes: "",
+        blockId: parentTask?.blockId || null,
+        parentTaskId: state.ui.editingTaskId,
+        isDone: false,
+        isCollapsed: false
+      };
+
+      state.tasks = state.tasks.map((task) =>
+        task.id === state.ui.editingTaskId ? { ...task, isCollapsed: false } : task
+      );
+      insertTaskAfterParent(nextTask);
+      closeInlineSubtaskComposer();
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleTaskSubmit(event) {
+      event.preventDefault();
+
+      const id = elements.taskId.value || crypto.randomUUID();
+      const title = elements.taskTitleInput.value.trim();
+      const notes = elements.taskNotes.value || "";
+      const blockId = elements.taskBlockSelect.value || null;
+      const parentTaskId = elements.taskParentId.value || null;
+      if (!title) {
+        return;
+      }
+
+      const existingTask = state.ui.taskModalMode === "edit" ? getTaskById(id) : null;
+
+      const nextTask = {
+        id,
+        title,
+        notes,
+        blockId,
+        parentTaskId,
+        isDone: existingTask ? Boolean(existingTask.isDone) : false,
+        isCollapsed: existingTask ? Boolean(existingTask.isCollapsed) : false
+      };
+
+      if (state.ui.taskModalMode === "edit") {
+        state.tasks = state.tasks.map((task) => task.id === id ? nextTask : task);
+      } else {
+        insertTaskAfterParent(nextTask);
+      }
+
+      persistState({ immediate: true });
+      closeModal("task");
+      render();
+    }
+
+    function handleTaskDelete() {
+      if (state.ui.taskModalMode !== "edit") {
+        return;
+      }
+
+      deleteTask(state.ui.editingTaskId);
+      closeModal("task");
+      render();
+    }
+
+    function handleTaskSettingsToggle() {
+      elements.taskSettingsPanel.classList.toggle("open");
+    }
+
+    function toggleTask(taskId) {
+      state.tasks = state.tasks.map((task) =>
+        task.id === taskId ? { ...task, isDone: !task.isDone } : task
+      );
+      persistState({ immediate: true });
+      render();
+    }
+
+    function toggleTaskCollapse(taskId) {
+      state.tasks = state.tasks.map((task) =>
+        task.id === taskId ? { ...task, isCollapsed: !task.isCollapsed } : task
+      );
+      persistState();
+      render();
+    }
+
+    function deleteTask(taskId) {
+      const descendantIds = getTaskDescendantIds(taskId);
+      const removalIds = new Set([taskId, ...descendantIds]);
+      state.tasks = state.tasks.filter((task) => !removalIds.has(task.id));
+      persistState({ immediate: true });
       render();
     }
 
@@ -1798,9 +3424,13 @@
 
       const targetId = state.ui.editingPhaseId;
       const remainingPhases = state.phases.filter((phase) => phase.id !== targetId);
+      const removedBlockIds = new Set(state.blocks.filter((block) => block.phaseId === targetId).map((block) => block.id));
       state.phases = remainingPhases;
 
       state.blocks = state.blocks.filter((block) => block.phaseId !== targetId);
+      state.tasks = state.tasks.map((task) =>
+        task.blockId && removedBlockIds.has(task.blockId) ? { ...task, blockId: null } : task
+      );
       state.ui.phaseToReveal = state.phases[0]?.id ?? null;
       persistState({ immediate: true });
       closeModal("phase");
@@ -1814,6 +3444,9 @@
 
       const targetId = state.ui.editingBlockId;
       state.blocks = state.blocks.filter((block) => block.id !== targetId);
+      state.tasks = state.tasks.map((task) =>
+        task.blockId === targetId ? { ...task, blockId: null } : task
+      );
       persistState({ immediate: true });
       closeModal("block");
       render();
@@ -1842,7 +3475,8 @@
         savedAt: new Date().toISOString(),
         selectedPhaseId,
         phases: clonePhases(state.phases),
-        blocks: cloneBlocks(state.blocks)
+        blocks: cloneBlocks(state.blocks),
+        tasks: cloneTasks(state.tasks)
       };
 
       state.savedTimelines.unshift(snapshot);
@@ -1853,6 +3487,7 @@
 
     function handleNewTimeline() {
       state.blocks = [];
+      state.tasks = [];
       state.ui.activeTab = "timeline";
       persistState({ immediate: true });
       closeModal("timeline-save");
@@ -1880,6 +3515,7 @@
 
       state.phases = clonePhases(snapshot.phases);
       state.blocks = cloneBlocks(snapshot.blocks);
+      state.tasks = cloneTasks(snapshot.tasks || []);
       state.ui.activeTab = "timeline";
       state.ui.phaseToReveal = state.phases[0]?.id ?? null;
       persistState({ immediate: true });
@@ -1961,9 +3597,11 @@
       elements.phaseId.value = phase ? phase.id : "";
       elements.phaseName.value = phase ? phase.name : "";
       elements.phaseColor.value = phase ? phase.color : COLOR_OPTIONS[0].value;
+      elements.phaseColorActionSelect.value = phase ? phase.color : COLOR_OPTIONS[0].value;
       updatePhaseColorPreview();
       elements.phaseDetails.value = phase ? phase.details || "" : "";
       elements.deletePhaseButton.style.display = phase ? "inline-flex" : "none";
+      elements.phaseSettingsPanel.classList.remove("open");
 
       openModal("phase");
     }
@@ -2004,12 +3642,38 @@
       state.ui.editingBlockId = block ? block.id : null;
       elements.blockId.value = block ? block.id : "";
       elements.blockTitle.value = block ? block.title : "";
+      elements.blockNotes.value = block ? block.notes || "" : "";
+      syncBlockNotesFieldToEditor();
       elements.blockStartTime.value = block ? block.startTime : "09:00";
       elements.blockEndTime.value = block ? block.endTime : "10:00";
       elements.blockPhase.value = block ? block.phaseId : defaultPhaseId;
       elements.deleteBlockButton.style.display = block ? "inline-flex" : "none";
+      elements.blockSettingsPanel.classList.remove("open");
+      renderLinkedTasks();
 
       openModal("block");
+    }
+
+    function openTaskModal(taskId = null, blockId = null, parentTaskId = null) {
+      const task = taskId ? getTaskById(taskId) : null;
+      const resolvedParentTaskId = task ? (task.parentTaskId || null) : parentTaskId;
+
+      state.ui.taskModalMode = task ? "edit" : "create";
+      state.ui.editingTaskId = task ? task.id : null;
+      state.ui.taskModalParentId = resolvedParentTaskId;
+      elements.taskId.value = task ? task.id : "";
+      elements.taskParentId.value = resolvedParentTaskId || "";
+      elements.taskTitleInput.value = task ? task.title : "";
+      elements.taskNotes.value = task ? task.notes || "" : "";
+      syncTaskNotesFieldToEditor();
+      renderTaskBlockOptions();
+      elements.taskBlockSelect.value = task ? (task.blockId || "") : (blockId || "");
+      elements.deleteTaskButton.style.display = task ? "inline-flex" : "none";
+      elements.taskSettingsPanel.classList.remove("open");
+      closeInlineSubtaskComposer();
+      renderTaskSubtasks();
+
+      openModal("task");
     }
 
     function openModal(type) {
@@ -2017,6 +3681,8 @@
         ? elements.phaseModalBackdrop
         : type === "phase-read"
           ? elements.phaseReadModalBackdrop
+          : type === "task"
+            ? elements.taskModalBackdrop
           : type === "timeline-save"
             ? elements.timelineSaveModalBackdrop
             : elements.blockModalBackdrop;
@@ -2029,6 +3695,8 @@
         ? elements.phaseModalBackdrop
         : type === "phase-read"
           ? elements.phaseReadModalBackdrop
+          : type === "task"
+            ? elements.taskModalBackdrop
           : type === "timeline-save"
             ? elements.timelineSaveModalBackdrop
             : elements.blockModalBackdrop;
@@ -2038,15 +3706,40 @@
       if (type === "phase") {
         elements.phaseForm.reset();
         elements.phaseColor.value = COLOR_OPTIONS[0].value;
+        elements.phaseColorActionSelect.value = COLOR_OPTIONS[0].value;
         updatePhaseColorPreview();
         elements.phaseDetails.value = "";
+        elements.phaseSettingsPanel.classList.remove("open");
       } else if (type === "phase-read") {
         state.ui.viewingPhaseId = null;
+      } else if (type === "task") {
+        elements.taskForm.reset();
+        elements.taskNotes.value = "";
+        syncTaskNotesFieldToEditor();
+        elements.taskBlockSelect.value = "";
+        elements.taskParentId.value = "";
+        elements.taskSettingsPanel.classList.remove("open");
+        closeInlineSubtaskComposer();
+        state.ui.editingTaskId = null;
+        state.ui.taskModalParentId = null;
       } else if (type === "timeline-save") {
         elements.timelineSaveForm.reset();
       } else {
         elements.blockForm.reset();
+        elements.blockNotes.value = "";
+        syncBlockNotesFieldToEditor();
+        elements.blockSettingsPanel.classList.remove("open");
+        state.ui.editingBlockId = null;
       }
+    }
+
+    function getModalTypeFromBackdrop(backdropId) {
+      if (backdropId === "phase-modal-backdrop") return "phase";
+      if (backdropId === "phase-read-modal-backdrop") return "phase-read";
+      if (backdropId === "block-modal-backdrop") return "block";
+      if (backdropId === "task-modal-backdrop") return "task";
+      if (backdropId === "timeline-save-modal-backdrop") return "timeline-save";
+      return null;
     }
 
     function scheduleNowUpdater() {
@@ -2068,6 +3761,61 @@
       return state.blocks.find((block) => block.id === blockId) || null;
     }
 
+    function getTaskById(taskId) {
+      return state.tasks.find((task) => task.id === taskId) || null;
+    }
+
+    function getChildTasks(parentTaskId) {
+      const normalizedParentId = parentTaskId || null;
+      return state.tasks.filter((task) => (task.parentTaskId || null) === normalizedParentId);
+    }
+
+    function getTasksForBlock(blockId, options = {}) {
+      const topLevelOnly = Boolean(options.topLevelOnly);
+      return state.tasks.filter((task) =>
+        task.blockId === blockId && (!topLevelOnly || !task.parentTaskId)
+      );
+    }
+
+    function getTaskDescendantIds(taskId) {
+      const descendantIds = [];
+      const stack = [taskId];
+      while (stack.length) {
+        const currentId = stack.pop();
+        state.tasks.forEach((task) => {
+          if (task.parentTaskId === currentId) {
+            descendantIds.push(task.id);
+            stack.push(task.id);
+          }
+        });
+      }
+      return descendantIds;
+    }
+
+    function insertTaskAfterParent(task) {
+      if (!task.parentTaskId) {
+        state.tasks.unshift(task);
+        return;
+      }
+
+      const descendantIds = getTaskDescendantIds(task.parentTaskId);
+      const insertAfterIds = new Set([task.parentTaskId, ...descendantIds]);
+      const parentClusterEndIndex = state.tasks.reduce((lastIndex, currentTask, index) =>
+        insertAfterIds.has(currentTask.id) ? index : lastIndex, -1
+      );
+
+      if (parentClusterEndIndex < 0) {
+        state.tasks.unshift(task);
+        return;
+      }
+
+      state.tasks = [
+        ...state.tasks.slice(0, parentClusterEndIndex + 1),
+        task,
+        ...state.tasks.slice(parentClusterEndIndex + 1)
+      ];
+    }
+
     function countBlocksForPhase(phaseId) {
       return state.blocks.filter((block) => block.phaseId === phaseId).length;
     }
@@ -2086,9 +3834,22 @@
       return blocks.map((block) => ({
         id: block.id,
         title: block.title,
+        notes: block.notes || "",
         phaseId: block.phaseId,
         startTime: block.startTime,
         endTime: block.endTime
+      }));
+    }
+
+    function cloneTasks(tasks) {
+      return tasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        notes: task.notes || "",
+        blockId: task.blockId || null,
+        parentTaskId: task.parentTaskId || null,
+        isDone: Boolean(task.isDone),
+        isCollapsed: Boolean(task.isCollapsed)
       }));
     }
 
@@ -2111,12 +3872,35 @@
             .map((block) => ({
               id: typeof block.id === "string" && block.id ? block.id : crypto.randomUUID(),
               title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
+              notes: typeof block.notes === "string" ? block.notes : "",
               phaseId: block.phaseId,
               startTime: normalizeTimeValue(block.startTime),
               endTime: normalizeTimeValue(block.endTime)
             }))
             .filter((block) => phases.some((phase) => phase.id === block.phaseId))
         : [];
+    }
+
+    function normalizeSavedTasks(tasks, blocks) {
+      if (!Array.isArray(tasks)) {
+        return [];
+      }
+
+      const normalizedTasks = tasks.map((task) => ({
+        id: typeof task?.id === "string" && task.id ? task.id : crypto.randomUUID(),
+        title: typeof task?.title === "string" && task.title.trim() ? task.title.trim() : "Untitled task",
+        notes: typeof task?.notes === "string" ? task.notes : "",
+        blockId: typeof task?.blockId === "string" && blocks.some((block) => block.id === task.blockId) ? task.blockId : null,
+        parentTaskId: typeof task?.parentTaskId === "string" && task.parentTaskId ? task.parentTaskId : null,
+        isDone: Boolean(task?.isDone),
+        isCollapsed: Boolean(task?.isCollapsed)
+      }));
+
+      const validTaskIds = new Set(normalizedTasks.map((task) => task.id));
+      return normalizedTasks.map((task) => ({
+        ...task,
+        parentTaskId: task.parentTaskId && validTaskIds.has(task.parentTaskId) ? task.parentTaskId : null
+      }));
     }
 
     function buildDefaultTimelineName() {
@@ -2137,25 +3921,127 @@
       });
     }
 
-    function findConflictingBlock(candidateBlock) {
-      const candidateSegments = createBlockSegments(candidateBlock);
+    function applyBlockOverride(priorityBlock) {
+      const nextBlocks = [];
+      const removedBlockIds = new Set();
 
-      return state.blocks.find((existingBlock) => {
-        if (existingBlock.id === candidateBlock.id) {
-          return false;
+      state.blocks.forEach((block) => {
+        if (block.id === priorityBlock.id) {
+          return;
         }
 
-        const existingSegments = createBlockSegments(existingBlock);
-        return candidateSegments.some((candidateSegment) =>
-          existingSegments.some((existingSegment) =>
-            segmentsOverlap(candidateSegment, existingSegment)
-          )
+        const trimmedBlock = trimBlockAgainstBlock(block, priorityBlock);
+        if (trimmedBlock) {
+          nextBlocks.push(trimmedBlock);
+        } else {
+          removedBlockIds.add(block.id);
+        }
+      });
+
+      nextBlocks.push(priorityBlock);
+      state.blocks = nextBlocks;
+
+      if (removedBlockIds.size) {
+        state.tasks = state.tasks.map((task) =>
+          task.blockId && removedBlockIds.has(task.blockId) ? { ...task, blockId: null } : task
         );
-      }) || null;
+      }
     }
 
-    function segmentsOverlap(a, b) {
-      return a.startMinutes < b.endMinutes && b.startMinutes < a.endMinutes;
+    function trimBlockAgainstBlock(blockToTrim, priorityBlock) {
+      const prioritySegments = createBlockSegments(priorityBlock).map((segment) => ({
+        start: segment.startMinutes,
+        end: segment.endMinutes
+      }));
+
+      let remainingSegments = createBlockSegments(blockToTrim).map((segment) => ({
+        start: segment.startMinutes,
+        end: segment.endMinutes
+      }));
+
+      prioritySegments.forEach((prioritySegment) => {
+        remainingSegments = subtractSegmentList(remainingSegments, prioritySegment);
+      });
+
+      return rebuildBlockFromSegments(blockToTrim, remainingSegments);
+    }
+
+    function subtractSegmentList(segments, blocker) {
+      return mergeMinuteSegments(
+        segments.flatMap((segment) => subtractMinuteSegment(segment, blocker))
+      );
+    }
+
+    function subtractMinuteSegment(segment, blocker) {
+      if (blocker.end <= segment.start || blocker.start >= segment.end) {
+        return [segment];
+      }
+
+      const fragments = [];
+
+      if (blocker.start > segment.start) {
+        fragments.push({
+          start: segment.start,
+          end: blocker.start
+        });
+      }
+
+      if (blocker.end < segment.end) {
+        fragments.push({
+          start: blocker.end,
+          end: segment.end
+        });
+      }
+
+      return fragments.filter((fragment) => fragment.end > fragment.start);
+    }
+
+    function mergeMinuteSegments(segments) {
+      if (!segments.length) {
+        return [];
+      }
+
+      const sortedSegments = [...segments].sort((a, b) => a.start - b.start);
+      return sortedSegments.reduce((merged, segment) => {
+        const lastSegment = merged[merged.length - 1];
+        if (lastSegment && segment.start <= lastSegment.end) {
+          lastSegment.end = Math.max(lastSegment.end, segment.end);
+          return merged;
+        }
+
+        merged.push({ ...segment });
+        return merged;
+      }, []);
+    }
+
+    function rebuildBlockFromSegments(originalBlock, segments) {
+      const validSegments = mergeMinuteSegments(segments).filter((segment) => segment.end > segment.start);
+
+      if (!validSegments.length) {
+        return null;
+      }
+
+      if (
+        validSegments.length === 2
+        && validSegments[0].start === 0
+        && validSegments[1].end === MINUTES_IN_DAY
+      ) {
+        return {
+          ...originalBlock,
+          startTime: minutesToTime(validSegments[1].start),
+          endTime: minutesToTime(validSegments[0].end)
+        };
+      }
+
+      const keptSegment = validSegments.reduce((longest, segment) =>
+        (segment.end - segment.start) > (longest.end - longest.start) ? segment : longest
+      );
+
+      return {
+        ...originalBlock,
+        startTime: minutesToTime(keptSegment.start),
+        endTime: minutesToTime(keptSegment.end)
+      };
     }
 
     function persistState(options = {}) {
@@ -2182,6 +4068,7 @@
       return {
         phases: state.phases,
         blocks: state.blocks,
+        tasks: state.tasks,
         savedTimelines: state.savedTimelines,
         ui: {
           isCompactTimeline: state.ui.isCompactTimeline,
@@ -2194,6 +4081,7 @@
     function applyPersistedState(parsed) {
       const savedPhases = Array.isArray(parsed?.phases) ? parsed.phases : [];
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
+      const savedTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
       const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
 
       if (savedPhases.length) {
@@ -2211,16 +4099,20 @@
         .map((block) => ({
           id: typeof block.id === "string" && block.id ? block.id : crypto.randomUUID(),
           title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
+          notes: typeof block.notes === "string" ? block.notes : "",
           phaseId: block.phaseId,
           startTime: normalizeTimeValue(block.startTime),
           endTime: normalizeTimeValue(block.endTime)
         }))
         .filter((block) => state.phases.some((phase) => phase.id === block.phaseId));
 
+      state.tasks = normalizeSavedTasks(savedTasks, state.blocks);
+
       state.savedTimelines = savedTimelines
         .map((item) => {
           const phases = normalizeSavedPhases(item?.phases);
           const blocks = normalizeSavedBlocks(item?.blocks, phases);
+          const tasks = normalizeSavedTasks(item?.tasks, blocks);
           if (!phases.length) {
             return null;
           }
@@ -2231,13 +4123,16 @@
             savedAt: typeof item?.savedAt === "string" && item.savedAt ? item.savedAt : new Date().toISOString(),
             selectedPhaseId: typeof item?.selectedPhaseId === "string" ? item.selectedPhaseId : (phases.find((phase) => phase.isActive)?.id || phases[0]?.id || ""),
             phases,
-            blocks
+            blocks,
+            tasks
           };
         })
         .filter(Boolean);
 
       state.ui.isCompactTimeline = Boolean(parsed?.ui?.isCompactTimeline);
-      state.ui.activeTab = parsed?.ui?.activeTab === "phases" ? "phases" : "timeline";
+      state.ui.activeTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.activeTab)
+        ? parsed.ui.activeTab
+        : "timeline";
     }
 
     function initializeFirebase() {
@@ -2428,8 +4323,9 @@
 
       const phases = Array.isArray(payload.phases) ? payload.phases : [];
       const blocks = Array.isArray(payload.blocks) ? payload.blocks : [];
+      const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
 
-      return phases.length > 0 || blocks.length > 0;
+      return phases.length > 0 || blocks.length > 0 || tasks.length > 0;
     }
 
     async function savePayloadToShared(payload) {
@@ -2487,6 +4383,13 @@
     function timeToMinutes(time) {
       const [hours, minutes] = time.split(":").map(Number);
       return hours * 60 + minutes;
+    }
+
+    function minutesToTime(totalMinutes) {
+      const normalizedMinutes = ((totalMinutes % MINUTES_IN_DAY) + MINUTES_IN_DAY) % MINUTES_IN_DAY;
+      const hours = Math.floor(normalizedMinutes / 60);
+      const minutes = normalizedMinutes % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
     }
 
     function timelineOffsetForMinute(minutes) {
