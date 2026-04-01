@@ -8,9 +8,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <script>
+    window.APP_ASSET_VERSION = "2026-04-01-1";
+    window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
+  </script>
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-1">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-1">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-1">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -7478,7 +7482,8 @@
       }
 
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch((error) => {
+        const serviceWorkerUrl = `./sw.js${window.APP_ASSET_SUFFIX || ""}`;
+        navigator.serviceWorker.register(serviceWorkerUrl).catch((error) => {
           console.error("Service worker registration failed", error);
         });
       });
