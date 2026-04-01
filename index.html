@@ -2,19 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-01-5";
+    window.APP_ASSET_VERSION = "2026-04-01-8";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-5">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-5">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-5">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-8">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-8">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-8">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -62,7 +62,7 @@
     body {
       display: flex;
       justify-content: center;
-      padding: calc(10px + env(safe-area-inset-top, 0px)) 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      padding: 0 12px env(safe-area-inset-bottom, 0px);
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -72,11 +72,12 @@
     .app-shell {
       width: 100%;
       max-width: 420px;
-      min-height: calc(100vh - 32px);
+      min-height: calc(100vh - env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 10px;
       position: relative;
+      padding-top: calc(10px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
     }
 
@@ -323,7 +324,7 @@
       position: fixed;
       inset: 0 auto 0 0;
       width: min(82vw, 320px);
-      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px));
+      padding: env(safe-area-inset-top, 0px) 16px calc(18px + env(safe-area-inset-bottom, 0px));
       background: linear-gradient(180deg, rgba(20, 20, 20, 0.99), rgba(9, 9, 9, 0.99));
       border-right: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 18px 0 40px rgba(0, 0, 0, 0.34);
@@ -463,6 +464,27 @@
       align-items: center;
       flex-shrink: 0;
       z-index: 2;
+    }
+
+    .tasks-list-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      padding-right: 48px;
+    }
+
+    .tasks-list-toolbar.hidden {
+      display: none;
+    }
+
+    .tasks-section-add {
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.82);
     }
 
     .tasks-list {
@@ -687,6 +709,22 @@
       font-size: 0.72rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+    }
+
+    .task-section-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-section-header {
+      margin-top: 6px;
+      padding: 0 2px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
 
     .tasks-empty {
@@ -2555,6 +2593,9 @@
         </div>
       </div>
       <div class="tasks-wrap">
+        <div class="tasks-list-toolbar" id="tasks-list-toolbar">
+          <button class="ghost-button tasks-section-add" id="add-section-button" type="button">+ Add Section</button>
+        </div>
         <div class="tasks-actions">
           <button class="primary-button header-add-button" id="add-task-button" type="button" aria-label="Add task">+</button>
         </div>
@@ -2838,6 +2879,10 @@
               <select id="task-list-select" name="taskListId"></select>
             </label>
             <label>
+              Move to Section
+              <select id="task-section-select" name="taskSectionId"></select>
+            </label>
+            <label>
               Link to block
               <select id="task-block-select" name="taskBlockId"></select>
             </label>
@@ -3097,6 +3142,7 @@
       taskLists: [
         { id: INBOX_LIST_ID, name: "Inbox" }
       ],
+      sections: [],
       tasks: [],
       savedTimelines: [],
       ui: {
@@ -3151,8 +3197,10 @@
       taskDrawerToggle: document.getElementById("task-drawer-toggle"),
       addTaskListButton: document.getElementById("add-task-list-button"),
       activeTaskListLabel: document.getElementById("active-task-list-label"),
+      tasksListToolbar: document.getElementById("tasks-list-toolbar"),
       tasksList: document.getElementById("tasks-list"),
       addTaskButton: document.getElementById("add-task-button"),
+      addSectionButton: document.getElementById("add-section-button"),
       addLinkedTaskButton: document.getElementById("add-linked-task-button"),
       linkedTasksList: document.getElementById("linked-tasks-list"),
       linkedTasksPanel: document.getElementById("linked-tasks-panel"),
@@ -3241,6 +3289,7 @@
       taskNotesStack: document.querySelector(".task-notes-stack"),
       taskBlockSelect: document.getElementById("task-block-select"),
       taskListSelect: document.getElementById("task-list-select"),
+      taskSectionSelect: document.getElementById("task-section-select"),
       taskScheduleButton: document.getElementById("task-schedule-button"),
       taskMenuButton: document.getElementById("task-menu-button"),
       taskContextMenu: document.getElementById("task-context-menu"),
@@ -3312,6 +3361,7 @@
       elements.taskDrawerNav.addEventListener("click", handleTaskDrawerClick);
       elements.taskDrawerLists.addEventListener("click", handleTaskDrawerClick);
       elements.addTaskListButton.addEventListener("click", handleAddTaskList);
+      elements.addSectionButton.addEventListener("click", handleAddSection);
       elements.tabTasks.addEventListener("click", () => setActiveTab("tasks"));
       elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
       elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
@@ -3392,6 +3442,7 @@
       elements.taskMenuCloseButton.addEventListener("click", () => closeModal("task"));
       elements.taskMenuDeleteButton.addEventListener("click", handleTaskDelete);
       elements.taskListSelect.addEventListener("change", handleTaskListSelectChange);
+      elements.taskSectionSelect.addEventListener("change", handleTaskSectionSelectChange);
       elements.taskBlockSelect.addEventListener("change", handleTaskBlockSelectChange);
       elements.taskScheduleButton.addEventListener("click", () => openScheduleModal("date"));
       elements.saveSubtaskInlineButton.addEventListener("click", handleInlineSubtaskSave);
@@ -3557,6 +3608,16 @@
         `<option value="${list.id}">${escapeHtml(list.name)}</option>`
       ).join("");
       elements.taskListSelect.value = nextValue;
+    }
+
+    function renderTaskSectionOptions(listId = null, selectedSectionId = null) {
+      const resolvedListId = normalizeTaskListId(listId || elements.taskListSelect.value || getDefaultTaskListForCompose());
+      const sections = getSectionsForList(resolvedListId);
+      elements.taskSectionSelect.innerHTML = [
+        `<option value="">Uncategorized</option>`,
+        ...sections.map((section) => `<option value="${section.id}">${escapeHtml(section.name)}</option>`)
+      ].join("");
+      elements.taskSectionSelect.value = isValidSectionAssignment(selectedSectionId, resolvedListId) ? selectedSectionId : "";
     }
 
     function renderTaskDrawer() {
@@ -3836,6 +3897,7 @@
 
     function renderTasks() {
       const isDynamicView = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter);
+      elements.tasksListToolbar.classList.toggle("hidden", isDynamicView);
       const visibleTasks = getVisibleRootTasks();
       if (!visibleTasks.length) {
         elements.tasksList.innerHTML = `<div class="tasks-empty">No tasks in this view yet. Add one here, or add tasks inside a block.</div>`;
@@ -3847,7 +3909,34 @@
         return;
       }
 
-      elements.tasksList.innerHTML = visibleTasks.map((task) => renderTaskItem(task)).join("");
+      elements.tasksList.innerHTML = renderSectionTaskGroups(visibleTasks, normalizeTaskListId(state.ui.activeTaskListFilter));
+    }
+
+    function renderSectionTaskGroups(tasks, listId) {
+      const sections = getSectionsForList(listId);
+      const groups = [];
+      const uncategorizedTasks = tasks.filter((task) => !isValidSectionAssignment(task.sectionId, listId));
+      groups.push({
+        label: "Uncategorized",
+        tasks: uncategorizedTasks
+      });
+
+      sections.forEach((section) => {
+        groups.push({
+          label: section.name,
+          tasks: tasks.filter((task) => task.sectionId === section.id)
+        });
+      });
+
+      return groups
+        .filter((group) => group.tasks.length)
+        .map((group) => `
+          <div class="task-section-group">
+            <div class="task-section-header">${escapeHtml(group.label)}</div>
+            ${group.tasks.map((task) => renderTaskItem(task)).join("")}
+          </div>
+        `)
+        .join("");
     }
 
     function renderTaskItem(task, depth = 0) {
@@ -4058,6 +4147,31 @@
       state.ui.activeTaskListFilter = state.taskLists[state.taskLists.length - 1].id;
       state.ui.activeTab = "tasks";
       state.ui.isTaskDrawerOpen = false;
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleAddSection() {
+      if ([TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter)) {
+        return;
+      }
+
+      const listId = normalizeTaskListId(state.ui.activeTaskListFilter);
+      const name = window.prompt("Section name");
+      if (!name) {
+        return;
+      }
+
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        return;
+      }
+
+      state.sections.push({
+        id: crypto.randomUUID(),
+        name: trimmedName,
+        listId
+      });
       persistState({ immediate: true });
       render();
     }
@@ -4998,6 +5112,9 @@
       const blockId = elements.taskBlockSelect.value || null;
       const parentTaskId = elements.taskParentId.value || null;
       const listId = normalizeTaskListId(elements.taskListSelect.value || null);
+      const sectionId = isValidSectionAssignment(elements.taskSectionSelect.value || null, listId)
+        ? (elements.taskSectionSelect.value || null)
+        : null;
       const dueDateTime = elements.taskDueDateTime.value || "";
       const repeatRule = readTaskRepeatRuleFromFields();
       return {
@@ -5007,6 +5124,7 @@
         blockId,
         parentTaskId,
         listId,
+        sectionId,
         dueDateTime,
         repeatRule
       };
@@ -5027,6 +5145,7 @@
         blockId: draft.blockId,
         parentTaskId: draft.parentTaskId,
         listId: draft.parentTaskId ? (getTaskById(draft.parentTaskId)?.listId || draft.listId) : draft.listId,
+        sectionId: draft.parentTaskId ? null : draft.sectionId,
         dueDateTime: draft.dueDateTime || "",
         repeatRule: draft.dueDateTime ? draft.repeatRule : null,
         isDone: existingTask ? Boolean(existingTask.isDone) : false,
@@ -5922,21 +6041,43 @@
     }
 
     function handleTaskListSelectChange() {
+      const nextListId = normalizeTaskListId(elements.taskListSelect.value || null);
+      const editingTask = state.ui.taskModalMode === "edit" ? getTaskById(state.ui.editingTaskId) : null;
+      const nextSectionId = isValidSectionAssignment(elements.taskSectionSelect.value || null, nextListId)
+        ? (elements.taskSectionSelect.value || null)
+        : null;
+      renderTaskSectionOptions(nextListId, nextSectionId);
+
+      if (!editingTask) {
+        return;
+      }
+
+      const descendantIds = new Set(getTaskDescendantIds(state.ui.editingTaskId));
+      state.tasks = state.tasks.map((task) => {
+        if (task.id === state.ui.editingTaskId) {
+          return { ...task, listId: nextListId, sectionId: nextSectionId };
+        }
+        if (descendantIds.has(task.id)) {
+          return { ...task, listId: nextListId, sectionId: null };
+        }
+        return task;
+      });
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleTaskSectionSelectChange() {
       if (state.ui.taskModalMode !== "edit" || !state.ui.editingTaskId) {
         return;
       }
 
       const nextListId = normalizeTaskListId(elements.taskListSelect.value || null);
-      const descendantIds = new Set(getTaskDescendantIds(state.ui.editingTaskId));
-      state.tasks = state.tasks.map((task) => {
-        if (task.id === state.ui.editingTaskId) {
-          return { ...task, listId: nextListId };
-        }
-        if (descendantIds.has(task.id)) {
-          return { ...task, listId: nextListId };
-        }
-        return task;
-      });
+      const nextSectionId = isValidSectionAssignment(elements.taskSectionSelect.value || null, nextListId)
+        ? (elements.taskSectionSelect.value || null)
+        : null;
+      state.tasks = state.tasks.map((task) =>
+        task.id === state.ui.editingTaskId ? { ...task, sectionId: nextSectionId } : task
+      );
       persistState({ immediate: true });
       render();
     }
@@ -5998,7 +6139,7 @@
       const descendantIds = new Set(getTaskDescendantIds(taskId));
       state.tasks = state.tasks.map((task) => {
         if (task.id === taskId || descendantIds.has(task.id)) {
-          return { ...task, listId: nextListId };
+          return { ...task, listId: nextListId, sectionId: null };
         }
         return task;
       });
@@ -6260,6 +6401,10 @@
       elements.taskBlockSelect.value = task ? (task.blockId || "") : (blockId || "");
       renderTaskListOptions();
       elements.taskListSelect.value = normalizeTaskListId(task ? task.listId : (parentTask?.listId || listId || getDefaultTaskListForCompose()));
+      renderTaskSectionOptions(
+        elements.taskListSelect.value,
+        task ? (task.sectionId || "") : (parentTask?.sectionId || "")
+      );
       renderTaskScheduleSummary();
       elements.taskMenuAddSubtaskButton.style.display = task ? "" : "none";
       elements.taskMenuDeleteButton.style.display = task ? "" : "none";
@@ -6426,6 +6571,10 @@
 
     function getTaskById(taskId) {
       return state.tasks.find((task) => task.id === taskId) || null;
+    }
+
+    function getSectionById(sectionId) {
+      return state.sections.find((section) => section.id === sectionId) || null;
     }
 
     function parseTaskDueDateTime(value) {
@@ -6733,6 +6882,19 @@
       return state.taskLists.find((list) => list.id === normalizedListId) || null;
     }
 
+    function getSectionsForList(listId) {
+      const normalizedListId = normalizeTaskListId(listId);
+      return state.sections.filter((section) => section.listId === normalizedListId);
+    }
+
+    function isValidSectionAssignment(sectionId, listId) {
+      if (typeof sectionId !== "string" || !sectionId) {
+        return false;
+      }
+      const section = getSectionById(sectionId);
+      return Boolean(section && section.listId === normalizeTaskListId(listId));
+    }
+
     function normalizeTaskListId(listId, taskLists = state.taskLists) {
       if (typeof listId !== "string" || !listId) {
         return INBOX_LIST_ID;
@@ -6829,6 +6991,7 @@
         notes: task.notes || "",
         blockId: task.blockId || null,
         listId: normalizeTaskListId(task.listId),
+        sectionId: typeof task.sectionId === "string" && task.sectionId ? task.sectionId : null,
         dueDateTime: typeof task.dueDateTime === "string" ? task.dueDateTime : "",
         repeatRule: normalizeRepeatRule(task.repeatRule),
         parentTaskId: task.parentTaskId || null,
@@ -6841,6 +7004,14 @@
       return taskLists.map((list) => ({
         id: list.id,
         name: list.name
+      }));
+    }
+
+    function cloneSections(sections) {
+      return sections.map((section) => ({
+        id: section.id,
+        name: section.name,
+        listId: normalizeTaskListId(section.listId)
       }));
     }
 
@@ -6877,7 +7048,7 @@
         : [];
     }
 
-    function normalizeSavedTasks(tasks, blocks, taskLists = state.taskLists) {
+    function normalizeSavedTasks(tasks, blocks, taskLists = state.taskLists, sections = state.sections) {
       if (!Array.isArray(tasks)) {
         return [];
       }
@@ -6888,6 +7059,7 @@
         notes: typeof task?.notes === "string" ? task.notes : "",
         blockId: typeof task?.blockId === "string" && blocks.some((block) => block.id === task.blockId) ? task.blockId : null,
         listId: typeof task?.listId === "string" && task.listId ? task.listId : INBOX_LIST_ID,
+        sectionId: typeof task?.sectionId === "string" && task.sectionId ? task.sectionId : null,
         dueDateTime: typeof task?.dueDateTime === "string" ? task.dueDateTime : "",
         repeatRule: normalizeRepeatRule(task?.repeatRule),
         parentTaskId: typeof task?.parentTaskId === "string" && task.parentTaskId ? task.parentTaskId : null,
@@ -6899,6 +7071,9 @@
       return normalizedTasks.map((task) => ({
         ...task,
         listId: normalizeTaskListId(task.listId, taskLists),
+        sectionId: sections.some((section) => section.id === task.sectionId && section.listId === normalizeTaskListId(task.listId, taskLists))
+          ? task.sectionId
+          : null,
         parentTaskId: task.parentTaskId && validTaskIds.has(task.parentTaskId) ? task.parentTaskId : null
       }));
     }
@@ -6915,6 +7090,18 @@
 
       const withoutInbox = normalizedLists.filter((list) => list.id !== INBOX_LIST_ID);
       return [{ id: INBOX_LIST_ID, name: "Inbox" }, ...withoutInbox];
+    }
+
+    function normalizeSavedSections(sections, taskLists = state.taskLists) {
+      return Array.isArray(sections)
+        ? sections
+            .map((section) => ({
+              id: typeof section?.id === "string" && section.id ? section.id : crypto.randomUUID(),
+              name: typeof section?.name === "string" && section.name.trim() ? section.name.trim() : "",
+              listId: normalizeTaskListId(section?.listId, taskLists)
+            }))
+            .filter((section) => section.name)
+        : [];
     }
 
     function buildDefaultTimelineName() {
@@ -7083,6 +7270,7 @@
         phases: state.phases,
         blocks: state.blocks,
         taskLists: state.taskLists,
+        sections: state.sections,
         tasks: state.tasks,
         savedTimelines: state.savedTimelines,
         ui: {
@@ -7098,6 +7286,7 @@
       const savedPhases = Array.isArray(parsed?.phases) ? parsed.phases : [];
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
       const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists);
+      const savedSections = normalizeSavedSections(parsed?.sections, savedTaskLists);
       const savedTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
       const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
 
@@ -7115,6 +7304,7 @@
       }
 
       state.taskLists = savedTaskLists;
+      state.sections = savedSections;
 
       const fallbackPhaseId = getActivePhases()[0]?.id || state.phases[0]?.id || "";
 
@@ -7130,12 +7320,12 @@
         }))
         .filter((block) => block.phaseId);
 
-      state.tasks = normalizeSavedTasks(savedTasks, state.blocks, state.taskLists);
+      state.tasks = normalizeSavedTasks(savedTasks, state.blocks, state.taskLists, state.sections);
 
       state.savedTimelines = savedTimelines
         .map((item) => {
           const blocks = normalizeSavedBlocks(item?.blocks, state.phases);
-          const tasks = normalizeSavedTasks(item?.tasks, blocks, state.taskLists);
+          const tasks = normalizeSavedTasks(item?.tasks, blocks, state.taskLists, state.sections);
           if (!blocks.length && !tasks.length) {
             return null;
           }
