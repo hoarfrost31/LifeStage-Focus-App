@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-01-8";
+    window.APP_ASSET_VERSION = "2026-04-01-11";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-8">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-8">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-8">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-11">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-11">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-11">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -280,6 +280,15 @@
       flex-shrink: 0;
     }
 
+    .floating-add-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 999px;
+      padding: 0;
+      font-size: 1.3rem;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+    }
+
     .danger-button {
       background: rgba(255, 127, 140, 0.12);
       color: var(--danger);
@@ -457,8 +466,8 @@
 
     .tasks-actions {
       position: absolute;
-      right: 12px;
-      bottom: 14px;
+      right: 18px;
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
       display: flex;
       justify-content: flex-end;
       align-items: center;
@@ -1125,6 +1134,14 @@
       overflow: hidden;
       flex: 1;
       min-height: 0;
+      position: relative;
+    }
+
+    .timeline-actions {
+      position: absolute;
+      right: 18px;
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      z-index: 3;
     }
 
     .timeline-summary {
@@ -1257,7 +1274,9 @@
       overflow: hidden;
       cursor: pointer;
       z-index: 2;
-      touch-action: none;
+      touch-action: pan-y;
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--phase-color, #b6c0d0) 16%, rgba(24, 24, 24, 0.96)), rgba(18, 18, 18, 0.96));
     }
 
     .timeline-block:hover {
@@ -1265,6 +1284,24 @@
       box-shadow:
         0 14px 28px rgba(0, 0, 0, 0.24),
         0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    }
+
+    .timeline-block.is-past {
+      background: rgba(18, 18, 18, 0.92);
+      border-color: rgba(255, 255, 255, 0.05);
+      box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.14),
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    }
+
+    .timeline-block.is-past .block-strip {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .timeline-block.is-past .block-title {
+      color: rgba(255, 255, 255, 0.56);
+      text-decoration: line-through;
+      text-decoration-color: rgba(255, 255, 255, 0.18);
     }
 
     .timeline-block.dragging {
@@ -1325,20 +1362,6 @@
       align-items: flex-start;
     }
 
-    .block-time {
-      font-size: 0.7rem;
-      color: #d6d7db;
-      text-transform: uppercase;
-      letter-spacing: 0.11em;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-
     .block-title {
       font-size: 0.94rem;
       font-weight: 600;
@@ -1346,7 +1369,7 @@
       color: #ffffff;
       display: -webkit-box;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 100%;
@@ -1363,17 +1386,9 @@
       max-width: 100%;
     }
 
+    .block-time,
     .block-phase-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      align-self: flex-start;
-      padding: 5px 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      min-width: 0;
-      max-width: 100%;
+      display: none;
     }
 
     .block-phase-swatch {
@@ -1400,22 +1415,34 @@
       gap: 8px;
     }
 
-    body.compact-mode .block-time {
-      font-size: 0.58rem;
-      letter-spacing: 0.08em;
-      align-self: start;
-      white-space: nowrap;
-      padding: 3px 6px;
-    }
-
     body.compact-mode .block-title {
       font-size: 0.78rem;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       align-self: start;
     }
 
     body.compact-mode .block-phase-label {
       display: none;
+    }
+
+    #active-phase-label {
+      display: none;
+    }
+
+    .mode-toggle {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0;
+    }
+
+    .mode-toggle svg {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     .now-line {
@@ -2597,7 +2624,7 @@
           <button class="ghost-button tasks-section-add" id="add-section-button" type="button">+ Add Section</button>
         </div>
         <div class="tasks-actions">
-          <button class="primary-button header-add-button" id="add-task-button" type="button" aria-label="Add task">+</button>
+          <button class="primary-button floating-add-button" id="add-task-button" type="button" aria-label="Add task">+</button>
         </div>
         <div class="tasks-list" id="tasks-list" aria-label="Tasks"></div>
       </div>
@@ -2614,7 +2641,11 @@
     <section class="card timeline-card">
       <div class="section-header compact-header">
         <div class="header-actions">
-          <button class="mode-toggle" id="toggle-compact-button" type="button">Compact</button>
+          <button class="mode-toggle" id="toggle-compact-button" type="button" aria-label="Toggle compact timeline view">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 5.1h10M3 8h10M3 10.9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
           <span id="active-phase-label" class="phase-badge">No active phases</span>
         </div>
         <div class="header-actions">
@@ -2626,11 +2657,13 @@
               <circle cx="11.9" cy="11.9" r="1.6" stroke="currentColor" stroke-width="1.2"/>
             </svg>
           </button>
-          <button class="primary-button header-add-button" id="add-block-button" type="button" aria-label="Add block">+</button>
         </div>
       </div>
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
+      </div>
+      <div class="timeline-actions">
+        <button class="primary-button floating-add-button" id="add-block-button" type="button" aria-label="Add block">+</button>
       </div>
     </section>
 
@@ -3495,7 +3528,10 @@
     function render() {
       document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
       elements.toggleCompactButton.classList.toggle("active", state.ui.isCompactTimeline);
-      elements.toggleCompactButton.textContent = state.ui.isCompactTimeline ? "Expanded" : "Compact";
+      elements.toggleCompactButton.innerHTML = state.ui.isCompactTimeline
+        ? `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.7" y="3.1" width="10.6" height="9.8" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5.2 6h5.6M5.2 8h5.6M5.2 10h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`
+        : `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 5.1h10M3 8h10M3 10.9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+      elements.toggleCompactButton.setAttribute("aria-label", state.ui.isCompactTimeline ? "Switch to expanded timeline" : "Switch to compact timeline");
       elements.taskDrawer.classList.toggle("open", state.ui.isTaskDrawerOpen);
       elements.drawerBackdrop.classList.toggle("open", state.ui.isTaskDrawerOpen);
       elements.scheduleModalBackdrop.classList.toggle("open", state.ui.scheduleModalOpen);
@@ -4229,14 +4265,7 @@
     }
 
     function renderSummary() {
-      const activePhases = getActivePhases();
-      if (!activePhases.length) {
-        elements.activePhaseLabel.textContent = "No active phases";
-      } else if (activePhases.length === 1) {
-        elements.activePhaseLabel.textContent = `${activePhases[0].name} active`;
-      } else {
-        elements.activePhaseLabel.textContent = `${activePhases.length} phases active`;
-      }
+      elements.activePhaseLabel.textContent = "";
     }
 
     function renderSyncStatus() {
@@ -4306,18 +4335,21 @@
       }
 
       blockSegments.forEach((segment) => {
-        const { block, startMinutes, endMinutes, isOvernightSegment } = segment;
+        const { block, startMinutes, endMinutes } = segment;
         const phase = getPhaseById(block.phaseId);
         if (!phase) {
           return;
         }
 
         const top = timelineOffsetForMinute(startMinutes);
-        const height = Math.max(((endMinutes - startMinutes) / 60) * pixelsPerHour, getMinBlockHeight());
+        const height = ((endMinutes - startMinutes) / 60) * pixelsPerHour;
+        const nowMinutes = state.ui.now.getHours() * 60 + state.ui.now.getMinutes();
+        const isPast = endMinutes <= nowMinutes;
 
         const blockElement = document.createElement("button");
         blockElement.type = "button";
         blockElement.className = "timeline-block";
+        blockElement.classList.toggle("is-past", isPast);
         blockElement.dataset.blockId = block.id;
         blockElement.style.top = `${top}px`;
         blockElement.style.height = `${height}px`;
@@ -4326,12 +4358,7 @@
           <div class="block-strip" aria-hidden="true"></div>
           <div class="block-content">
             <div class="block-main">
-              <div class="block-time">${formatBlockTimeRange(block.startTime, block.endTime, isOvernightSegment)}</div>
               <div class="block-title">${escapeHtml(block.title)}</div>
-            </div>
-            <div class="block-phase-label">
-              <span class="block-phase-swatch" aria-hidden="true"></span>
-              <span class="block-phase">${escapeHtml(phase.name)}</span>
             </div>
           </div>
         `;
@@ -5576,63 +5603,27 @@
         return;
       }
 
-      const sourceTimeElement = activeBlockDrag.blockElement.querySelector(".block-time");
       const draggedBlock = getBlockById(activeBlockDrag.blockId);
-      if (!draggedBlock || !sourceTimeElement) {
+      if (!draggedBlock) {
         return;
       }
 
       if (hoverBlockId) {
         const targetElement = elements.timeline.querySelector(`.timeline-block[data-block-id="${hoverBlockId}"]`);
-        const targetTimeElement = targetElement?.querySelector(".block-time");
         const hoveredBlock = getBlockById(hoverBlockId);
-        if (!targetElement || !hoveredBlock || !targetTimeElement) {
+        if (!targetElement || !hoveredBlock) {
           return;
         }
 
         targetElement.style.transform = `translateY(${activeBlockDrag.blockElement.getBoundingClientRect().height + 8}px)`;
-        const draggedDuration = getBlockDurationMinutes(draggedBlock);
-        const hoveredDuration = getBlockDurationMinutes(hoveredBlock);
-        const hoveredStartMinutes = timeToMinutes(hoveredBlock.startTime);
-        sourceTimeElement.textContent = formatBlockTimeRange(
-          minutesToTime(hoveredStartMinutes),
-          minutesToTime(hoveredStartMinutes + draggedDuration),
-          hoveredStartMinutes + draggedDuration >= MINUTES_IN_DAY
-        );
-        targetTimeElement.textContent = formatBlockTimeRange(
-          minutesToTime(hoveredStartMinutes + draggedDuration),
-          minutesToTime(hoveredStartMinutes + draggedDuration + hoveredDuration),
-          hoveredStartMinutes + draggedDuration + hoveredDuration >= MINUTES_IN_DAY
-        );
         return;
       }
-
-      const minuteDelta = getCappedStandaloneBlockDelta(deltaY);
-      if (minuteDelta === 0) {
-        return;
-      }
-
-      const startMinutes = timeToMinutes(draggedBlock.startTime);
-      const duration = getBlockDurationMinutes(draggedBlock);
-      const nextStartMinutes = clampMinutes(startMinutes + minuteDelta);
-      sourceTimeElement.textContent = formatBlockTimeRange(
-        minutesToTime(nextStartMinutes),
-        minutesToTime(nextStartMinutes + duration),
-        nextStartMinutes + duration >= MINUTES_IN_DAY
-      );
     }
 
     function clearBlockDragPreview() {
       elements.timeline.querySelectorAll(".timeline-block").forEach((element) => {
         if (!element.classList.contains("dragging")) {
           element.style.transform = "";
-        }
-        const blockId = element.dataset.blockId;
-        const block = blockId ? getBlockById(blockId) : null;
-        const timeElement = element.querySelector(".block-time");
-        if (block && timeElement) {
-          const isOvernight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
-          timeElement.textContent = formatBlockTimeRange(block.startTime, block.endTime, isOvernight);
         }
       });
     }
