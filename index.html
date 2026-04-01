@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-01-1";
+    window.APP_ASSET_VERSION = "2026-04-01-4";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-1">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-1">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-1">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-4">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-4">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-4">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -1892,8 +1892,14 @@
     }
 
     .task-modal-bottom-bar {
-      position: relative;
+      position: sticky;
+      bottom: 0;
+      z-index: 3;
       min-height: 44px;
+      margin-top: auto;
+      padding-top: 10px;
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 2px);
+      background: linear-gradient(180deg, rgba(24, 24, 24, 0), rgba(24, 24, 24, 0.96) 18px, rgba(24, 24, 24, 0.98));
     }
 
     .task-bottom-actions,
@@ -3231,6 +3237,7 @@
       taskModalBottomBar: document.querySelector(".task-modal-bottom-bar"),
       taskNotesEditor: document.getElementById("task-notes-editor"),
       taskNotes: document.getElementById("task-notes"),
+      taskNotesStack: document.querySelector(".task-notes-stack"),
       taskBlockSelect: document.getElementById("task-block-select"),
       taskListSelect: document.getElementById("task-list-select"),
       taskScheduleButton: document.getElementById("task-schedule-button"),
@@ -3335,10 +3342,8 @@
       elements.blockUndoButton.addEventListener("click", handleBlockUndo);
       elements.blockRedoButton.addEventListener("click", handleBlockRedo);
       elements.taskNotesEditor.addEventListener("input", handleTaskNotesEditorInput);
-      elements.taskNotesEditor.addEventListener("focus", ensureTaskModalEditing);
-      elements.taskTitleInput.addEventListener("focus", ensureTaskModalEditing);
-      elements.taskTitleInput.addEventListener("pointerdown", handleTaskEditActivator);
-      elements.taskNotesEditor.addEventListener("pointerdown", handleTaskEditActivator);
+      elements.taskTitleInput.addEventListener("click", handleTaskEditActivator);
+      elements.taskNotesEditor.addEventListener("click", handleTaskEditActivator);
       elements.taskForm.addEventListener("submit", handleTaskSubmit);
       elements.taskTitleInput.addEventListener("keydown", handleTaskTitleKeydown);
       elements.taskRichToolbar.addEventListener("click", handleTaskToolbarClick);
@@ -3354,6 +3359,10 @@
       elements.taskModalHeader.addEventListener("touchmove", handleTaskSheetTouchMove, { passive: false });
       elements.taskModalHeader.addEventListener("touchend", handleTaskSheetTouchEnd);
       elements.taskModalHeader.addEventListener("touchcancel", handleTaskSheetTouchEnd);
+      elements.taskEditZone.addEventListener("touchstart", handleTaskSheetTouchStart, { passive: true });
+      elements.taskEditZone.addEventListener("touchmove", handleTaskSheetTouchMove, { passive: false });
+      elements.taskEditZone.addEventListener("touchend", handleTaskSheetTouchEnd);
+      elements.taskEditZone.addEventListener("touchcancel", handleTaskSheetTouchEnd);
       elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
       elements.phaseMenuButton.addEventListener("click", handlePhaseMenuToggle);
       elements.phaseMenuButton.addEventListener("pointerdown", stopPhaseMenuInteraction);
@@ -4346,8 +4355,8 @@
       const touch = event.touches[0];
       const drawerWidth = getDrawerWidth();
       const isOpen = state.ui.isTaskDrawerOpen;
-      const isEdgeOpenGesture = !isOpen && touch.clientX <= 22;
-      const isDrawerCloseGesture = isOpen && touch.clientX <= drawerWidth + 28;
+      const isEdgeOpenGesture = !isOpen && touch.clientX <= 38;
+      const isDrawerCloseGesture = isOpen && touch.clientX <= drawerWidth + 44;
       if (!isEdgeOpenGesture && !isDrawerCloseGesture) {
         activeDrawerGesture = null;
         return;
@@ -4374,11 +4383,11 @@
       activeDrawerGesture.deltaX = deltaX;
 
       if (!activeDrawerGesture.engaged) {
-        if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        if (Math.abs(deltaY) > 14 && Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
           activeDrawerGesture = null;
           return;
         }
-        if (Math.abs(deltaX) < 8) {
+        if (Math.abs(deltaX) < 5) {
           return;
         }
         activeDrawerGesture.engaged = true;
@@ -4401,9 +4410,9 @@
       clearDrawerGestureStyles();
 
       if (engaged) {
-        if (mode === "open" && deltaX > Math.min(88, drawerWidth * 0.3)) {
+        if (mode === "open" && deltaX > Math.min(42, drawerWidth * 0.14)) {
           setTaskDrawerOpen(true);
-        } else if (mode === "close" && deltaX < -Math.min(72, drawerWidth * 0.24)) {
+        } else if (mode === "close" && deltaX < -Math.min(38, drawerWidth * 0.12)) {
           setTaskDrawerOpen(false);
         } else {
           render();
@@ -4759,7 +4768,6 @@
       if (state.ui.taskModalIsEditing) {
         return;
       }
-      event.preventDefault();
       const focusTarget = event.currentTarget === elements.taskTitleInput ? "title" : "notes";
       setTaskModalEditing(true, { focusTarget });
     }
@@ -5040,15 +5048,29 @@
     }
 
     function handleTaskSheetTouchStart(event) {
-      if (!isTaskModalOpen() || !event.touches.length) {
+      if (!isTaskModalOpen() || !event.touches.length || activeTaskSheetDrag) {
         return;
       }
 
+      const touchTarget = event.target;
+      if (
+        touchTarget.closest(".task-context-menu")
+        || touchTarget.closest(".task-modal-bottom-bar")
+        || touchTarget.closest(".task-rich-toolbar")
+      ) {
+        return;
+      }
+
+      const scrollContainer = getTaskSheetSwipeScrollContainer(touchTarget);
       activeTaskSheetDrag = {
         startY: event.touches[0].clientY,
-        deltaY: 0
+        startX: event.touches[0].clientX,
+        deltaY: 0,
+        engaged: false,
+        source: elements.taskModalHeader.contains(touchTarget) ? "header" : "content",
+        scrollContainer,
+        startScrollTop: scrollContainer ? scrollContainer.scrollTop : 0
       };
-      elements.taskModalBackdrop.classList.add("dragging");
     }
 
     function handleTaskSheetTouchMove(event) {
@@ -5057,7 +5079,29 @@
       }
 
       const deltaY = event.touches[0].clientY - activeTaskSheetDrag.startY;
+      const deltaX = event.touches[0].clientX - activeTaskSheetDrag.startX;
       activeTaskSheetDrag.deltaY = deltaY;
+      if (!activeTaskSheetDrag.engaged) {
+        if (Math.abs(deltaY) < 8) {
+          return;
+        }
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          activeTaskSheetDrag = null;
+          return;
+        }
+      }
+
+      const canDragDown = deltaY > 0 && canStartTaskSheetPullDown(activeTaskSheetDrag);
+      const canDragUp = deltaY < 0 && activeTaskSheetDrag.source === "header";
+      if (!canDragDown && !canDragUp) {
+        if (deltaY > 0 && activeTaskSheetDrag.source === "content" && activeTaskSheetDrag.scrollContainer) {
+          activeTaskSheetDrag = null;
+        }
+        return;
+      }
+
+      activeTaskSheetDrag.engaged = true;
+      elements.taskModalBackdrop.classList.add("dragging");
       elements.taskModalSheet.style.setProperty("--task-sheet-drag-offset", `${deltaY}px`);
       event.preventDefault();
     }
@@ -5078,6 +5122,20 @@
       } else {
         setTaskModalSheetState(state.ui.taskModalSheetState);
       }
+    }
+
+    function getTaskSheetSwipeScrollContainer(target) {
+      if (!(target instanceof Element)) {
+        return null;
+      }
+      return target.closest(".task-notes-stack");
+    }
+
+    function canStartTaskSheetPullDown(dragState) {
+      if (!dragState?.scrollContainer) {
+        return true;
+      }
+      return dragState.startScrollTop <= 0 && dragState.scrollContainer.scrollTop <= 0;
     }
 
     function handleTaskDragStart(event) {
