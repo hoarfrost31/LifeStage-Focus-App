@@ -296,6 +296,146 @@
       padding-bottom: 12px;
     }
 
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.56);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+      z-index: 24;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .task-drawer {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: min(82vw, 320px);
+      padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px));
+      background: linear-gradient(180deg, rgba(20, 20, 20, 0.99), rgba(9, 9, 9, 0.99));
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 18px 0 40px rgba(0, 0, 0, 0.34);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: translateX(-104%);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 25;
+    }
+
+    .task-drawer.open {
+      transform: translateX(0);
+    }
+
+    .task-drawer-profile {
+      padding: 8px 6px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .task-drawer-eyebrow {
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .task-drawer-name {
+      margin-top: 8px;
+      color: var(--text);
+      font-size: 1.02rem;
+      font-weight: 600;
+    }
+
+    .task-drawer-nav,
+    .task-drawer-lists {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .task-drawer-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+      margin: 2px 0;
+    }
+
+    .task-drawer-section-title {
+      padding: 0 6px;
+      color: rgba(255, 255, 255, 0.44);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .task-drawer-list-scroll {
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 2px;
+    }
+
+    .task-drawer-item {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.78);
+      font: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .task-drawer-item.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .task-drawer-item-main {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .task-drawer-icon {
+      width: 18px;
+      height: 18px;
+      color: rgba(255, 255, 255, 0.56);
+      flex-shrink: 0;
+    }
+
+    .task-drawer-item.active .task-drawer-icon {
+      color: var(--text);
+    }
+
+    .task-drawer-count {
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 0.72rem;
+      flex-shrink: 0;
+    }
+
+    .task-drawer-footer {
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .task-drawer-add {
+      width: 100%;
+      justify-content: center;
+    }
+
     .tasks-wrap {
       padding: 10px 12px 0;
       display: flex;
@@ -437,10 +577,6 @@
       text-transform: uppercase;
     }
 
-    .task-subtask-badge {
-      color: rgba(255, 255, 255, 0.54);
-    }
-
     .task-block-chip {
       display: inline-flex;
       align-items: center;
@@ -455,7 +591,15 @@
       font-size: 0.72rem;
     }
 
-    .task-delete {
+    .task-row-menu-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .task-row-menu-button {
       width: 34px;
       height: 34px;
       padding: 0;
@@ -466,10 +610,69 @@
       flex-shrink: 0;
     }
 
-    .task-delete svg {
+    .task-row-menu-button svg {
       width: 15px;
       height: 15px;
       display: block;
+    }
+
+    .task-row-menu {
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 152px;
+      z-index: 6;
+    }
+
+    .task-row-submenu-wrap {
+      position: relative;
+    }
+
+    .task-row-submenu-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .task-row-submenu-chevron {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      opacity: 0.72;
+    }
+
+    .task-row-submenu {
+      position: absolute;
+      top: 0;
+      right: calc(100% + 6px);
+      min-width: 164px;
+      z-index: 7;
+    }
+
+    .task-row-submenu:not(.open) {
+      display: none;
+    }
+
+    .task-due-chip {
+      color: rgba(255, 255, 255, 0.64);
+    }
+
+    .task-list-chip {
+      color: rgba(255, 255, 255, 0.54);
+    }
+
+    .task-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-group-label {
+      padding: 2px 4px 0;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
     .tasks-empty {
@@ -1741,6 +1944,12 @@
       min-width: 0;
     }
 
+    .task-schedule-button.active {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: var(--text);
+    }
+
     .task-format-back {
       margin-right: 0;
     }
@@ -1906,6 +2115,232 @@
       display: block;
     }
 
+    #schedule-modal-backdrop {
+      display: flex;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+
+    #schedule-modal-backdrop.open {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #schedule-modal-backdrop .modal {
+      transform: translateY(48px);
+      opacity: 0.94;
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+    }
+
+    #schedule-modal-backdrop.open .modal {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .schedule-modal {
+      max-height: min(84vh, 720px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    .schedule-modal-body {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-right: 4px;
+    }
+
+    .schedule-modal-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .schedule-modal-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+    }
+
+    .schedule-modal-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+      padding-top: 6px;
+      background: linear-gradient(180deg, rgba(24, 24, 24, 0), rgba(24, 24, 24, 0.96) 18px, rgba(24, 24, 24, 0.96));
+    }
+
+    .schedule-tabs {
+      display: inline-flex;
+      gap: 8px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      align-self: flex-start;
+    }
+
+    .schedule-tab {
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.58);
+      font: inherit;
+      font-size: 0.8rem;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    .schedule-tab.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .schedule-quick-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .schedule-quick-button {
+      min-height: 56px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .schedule-quick-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .schedule-calendar {
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .schedule-calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .schedule-month-label {
+      color: var(--text);
+      font-size: 0.94rem;
+      font-weight: 600;
+    }
+
+    .schedule-nav-button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .schedule-weekdays,
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .schedule-weekday {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .schedule-day {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .schedule-day.is-outside {
+      color: rgba(255, 255, 255, 0.2);
+    }
+
+    .schedule-day.is-today::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+    }
+
+    .schedule-day.is-selected {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .schedule-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 4px;
+      color: var(--text);
+    }
+
+    .schedule-section-meta {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.78rem;
+    }
+
+    .schedule-time-input {
+      width: auto;
+      min-width: 112px;
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .schedule-duration-panel {
+      display: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.5;
+    }
+
+    .schedule-duration-panel.open {
+      display: block;
+    }
+
     .block-notes,
     .task-notes {
       display: none;
@@ -2033,10 +2468,33 @@
   </style>
 </head>
 <body>
+  <div class="drawer-backdrop" id="drawer-backdrop" aria-hidden="true"></div>
+  <aside class="task-drawer" id="task-drawer" aria-hidden="true">
+    <div class="task-drawer-profile">
+      <div class="task-drawer-eyebrow">Workspace</div>
+      <div class="task-drawer-name">Focus Planner</div>
+    </div>
+    <div class="task-drawer-nav" id="task-drawer-nav"></div>
+    <div class="task-drawer-divider" aria-hidden="true"></div>
+    <div class="task-drawer-lists">
+      <div class="task-drawer-section-title">Task Lists</div>
+      <div class="task-drawer-list-scroll" id="task-drawer-lists"></div>
+    </div>
+    <div class="task-drawer-footer">
+      <button class="ghost-button task-drawer-add" id="add-task-list-button" type="button">+ Add List</button>
+    </div>
+  </aside>
   <main class="app-shell">
     <section class="card tasks-card panel-hidden">
       <div class="section-header compact-header">
-        <div class="header-actions"></div>
+        <div class="header-actions">
+          <button class="ghost-button timeline-library-button" id="task-drawer-toggle" type="button" aria-label="Open task lists">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 4.2h10M3 8h10M3 11.8h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <span class="phase-badge" id="active-task-list-label">Inbox</span>
+        </div>
       </div>
       <div class="tasks-wrap">
         <div class="tasks-actions">
@@ -2320,6 +2778,14 @@
           </button>
           <div class="task-context-menu" id="task-context-menu" aria-hidden="true">
             <button type="button" id="task-menu-add-subtask-button">Add subtask</button>
+            <label>
+              Move to
+              <select id="task-list-select" name="taskListId"></select>
+            </label>
+            <label>
+              Link to block
+              <select id="task-block-select" name="taskBlockId"></select>
+            </label>
             <button type="button" id="task-menu-close-button">Close</button>
             <button class="danger" type="button" id="task-menu-delete-button">Delete task</button>
           </div>
@@ -2328,6 +2794,7 @@
       <form id="task-form">
         <input type="hidden" id="task-id">
         <input type="hidden" id="task-parent-id">
+        <input type="hidden" id="task-due-datetime">
         <div class="form-grid">
           <div class="task-edit-zone" id="task-edit-zone">
             <input class="task-title-field" id="task-title-input" name="taskTitle" type="text" maxlength="120" required placeholder="Task">
@@ -2355,12 +2822,6 @@
               </div>
             </div>
           </div>
-          <div class="block-settings-panel task-settings-panel" id="task-settings-panel">
-            <label>
-              Linked block
-              <select id="task-block-select" name="taskBlockId"></select>
-            </label>
-          </div>
         </div>
         <div class="modal-actions block-modal-actions task-modal-bottom-bar">
           <div class="task-bottom-actions" id="task-bottom-actions">
@@ -2369,10 +2830,10 @@
                 <path d="M3.6 12.4 7.1 3.6h1.8l3.5 8.8M4.7 9.5h6.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <button class="ghost-button modal-icon-button" id="task-settings-button" type="button" aria-label="Open task settings">
+            <button class="ghost-button modal-icon-button task-schedule-button" id="task-schedule-button" type="button" aria-label="Schedule task">
               <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-                <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
+                <rect x="2.5" y="3.1" width="11" height="10.4" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M5.2 2.4v2.1M10.8 2.4v2.1M2.9 5.9h10.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
               </svg>
             </button>
             <div class="task-bottom-spacer"></div>
@@ -2427,6 +2888,82 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="schedule-modal-backdrop" aria-hidden="true">
+    <section class="modal schedule-modal" aria-labelledby="schedule-modal-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="schedule-modal-title">Schedule</h3>
+        </div>
+        <button class="close-button" id="schedule-close-button" type="button" aria-label="Close schedule">&times;</button>
+      </div>
+      <div class="schedule-modal-body" id="schedule-modal-body">
+        <div class="schedule-tabs" id="schedule-tabs">
+          <button class="schedule-tab active" id="schedule-date-tab" type="button">Date</button>
+          <button class="schedule-tab" id="schedule-duration-tab" type="button">Duration</button>
+        </div>
+        <div class="schedule-quick-row" id="schedule-quick-row">
+          <button class="schedule-quick-button" type="button" data-schedule-quick="today">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="3" fill="currentColor"/><path d="M8 1.8v1.8M8 12.4v1.8M1.8 8h1.8M12.4 8h1.8M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M11.5 4.5l1.3-1.3M3.2 12.8l1.3-1.3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <span>Today</span>
+          </button>
+          <button class="schedule-quick-button" type="button" data-schedule-quick="tomorrow">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9.8a5 5 0 0 1 10 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8 4.2V2.3M4.5 5.5 3.2 4.3M11.5 5.5l1.3-1.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M2.6 11.3h10.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>Tomorrow</span>
+          </button>
+          <button class="schedule-quick-button" type="button" data-schedule-quick="week">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 4.1h11M4.6 2.4v3.1M11.4 2.4v3.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><rect x="2.5" y="3.5" width="11" height="9.5" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.4 8h5.2M5.4 10.4h3.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>+7 days</span>
+          </button>
+          <button class="schedule-quick-button" type="button" data-schedule-quick="clear">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.2 9.4A4.4 4.4 0 1 0 8.7 3a3.5 3.5 0 0 1 0 7 4.3 4.3 0 0 1-4.5-.6Z" fill="currentColor"/></svg>
+            <span>No date</span>
+          </button>
+        </div>
+        <div class="schedule-calendar" id="schedule-calendar">
+          <div class="schedule-calendar-header">
+            <button class="ghost-button schedule-nav-button" id="schedule-prev-month" type="button" aria-label="Previous month">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m9.8 3.6-4.2 4.2 4.2 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="schedule-month-label" id="schedule-month-label"></div>
+            <button class="ghost-button schedule-nav-button" id="schedule-next-month" type="button" aria-label="Next month">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m6.2 3.6 4.2 4.2-4.2 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="schedule-weekdays" id="schedule-weekdays"></div>
+          <div class="schedule-grid" id="schedule-grid"></div>
+        </div>
+        <div class="schedule-duration-panel" id="schedule-duration-panel">
+          Duration UI is not active yet. Use the Date tab to set the day and optional time, then confirm with Done.
+        </div>
+        <div class="schedule-section" id="schedule-time-section">
+          <div>
+            <div>Time</div>
+            <div class="schedule-section-meta" id="schedule-time-summary">Any time</div>
+          </div>
+          <input class="schedule-time-input" id="schedule-time-input" type="time">
+        </div>
+        <div class="schedule-section">
+          <div>
+            <div>Reminder</div>
+            <div class="schedule-section-meta">UI only for now</div>
+          </div>
+          <span class="schedule-section-meta">Off</span>
+        </div>
+        <div class="schedule-section">
+          <div>
+            <div>Repeat</div>
+            <div class="schedule-section-meta">UI only for now</div>
+          </div>
+          <span class="schedule-section-meta">Never</span>
+        </div>
+      </div>
+      <div class="modal-actions schedule-modal-actions">
+        <button class="ghost-button" id="schedule-clear-button" type="button">Clear</button>
+        <button class="primary-button" id="schedule-apply-button" type="button">Done</button>
+      </div>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="timeline-save-modal-backdrop" aria-hidden="true">
     <section class="modal" aria-labelledby="timeline-save-title">
       <div class="modal-header">
@@ -2440,10 +2977,6 @@
         <label>
           Timeline name
           <input id="timeline-save-name" name="timelineName" type="text" maxlength="60" required placeholder="Weekday focus plan">
-        </label>
-        <label>
-          Phase label
-          <select id="timeline-save-phase" name="timelinePhase" required></select>
         </label>
         <div class="saved-timeline-list" id="saved-timeline-list"></div>
         <div class="modal-actions">
@@ -2481,6 +3014,9 @@
       { value: "#a88ea2", label: "Dusty Mauve" },
       { value: "#c7b48a", label: "Soft Brass" }
     ];
+    const INBOX_LIST_ID = "inbox";
+    const TASK_VIEW_TODAY = "today";
+    const TASK_VIEW_NEXT_7_DAYS = "next-7-days";
 
     const state = {
       phases: [
@@ -2490,10 +3026,17 @@
         { id: crypto.randomUUID(), name: "Financial Stability", color: "#7e9b94", isActive: false, details: "" }
       ],
       blocks: [],
+      taskLists: [
+        { id: INBOX_LIST_ID, name: "Inbox" }
+      ],
       tasks: [],
       savedTimelines: [],
       ui: {
         activeTab: "timeline",
+        activeTaskListFilter: INBOX_LIST_ID,
+        isTaskDrawerOpen: false,
+        scheduleModalOpen: false,
+        scheduleDraft: null,
         viewingPhaseId: null,
         phaseModalMode: "create",
         editingPhaseId: null,
@@ -2531,6 +3074,13 @@
     const elements = {
       phaseRail: document.getElementById("phase-rail"),
       activePhaseLabel: document.getElementById("active-phase-label"),
+      taskDrawer: document.getElementById("task-drawer"),
+      drawerBackdrop: document.getElementById("drawer-backdrop"),
+      taskDrawerNav: document.getElementById("task-drawer-nav"),
+      taskDrawerLists: document.getElementById("task-drawer-lists"),
+      taskDrawerToggle: document.getElementById("task-drawer-toggle"),
+      addTaskListButton: document.getElementById("add-task-list-button"),
+      activeTaskListLabel: document.getElementById("active-task-list-label"),
       tasksList: document.getElementById("tasks-list"),
       addTaskButton: document.getElementById("add-task-button"),
       addLinkedTaskButton: document.getElementById("add-linked-task-button"),
@@ -2602,6 +3152,7 @@
       taskForm: document.getElementById("task-form"),
       taskId: document.getElementById("task-id"),
       taskParentId: document.getElementById("task-parent-id"),
+      taskDueDateTime: document.getElementById("task-due-datetime"),
       taskTitleInput: document.getElementById("task-title-input"),
       taskEditZone: document.getElementById("task-edit-zone"),
       taskRichToolbar: document.getElementById("task-rich-toolbar"),
@@ -2616,8 +3167,8 @@
       taskNotesEditor: document.getElementById("task-notes-editor"),
       taskNotes: document.getElementById("task-notes"),
       taskBlockSelect: document.getElementById("task-block-select"),
-      taskSettingsButton: document.getElementById("task-settings-button"),
-      taskSettingsPanel: document.getElementById("task-settings-panel"),
+      taskListSelect: document.getElementById("task-list-select"),
+      taskScheduleButton: document.getElementById("task-schedule-button"),
       taskMenuButton: document.getElementById("task-menu-button"),
       taskContextMenu: document.getElementById("task-context-menu"),
       taskMenuAddSubtaskButton: document.getElementById("task-menu-add-subtask-button"),
@@ -2629,9 +3180,25 @@
       cancelSubtaskInlineButton: document.getElementById("cancel-subtask-inline-button"),
       taskSubtasksPanel: document.getElementById("task-subtasks-panel"),
       taskSubtasksList: document.getElementById("task-subtasks-list"),
+      scheduleModalBackdrop: document.getElementById("schedule-modal-backdrop"),
+      scheduleDateTab: document.getElementById("schedule-date-tab"),
+      scheduleDurationTab: document.getElementById("schedule-duration-tab"),
+      scheduleMonthLabel: document.getElementById("schedule-month-label"),
+      scheduleWeekdays: document.getElementById("schedule-weekdays"),
+      scheduleGrid: document.getElementById("schedule-grid"),
+      schedulePrevMonth: document.getElementById("schedule-prev-month"),
+      scheduleNextMonth: document.getElementById("schedule-next-month"),
+      scheduleCloseButton: document.getElementById("schedule-close-button"),
+      scheduleQuickRow: document.getElementById("schedule-quick-row"),
+      scheduleCalendar: document.getElementById("schedule-calendar"),
+      scheduleDurationPanel: document.getElementById("schedule-duration-panel"),
+      scheduleTimeSection: document.getElementById("schedule-time-section"),
+      scheduleTimeInput: document.getElementById("schedule-time-input"),
+      scheduleTimeSummary: document.getElementById("schedule-time-summary"),
+      scheduleApplyButton: document.getElementById("schedule-apply-button"),
+      scheduleClearButton: document.getElementById("schedule-clear-button"),
       timelineSaveForm: document.getElementById("timeline-save-form"),
       timelineSaveName: document.getElementById("timeline-save-name"),
-      timelineSavePhase: document.getElementById("timeline-save-phase"),
       savedTimelineList: document.getElementById("saved-timeline-list"),
       newTimelineButton: document.getElementById("new-timeline-button")
     };
@@ -2663,10 +3230,18 @@
     }
 
     function bindEvents() {
-      elements.tabTasks.addEventListener("click", () => setActiveTab("tasks"));
+      elements.taskDrawerToggle.addEventListener("click", () => setTaskDrawerOpen(true));
+      elements.drawerBackdrop.addEventListener("click", () => setTaskDrawerOpen(false));
+      elements.taskDrawerNav.addEventListener("click", handleTaskDrawerClick);
+      elements.taskDrawerLists.addEventListener("click", handleTaskDrawerClick);
+      elements.addTaskListButton.addEventListener("click", handleAddTaskList);
+      elements.tabTasks.addEventListener("click", () => {
+        state.ui.activeTaskListFilter = INBOX_LIST_ID;
+        setActiveTab("tasks");
+      });
       elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
       elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
-      elements.addTaskButton.addEventListener("click", () => openTaskModal());
+      elements.addTaskButton.addEventListener("click", () => openTaskModal(null, null, null, getDefaultTaskListForCompose()));
       elements.addLinkedTaskButton.addEventListener("click", handleAddLinkedTask);
       elements.tasksList.addEventListener("click", handleTaskListClick);
       elements.tasksList.addEventListener("pointerdown", handleTaskDragStart);
@@ -2740,11 +3315,26 @@
       elements.taskMenuAddSubtaskButton.addEventListener("click", handleTaskMenuAddSubtask);
       elements.taskMenuCloseButton.addEventListener("click", () => closeModal("task"));
       elements.taskMenuDeleteButton.addEventListener("click", handleTaskDelete);
-      elements.taskSettingsButton.addEventListener("click", handleTaskSettingsToggle);
+      elements.taskListSelect.addEventListener("change", handleTaskListSelectChange);
+      elements.taskBlockSelect.addEventListener("change", handleTaskBlockSelectChange);
+      elements.taskScheduleButton.addEventListener("click", () => openScheduleModal("date"));
       elements.saveSubtaskInlineButton.addEventListener("click", handleInlineSubtaskSave);
       elements.cancelSubtaskInlineButton.addEventListener("click", closeInlineSubtaskComposer);
       elements.taskSubtaskInlineInput.addEventListener("keydown", handleInlineSubtaskKeydown);
       elements.taskSubtasksList.addEventListener("click", handleTaskSubtasksListClick);
+      elements.scheduleDateTab.addEventListener("click", () => setScheduleTab("date"));
+      elements.scheduleDurationTab.addEventListener("click", () => setScheduleTab("duration"));
+      elements.schedulePrevMonth.addEventListener("click", () => shiftScheduleMonth(-1));
+      elements.scheduleNextMonth.addEventListener("click", () => shiftScheduleMonth(1));
+      elements.scheduleCloseButton.addEventListener("click", closeScheduleModal);
+      elements.scheduleGrid.addEventListener("click", handleScheduleGridClick);
+      elements.scheduleTimeInput.addEventListener("input", handleScheduleTimeInput);
+      elements.scheduleApplyButton.addEventListener("click", applyScheduleSelection);
+      elements.scheduleClearButton.addEventListener("click", clearScheduleSelection);
+      elements.scheduleModalBackdrop.addEventListener("click", handleScheduleBackdropClick);
+      document.querySelectorAll("[data-schedule-quick]").forEach((button) => {
+        button.addEventListener("click", handleScheduleQuickAction);
+      });
       elements.timelineSaveForm.addEventListener("submit", handleTimelineSaveSubmit);
       elements.savedTimelineList.addEventListener("click", handleSavedTimelineListClick);
       elements.newTimelineButton.addEventListener("click", handleNewTimeline);
@@ -2777,6 +3367,12 @@
       document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
       elements.toggleCompactButton.classList.toggle("active", state.ui.isCompactTimeline);
       elements.toggleCompactButton.textContent = state.ui.isCompactTimeline ? "Expanded" : "Compact";
+      elements.taskDrawer.classList.toggle("open", state.ui.isTaskDrawerOpen);
+      elements.drawerBackdrop.classList.toggle("open", state.ui.isTaskDrawerOpen);
+      elements.scheduleModalBackdrop.classList.toggle("open", state.ui.scheduleModalOpen);
+      elements.scheduleModalBackdrop.setAttribute("aria-hidden", String(!state.ui.scheduleModalOpen));
+      elements.taskDrawer.setAttribute("aria-hidden", String(!state.ui.isTaskDrawerOpen));
+      elements.drawerBackdrop.setAttribute("aria-hidden", String(!state.ui.isTaskDrawerOpen));
       elements.tabTasks.classList.toggle("active", state.ui.activeTab === "tasks");
       elements.tabPhases.classList.toggle("active", state.ui.activeTab === "phases");
       elements.tabTimeline.classList.toggle("active", state.ui.activeTab === "timeline");
@@ -2784,10 +3380,14 @@
       elements.phasesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "phases");
       elements.timelineCard.classList.toggle("panel-hidden", state.ui.activeTab !== "timeline");
       elements.addBlockButton.style.display = state.ui.activeTab === "timeline" ? "block" : "none";
+      renderTaskDrawer();
       renderTasks();
       renderPhaseRail();
       renderBlockPhaseOptions();
       renderTaskBlockOptions();
+      renderTaskListOptions();
+      renderTaskScheduleSummary();
+      renderScheduleModal();
       renderLinkedTasks();
       renderTaskSubtasks();
       renderTimeline();
@@ -2869,14 +3469,269 @@
       ].join("");
     }
 
-    function renderTasks() {
-      const rootTasks = getChildTasks(null);
-      if (!rootTasks.length) {
-        elements.tasksList.innerHTML = `<div class="tasks-empty">No tasks yet. Add one here, or add tasks inside a block.</div>`;
+    function renderTaskListOptions() {
+      const currentValue = elements.taskListSelect.value;
+      const editingTask = state.ui.editingTaskId ? getTaskById(state.ui.editingTaskId) : null;
+      const nextValue = editingTask
+        ? normalizeTaskListId(editingTask.listId)
+        : normalizeTaskListId(currentValue || getDefaultTaskListForCompose());
+      elements.taskListSelect.innerHTML = state.taskLists.map((list) =>
+        `<option value="${list.id}">${escapeHtml(list.name)}</option>`
+      ).join("");
+      elements.taskListSelect.value = nextValue;
+    }
+
+    function renderTaskDrawer() {
+      const activeFilter = state.ui.activeTaskListFilter;
+      elements.activeTaskListLabel.textContent = getTaskFilterLabel(activeFilter);
+
+      const staticItems = [
+        { id: TASK_VIEW_TODAY, label: "Today", icon: "today", count: getTasksForFilter(TASK_VIEW_TODAY).length },
+        { id: TASK_VIEW_NEXT_7_DAYS, label: "Next 7 Days", icon: "next", count: getTasksForFilter(TASK_VIEW_NEXT_7_DAYS).length },
+        { id: INBOX_LIST_ID, label: "Inbox", icon: "inbox", count: getTasksForFilter(INBOX_LIST_ID).length }
+      ];
+
+      elements.taskDrawerNav.innerHTML = staticItems.map((item) => `
+        <button class="task-drawer-item ${activeFilter === item.id ? "active" : ""}" type="button" data-task-filter="${item.id}">
+          <span class="task-drawer-item-main">
+            <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon(item.icon)}</span>
+            <span>${escapeHtml(item.label)}</span>
+          </span>
+          <span class="task-drawer-count">${item.count}</span>
+        </button>
+      `).join("");
+
+      elements.taskDrawerLists.innerHTML = state.taskLists
+        .filter((list) => list.id !== INBOX_LIST_ID)
+        .map((list) => `
+          <button class="task-drawer-item ${activeFilter === list.id ? "active" : ""}" type="button" data-task-filter="${list.id}">
+            <span class="task-drawer-item-main">
+              <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon("list")}</span>
+              <span>${escapeHtml(list.name)}</span>
+            </span>
+            <span class="task-drawer-count">${getTasksForFilter(list.id).length}</span>
+          </button>
+        `).join("") || `<div class="saved-timeline-empty">No custom lists yet.</div>`;
+    }
+
+    function renderTaskScheduleSummary() {
+      const parsed = parseTaskDueDateTime(elements.taskDueDateTime.value || "");
+      elements.taskScheduleButton.classList.toggle("active", Boolean(parsed));
+      elements.taskScheduleButton.setAttribute("aria-label", parsed
+        ? `Scheduled for ${formatTaskDueMeta(elements.taskDueDateTime.value || "", { includeDate: true, includeTime: true })}`
+        : "Schedule task");
+    }
+
+    function renderScheduleModal() {
+      const draft = state.ui.scheduleDraft;
+      elements.scheduleDateTab.classList.toggle("active", !draft || draft.activeTab === "date");
+      elements.scheduleDurationTab.classList.toggle("active", Boolean(draft && draft.activeTab === "duration"));
+      if (!draft) {
+        elements.scheduleQuickRow.hidden = false;
+        elements.scheduleCalendar.hidden = false;
+        elements.scheduleTimeSection.hidden = false;
+        elements.scheduleDurationPanel.classList.remove("open");
+        elements.scheduleMonthLabel.textContent = "";
+        elements.scheduleWeekdays.innerHTML = "";
+        elements.scheduleGrid.innerHTML = "";
+        elements.scheduleTimeInput.value = "";
+        elements.scheduleTimeSummary.textContent = "Any time";
         return;
       }
 
-      elements.tasksList.innerHTML = rootTasks.map((task) => renderTaskItem(task)).join("");
+      const isDurationTab = draft.activeTab === "duration";
+      elements.scheduleQuickRow.hidden = isDurationTab;
+      elements.scheduleCalendar.hidden = isDurationTab;
+      elements.scheduleTimeSection.hidden = isDurationTab;
+      elements.scheduleDurationPanel.classList.toggle("open", isDurationTab);
+
+      const monthDate = new Date(`${draft.monthKey}-01T00:00`);
+      elements.scheduleMonthLabel.textContent = monthDate.toLocaleDateString([], { month: "short", year: "numeric" });
+      elements.scheduleWeekdays.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => `<div class="schedule-weekday">${day}</div>`).join("");
+      elements.scheduleGrid.innerHTML = buildScheduleCalendarGrid(draft.monthKey, draft.dateKey);
+      elements.scheduleTimeInput.value = draft.timeValue || "";
+      elements.scheduleTimeSummary.textContent = draft.timeValue ? formatTimeValue(draft.timeValue) : "Any time";
+    }
+
+    function buildScheduleCalendarGrid(monthKey, selectedDateKey) {
+      const monthDate = new Date(`${monthKey}-01T00:00`);
+      const start = new Date(monthDate);
+      start.setDate(1 - monthDate.getDay());
+      return Array.from({ length: 42 }, (_, index) => {
+        const cellDate = new Date(start);
+        cellDate.setDate(start.getDate() + index);
+        const dateKey = getLocalDateKey(cellDate);
+        const isSelected = selectedDateKey === dateKey;
+        const isToday = dateKey === getLocalDateKey();
+        const isOutside = cellDate.getMonth() !== monthDate.getMonth();
+        return `<button class="schedule-day ${isSelected ? "is-selected" : ""} ${isToday ? "is-today" : ""} ${isOutside ? "is-outside" : ""}" type="button" data-schedule-date="${dateKey}">${cellDate.getDate()}</button>`;
+      }).join("");
+    }
+
+    function openScheduleModal(focus = "date") {
+      const parsed = parseTaskDueDateTime(elements.taskDueDateTime.value || "");
+      const todayKey = getLocalDateKey();
+      const baseDateKey = parsed?.dateKey || todayKey;
+      state.ui.scheduleDraft = {
+        activeTab: focus === "duration" ? "duration" : "date",
+        dateKey: baseDateKey,
+        timeValue: parsed?.timeValue || "",
+        monthKey: baseDateKey.slice(0, 7)
+      };
+      state.ui.scheduleModalOpen = true;
+      renderScheduleModal();
+      render();
+      requestAnimationFrame(() => {
+        if (!state.ui.scheduleModalOpen) {
+          return;
+        }
+        if (focus === "time" && elements.scheduleTimeInput) {
+          elements.scheduleTimeInput.focus({ preventScroll: true });
+          try {
+            elements.scheduleTimeInput.showPicker?.();
+          } catch (error) {}
+        } else if (focus === "date") {
+          elements.scheduleGrid.querySelector(".schedule-day.is-selected")?.focus({ preventScroll: true });
+        }
+      });
+    }
+
+    function closeScheduleModal() {
+      state.ui.scheduleModalOpen = false;
+      state.ui.scheduleDraft = null;
+      render();
+    }
+
+    function setScheduleTab(tab) {
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      state.ui.scheduleDraft.activeTab = tab;
+      renderScheduleModal();
+    }
+
+    function shiftScheduleMonth(delta) {
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      const monthDate = new Date(`${state.ui.scheduleDraft.monthKey}-01T00:00`);
+      monthDate.setMonth(monthDate.getMonth() + delta);
+      state.ui.scheduleDraft.monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
+      renderScheduleModal();
+    }
+
+    function handleScheduleGridClick(event) {
+      const dayButton = event.target.closest("[data-schedule-date]");
+      if (!dayButton || !state.ui.scheduleDraft) {
+        return;
+      }
+      state.ui.scheduleDraft.dateKey = dayButton.dataset.scheduleDate;
+      state.ui.scheduleDraft.monthKey = dayButton.dataset.scheduleDate.slice(0, 7);
+      renderScheduleModal();
+    }
+
+    function handleScheduleTimeInput(event) {
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      state.ui.scheduleDraft.timeValue = event.target.value || "";
+      renderScheduleModal();
+    }
+
+    function handleScheduleQuickAction(event) {
+      const action = event.currentTarget.dataset.scheduleQuick;
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      const base = new Date();
+      if (action === "today") {
+        state.ui.scheduleDraft.dateKey = getLocalDateKey(base);
+      } else if (action === "tomorrow") {
+        base.setDate(base.getDate() + 1);
+        state.ui.scheduleDraft.dateKey = getLocalDateKey(base);
+      } else if (action === "week") {
+        base.setDate(base.getDate() + 7);
+        state.ui.scheduleDraft.dateKey = getLocalDateKey(base);
+      } else if (action === "clear") {
+        state.ui.scheduleDraft.dateKey = "";
+        state.ui.scheduleDraft.timeValue = "";
+      }
+      state.ui.scheduleDraft.monthKey = (state.ui.scheduleDraft.dateKey || getLocalDateKey()).slice(0, 7);
+      renderScheduleModal();
+    }
+
+    function applyScheduleSelection() {
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      const nextValue = buildTaskDueDateTime(state.ui.scheduleDraft.dateKey, state.ui.scheduleDraft.timeValue);
+      elements.taskDueDateTime.value = nextValue;
+      renderTaskScheduleSummary();
+      if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
+        state.tasks = state.tasks.map((task) =>
+          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: nextValue } : task
+        );
+        persistState({ immediate: true });
+        render();
+      }
+      closeScheduleModal();
+    }
+
+    function clearScheduleSelection() {
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      state.ui.scheduleDraft.dateKey = "";
+      state.ui.scheduleDraft.timeValue = "";
+      renderScheduleModal();
+      applyScheduleSelection();
+    }
+
+    function clearTaskSchedule() {
+      elements.taskDueDateTime.value = "";
+      renderTaskScheduleSummary();
+      if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
+        state.tasks = state.tasks.map((task) =>
+          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: "" } : task
+        );
+        persistState({ immediate: true });
+        render();
+      }
+    }
+
+    function handleScheduleBackdropClick(event) {
+      if (event.target === elements.scheduleModalBackdrop) {
+        closeScheduleModal();
+      }
+    }
+
+    function getTaskDrawerIcon(type) {
+      if (type === "today") {
+        return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.5" y="3.1" width="11" height="10.4" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.2 2.4v2.1M10.8 2.4v2.1M2.9 5.9h10.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="9.5" r="1.4" fill="currentColor"/></svg>`;
+      }
+      if (type === "next") {
+        return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2.7a5.3 5.3 0 1 0 5.3 5.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M8 5.4v2.9l2 1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.9 2.7h2.4v2.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      }
+      if (type === "inbox") {
+        return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 5.2 4 12.6h8L13.5 5.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.7 5.2h10.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5.5 8.7h5l-1 1.8h-3z" fill="currentColor"/></svg>`;
+      }
+      return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.8" y="3" width="10.4" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.2 6.1h5.6M5.2 8.2h5.6M5.2 10.3h3.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+    }
+
+    function renderTasks() {
+      const isDynamicView = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter);
+      const visibleTasks = getVisibleRootTasks();
+      if (!visibleTasks.length) {
+        elements.tasksList.innerHTML = `<div class="tasks-empty">No tasks in this view yet. Add one here, or add tasks inside a block.</div>`;
+        return;
+      }
+
+      if (isDynamicView) {
+        elements.tasksList.innerHTML = renderScheduledTaskGroups(visibleTasks);
+        return;
+      }
+
+      elements.tasksList.innerHTML = visibleTasks.map((task) => renderTaskItem(task)).join("");
     }
 
     function renderTaskItem(task, depth = 0) {
@@ -2884,7 +3739,7 @@
       const overnight = block ? timeToMinutes(block.endTime) <= timeToMinutes(block.startTime) : false;
       const subtasks = getChildTasks(task.id);
       const isExpanded = subtasks.length ? !task.isCollapsed : false;
-      const subtaskCountLabel = subtasks.length ? `${subtasks.length} subtask${subtasks.length === 1 ? "" : "s"}` : "";
+      const dueMeta = formatTaskDueMeta(task.dueDateTime, { includeDate: true, includeTime: true });
       const showScheduleMeta = depth === 0;
 
       return `
@@ -2906,17 +3761,182 @@
             <div class="task-meta">
               ${showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : ""}
               ${showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
-              ${subtaskCountLabel ? `<span class="task-subtask-badge">${escapeHtml(subtaskCountLabel)}</span>` : ""}
+              ${dueMeta ? `<span class="task-due-chip">${escapeHtml(dueMeta)}</span>` : ""}
             </div>
           </button>
-          <button class="danger-button task-delete" type="button" data-delete-task="${task.id}" aria-label="Delete task">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+          <div class="task-row-menu-wrap">
+            <button class="ghost-button task-row-menu-button" type="button" data-toggle-task-row-menu="${task.id}" aria-label="Task options" aria-expanded="false">
+              <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="3.2" r="1.2"/>
+                <circle cx="8" cy="8" r="1.2"/>
+                <circle cx="8" cy="12.8" r="1.2"/>
+              </svg>
+            </button>
+            <div class="task-context-menu task-row-menu" data-task-row-menu="${task.id}" aria-hidden="true">
+              <div class="task-row-submenu-wrap">
+                <button class="task-row-submenu-trigger" type="button" data-toggle-task-list-submenu="${task.id}" aria-expanded="false">
+                  <span>Move to</span>
+                  <svg class="task-row-submenu-chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m6.2 3.6 4.2 4.2-4.2 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <div class="task-context-menu task-row-submenu" data-task-row-submenu="${task.id}" aria-hidden="true">
+                  ${state.taskLists.map((list) => `
+                    <button type="button" data-move-task-list="${task.id}" data-list-id="${list.id}">
+                      ${escapeHtml(list.name)}
+                    </button>
+                  `).join("")}
+                </div>
+              </div>
+              <button class="danger" type="button" data-delete-task="${task.id}">Delete task</button>
+            </div>
+          </div>
         </div>
         ${isExpanded ? subtasks.map((childTask) => renderTaskItem(childTask, depth + 1)).join("") : ""}
       `;
+    }
+
+    function getVisibleRootTasks() {
+      if ([TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter)) {
+        return getTasksForFilter(state.ui.activeTaskListFilter);
+      }
+      return getTasksForFilter(state.ui.activeTaskListFilter).filter((task) => !task.parentTaskId);
+    }
+
+    function getTasksForFilter(filterId) {
+      if (filterId === TASK_VIEW_TODAY) {
+        return sortTasksForScheduleView(state.tasks.filter((task) => isTaskDueToday(task)));
+      }
+
+      if (filterId === TASK_VIEW_NEXT_7_DAYS) {
+        return sortTasksForScheduleView(state.tasks.filter((task) => isTaskDueWithinNextDays(task, 7)));
+      }
+
+      const normalizedListId = normalizeTaskListId(filterId);
+      return state.tasks.filter((task) => normalizeTaskListId(task.listId) === normalizedListId);
+    }
+
+    function getTaskFilterLabel(filterId) {
+      if (filterId === TASK_VIEW_TODAY) {
+        return "Today";
+      }
+      if (filterId === TASK_VIEW_NEXT_7_DAYS) {
+        return "Next 7 Days";
+      }
+      return getTaskListById(filterId)?.name || "Inbox";
+    }
+
+    function renderScheduledTaskGroups(tasks) {
+      const groups = new Map();
+      tasks.forEach((task) => {
+        const parsedDue = parseTaskDueDateTime(task.dueDateTime);
+        if (!parsedDue?.dateKey) {
+          return;
+        }
+        const label = getRelativeDateLabel(parsedDue.dateKey);
+        if (!groups.has(label)) {
+          groups.set(label, []);
+        }
+        groups.get(label).push(task);
+      });
+
+      return [...groups.entries()].map(([label, groupedTasks]) => `
+        <div class="task-group">
+          <div class="task-group-label">${escapeHtml(label)}</div>
+          ${groupedTasks.map((task) => renderScheduledTaskItem(task)).join("")}
+        </div>
+      `).join("");
+    }
+
+    function renderScheduledTaskItem(task) {
+      const block = task.blockId ? getBlockById(task.blockId) : null;
+      const dueMeta = formatTaskDueMeta(task.dueDateTime, { includeDate: false, includeTime: true }) || "Any time";
+      const listName = getTaskListById(task.listId)?.name || "Inbox";
+      return `
+        <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}">
+          <span class="task-expand-placeholder" aria-hidden="true"></span>
+          <button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="task-main-button" type="button" data-edit-task="${task.id}">
+            <div class="task-title">${escapeHtml(task.title)}</div>
+            <div class="task-meta">
+              <span class="task-due-chip">${escapeHtml(dueMeta)}</span>
+              <span class="task-list-chip">${escapeHtml(listName)}</span>
+              ${block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
+            </div>
+          </button>
+          <div class="task-row-menu-wrap">
+            <button class="ghost-button task-row-menu-button" type="button" data-toggle-task-row-menu="${task.id}" aria-label="Task options" aria-expanded="false">
+              <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="3.2" r="1.2"/>
+                <circle cx="8" cy="8" r="1.2"/>
+                <circle cx="8" cy="12.8" r="1.2"/>
+              </svg>
+            </button>
+            <div class="task-context-menu task-row-menu" data-task-row-menu="${task.id}" aria-hidden="true">
+              <div class="task-row-submenu-wrap">
+                <button class="task-row-submenu-trigger" type="button" data-toggle-task-list-submenu="${task.id}" aria-expanded="false">
+                  <span>Move to</span>
+                  <svg class="task-row-submenu-chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m6.2 3.6 4.2 4.2-4.2 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <div class="task-context-menu task-row-submenu" data-task-row-submenu="${task.id}" aria-hidden="true">
+                  ${state.taskLists.map((list) => `
+                    <button type="button" data-move-task-list="${task.id}" data-list-id="${list.id}">
+                      ${escapeHtml(list.name)}
+                    </button>
+                  `).join("")}
+                </div>
+              </div>
+              <button class="danger" type="button" data-delete-task="${task.id}">Delete task</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setTaskDrawerOpen(isOpen) {
+      state.ui.isTaskDrawerOpen = isOpen;
+      render();
+    }
+
+    function handleTaskDrawerClick(event) {
+      const filterButton = event.target.closest("[data-task-filter]");
+      if (!filterButton) {
+        return;
+      }
+
+      state.ui.activeTaskListFilter = filterButton.dataset.taskFilter;
+      state.ui.activeTab = "tasks";
+      state.ui.isTaskDrawerOpen = false;
+      persistState();
+      render();
+    }
+
+    function handleAddTaskList() {
+      const name = window.prompt("List name");
+      if (!name) {
+        return;
+      }
+
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        return;
+      }
+
+      state.taskLists.push({
+        id: crypto.randomUUID(),
+        name: trimmedName
+      });
+      state.ui.activeTaskListFilter = state.taskLists[state.taskLists.length - 1].id;
+      state.ui.activeTab = "tasks";
+      state.ui.isTaskDrawerOpen = false;
+      persistState({ immediate: true });
+      render();
     }
 
     function renderLinkedTasks() {
@@ -2990,6 +4010,7 @@
 
     function setActiveTab(tab) {
       state.ui.activeTab = tab;
+      state.ui.isTaskDrawerOpen = false;
       persistState();
       render();
     }
@@ -3171,6 +4192,55 @@
       elements.phaseContextMenu.classList.toggle("open", isOpen);
       elements.phaseContextMenu.setAttribute("aria-hidden", String(!isOpen));
       elements.phaseMenuButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function closeTaskRowMenus(exceptTaskId = null) {
+      elements.tasksList.querySelectorAll("[data-task-row-menu]").forEach((menu) => {
+        const shouldStayOpen = exceptTaskId && menu.dataset.taskRowMenu === exceptTaskId;
+        menu.classList.toggle("open", Boolean(shouldStayOpen));
+        menu.setAttribute("aria-hidden", String(!shouldStayOpen));
+      });
+
+      elements.tasksList.querySelectorAll("[data-toggle-task-row-menu]").forEach((button) => {
+        const isExpanded = Boolean(exceptTaskId && button.dataset.toggleTaskRowMenu === exceptTaskId);
+        button.setAttribute("aria-expanded", String(isExpanded));
+      });
+
+      closeTaskRowSubmenus(exceptTaskId);
+    }
+
+    function toggleTaskRowMenu(taskId) {
+      const menu = elements.tasksList.querySelector(`[data-task-row-menu="${taskId}"]`);
+      if (!menu) {
+        return;
+      }
+
+      const shouldOpen = !menu.classList.contains("open");
+      closeTaskRowMenus(shouldOpen ? taskId : null);
+    }
+
+    function closeTaskRowSubmenus(exceptTaskId = null) {
+      elements.tasksList.querySelectorAll("[data-task-row-submenu]").forEach((menu) => {
+        const shouldStayOpen = exceptTaskId && menu.dataset.taskRowSubmenu === exceptTaskId;
+        menu.classList.toggle("open", Boolean(shouldStayOpen));
+        menu.setAttribute("aria-hidden", String(!shouldStayOpen));
+      });
+
+      elements.tasksList.querySelectorAll("[data-toggle-task-list-submenu]").forEach((button) => {
+        const isExpanded = Boolean(exceptTaskId && button.dataset.toggleTaskListSubmenu === exceptTaskId);
+        button.setAttribute("aria-expanded", String(isExpanded));
+      });
+    }
+
+    function toggleTaskRowSubmenu(taskId) {
+      const submenu = elements.tasksList.querySelector(`[data-task-row-submenu="${taskId}"]`);
+      if (!submenu) {
+        return;
+      }
+
+      const shouldOpen = !submenu.classList.contains("open");
+      closeTaskRowMenus(taskId);
+      closeTaskRowSubmenus(shouldOpen ? taskId : null);
     }
 
     function handlePhaseMenuToggle(event) {
@@ -3566,12 +4636,20 @@
     }
 
     function handleDocumentPointerDown(event) {
+      if (!event.target.closest(".task-row-menu-wrap")) {
+        closeTaskRowMenus();
+      }
+
       if (elements.phaseContextMenu && !elements.phaseContextMenu.contains(event.target) && !elements.phaseMenuButton.contains(event.target)) {
         setPhaseMenuOpen(false);
       }
 
       if (elements.blockContextMenu && !elements.blockContextMenu.contains(event.target) && !elements.blockMenuButton.contains(event.target)) {
         setBlockMenuOpen(false);
+      }
+
+      if (state.ui.scheduleModalOpen) {
+        return;
       }
 
       if (!isTaskModalOpen() || !state.ui.taskModalIsEditing) {
@@ -3660,12 +4738,16 @@
       const notes = normalizeTaskEditorHtml(elements.taskNotesEditor.innerHTML);
       const blockId = elements.taskBlockSelect.value || null;
       const parentTaskId = elements.taskParentId.value || null;
+      const listId = normalizeTaskListId(elements.taskListSelect.value || null);
+      const dueDateTime = elements.taskDueDateTime.value || "";
       return {
         id: elements.taskId.value || crypto.randomUUID(),
         title,
         notes,
         blockId,
-        parentTaskId
+        parentTaskId,
+        listId,
+        dueDateTime
       };
     }
 
@@ -3683,6 +4765,8 @@
         notes: draft.notes,
         blockId: draft.blockId,
         parentTaskId: draft.parentTaskId,
+        listId: draft.parentTaskId ? (getTaskById(draft.parentTaskId)?.listId || draft.listId) : draft.listId,
+        dueDateTime: draft.dueDateTime || "",
         isDone: existingTask ? Boolean(existingTask.isDone) : false,
         isCollapsed: existingTask ? Boolean(existingTask.isCollapsed) : false
       };
@@ -3745,6 +4829,9 @@
     }
 
     function handleTaskDragStart(event) {
+      if ([TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter)) {
+        return;
+      }
       const handle = event.target.closest("[data-drag-task-handle]");
       if (!handle) {
         return;
@@ -4163,6 +5250,18 @@
         return;
       }
 
+      const rowMenuButton = event.target.closest("[data-toggle-task-row-menu]");
+      if (rowMenuButton) {
+        toggleTaskRowMenu(rowMenuButton.dataset.toggleTaskRowMenu);
+        return;
+      }
+
+      const rowSubmenuButton = event.target.closest("[data-toggle-task-list-submenu]");
+      if (rowSubmenuButton) {
+        toggleTaskRowSubmenu(rowSubmenuButton.dataset.toggleTaskListSubmenu);
+        return;
+      }
+
       const collapseButton = event.target.closest("[data-toggle-task-collapse]");
       if (collapseButton) {
         toggleTaskCollapse(collapseButton.dataset.toggleTaskCollapse);
@@ -4181,8 +5280,16 @@
         return;
       }
 
+      const moveButton = event.target.closest("[data-move-task-list]");
+      if (moveButton) {
+        closeTaskRowMenus();
+        moveTaskToList(moveButton.dataset.moveTaskList, moveButton.dataset.listId);
+        return;
+      }
+
       const deleteButton = event.target.closest("[data-delete-task]");
       if (deleteButton) {
+        closeTaskRowMenus();
         deleteTask(deleteButton.dataset.deleteTask);
         return;
       }
@@ -4379,7 +5486,7 @@
         return;
       }
 
-      openTaskModal(null, state.ui.editingBlockId);
+      openTaskModal(null, state.ui.editingBlockId, null, getDefaultTaskListForCompose());
     }
 
     function handleAddSubtask() {
@@ -4431,6 +5538,8 @@
         notes: "",
         blockId: parentTask?.blockId || null,
         parentTaskId: state.ui.editingTaskId,
+        listId: normalizeTaskListId(parentTask?.listId),
+        dueDateTime: "",
         isDone: false,
         isCollapsed: false
       };
@@ -4461,8 +5570,41 @@
       render();
     }
 
-    function handleTaskSettingsToggle() {
-      elements.taskSettingsPanel.classList.toggle("open");
+    function handleTaskListSelectChange() {
+      if (state.ui.taskModalMode !== "edit" || !state.ui.editingTaskId) {
+        return;
+      }
+
+      const nextListId = normalizeTaskListId(elements.taskListSelect.value || null);
+      const descendantIds = new Set(getTaskDescendantIds(state.ui.editingTaskId));
+      state.tasks = state.tasks.map((task) => {
+        if (task.id === state.ui.editingTaskId) {
+          return { ...task, listId: nextListId };
+        }
+        if (descendantIds.has(task.id)) {
+          return { ...task, listId: nextListId };
+        }
+        return task;
+      });
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleTaskBlockSelectChange() {
+      if (state.ui.taskModalMode !== "edit" || !state.ui.editingTaskId) {
+        return;
+      }
+
+      const nextBlockId = elements.taskBlockSelect.value || null;
+      const descendantIds = new Set(getTaskDescendantIds(state.ui.editingTaskId));
+      state.tasks = state.tasks.map((task) => {
+        if (task.id === state.ui.editingTaskId || descendantIds.has(task.id)) {
+          return { ...task, blockId: nextBlockId };
+        }
+        return task;
+      });
+      persistState({ immediate: true });
+      render();
     }
 
     function toggleTask(taskId) {
@@ -4485,6 +5627,19 @@
       const descendantIds = getTaskDescendantIds(taskId);
       const removalIds = new Set([taskId, ...descendantIds]);
       state.tasks = state.tasks.filter((task) => !removalIds.has(task.id));
+      persistState({ immediate: true });
+      render();
+    }
+
+    function moveTaskToList(taskId, listId) {
+      const nextListId = normalizeTaskListId(listId);
+      const descendantIds = new Set(getTaskDescendantIds(taskId));
+      state.tasks = state.tasks.map((task) => {
+        if (task.id === taskId || descendantIds.has(task.id)) {
+          return { ...task, listId: nextListId };
+        }
+        return task;
+      });
       persistState({ immediate: true });
       render();
     }
@@ -4533,7 +5688,6 @@
 
     function openTimelineSaveModal() {
       elements.timelineSaveName.value = buildDefaultTimelineName();
-      populateTimelineSavePhaseOptions();
       renderSavedTimelineList();
       openModal("timeline-save");
     }
@@ -4542,20 +5696,12 @@
       event.preventDefault();
 
       const name = elements.timelineSaveName.value.trim() || buildDefaultTimelineName();
-      const selectedPhaseId = elements.timelineSavePhase.value;
-      if (!selectedPhaseId) {
-        alert("Select one active phase for this saved timeline.");
-        return;
-      }
-
       const snapshot = {
         id: crypto.randomUUID(),
         name,
         savedAt: new Date().toISOString(),
-        selectedPhaseId,
-        phases: clonePhases(state.phases),
         blocks: cloneBlocks(state.blocks),
-        tasks: cloneTasks(state.tasks)
+        tasks: cloneTimelineTasksForSave()
       };
 
       state.savedTimelines.unshift(snapshot);
@@ -4592,10 +5738,25 @@
         return;
       }
 
-      state.phases = clonePhases(snapshot.phases);
-      state.blocks = cloneBlocks(snapshot.blocks);
-      state.tasks = cloneTasks(snapshot.tasks || []);
+      const fallbackPhaseId = getActivePhases()[0]?.id || state.phases[0]?.id || "";
+      const previousTimelineBlockIds = new Set(state.blocks.map((block) => block.id));
+      const nextBlocks = cloneBlocks(snapshot.blocks || []).map((block) => ({
+        ...block,
+        phaseId: state.phases.some((phase) => phase.id === block.phaseId) ? block.phaseId : fallbackPhaseId
+      }));
+      const nextTimelineBlockIds = new Set(nextBlocks.map((block) => block.id));
+      const nextTimelineTasks = cloneTasks(snapshot.tasks || []).map((task) => ({
+        ...task,
+        blockId: task.blockId && nextTimelineBlockIds.has(task.blockId) ? task.blockId : null
+      }));
+
+      state.blocks = nextBlocks;
+      state.tasks = [
+        ...state.tasks.filter((task) => !task.blockId || !previousTimelineBlockIds.has(task.blockId)),
+        ...nextTimelineTasks
+      ];
       state.ui.activeTab = "timeline";
+      state.ui.activeTaskListFilter = INBOX_LIST_ID;
       state.ui.phaseToReveal = state.phases[0]?.id ?? null;
       persistState({ immediate: true });
       closeModal("timeline-save");
@@ -4618,8 +5779,8 @@
         <div class="saved-timeline-item">
           <div class="saved-timeline-info">
             <div class="saved-timeline-title">${escapeHtml(item.name)}</div>
-            ${renderSavedTimelinePhaseChip(item)}
-            <div class="saved-timeline-meta">${item.blocks.length} blocks - ${item.phases.length} phases - ${escapeHtml(formatSavedTimelineDate(item.savedAt))}</div>
+            ${renderSavedTimelineTaskChip(item)}
+            <div class="saved-timeline-meta">${item.blocks.length} blocks - ${(item.tasks || []).length} linked tasks - ${escapeHtml(formatSavedTimelineDate(item.savedAt))}</div>
           </div>
           <div class="saved-timeline-actions">
             <button class="ghost-button micro-button" type="button" data-load-timeline="${item.id}">Load</button>
@@ -4629,32 +5790,16 @@
       `).join("");
     }
 
-    function populateTimelineSavePhaseOptions() {
-      const activePhases = getActivePhases();
-      if (!activePhases.length) {
-        elements.timelineSavePhase.innerHTML = `<option value="">No active phases</option>`;
-        elements.timelineSavePhase.value = "";
-        return;
-      }
-
-      elements.timelineSavePhase.innerHTML = activePhases.map((phase) =>
-        `<option value="${phase.id}">${escapeHtml(phase.name)}</option>`
-      ).join("");
-      elements.timelineSavePhase.value = activePhases[0].id;
-    }
-
-    function renderSavedTimelinePhaseChip(item) {
-      const phase = item.phases.find((entry) => entry.id === item.selectedPhaseId)
-        || item.phases.find((entry) => entry.isActive)
-        || item.phases[0];
-      if (!phase) {
+    function renderSavedTimelineTaskChip(item) {
+      const linkedTaskCount = Array.isArray(item.tasks) ? item.tasks.length : 0;
+      if (!linkedTaskCount) {
         return "";
       }
 
       return `
-        <div class="saved-timeline-phase" style="--phase-color: ${escapeHtml(phase.color)};">
+        <div class="saved-timeline-phase" style="--phase-color: #b6c0d0;">
           <span class="saved-timeline-phase-dot" aria-hidden="true"></span>
-          <span>${escapeHtml(phase.name)}</span>
+          <span>${linkedTaskCount} linked task${linkedTaskCount === 1 ? "" : "s"}</span>
         </div>
       `;
     }
@@ -4734,9 +5879,10 @@
       openModal("block");
     }
 
-    function openTaskModal(taskId = null, blockId = null, parentTaskId = null) {
+    function openTaskModal(taskId = null, blockId = null, parentTaskId = null, listId = null) {
       const task = taskId ? getTaskById(taskId) : null;
       const resolvedParentTaskId = task ? (task.parentTaskId || null) : parentTaskId;
+      const parentTask = resolvedParentTaskId ? getTaskById(resolvedParentTaskId) : null;
 
       state.ui.taskModalMode = task ? "edit" : "create";
       state.ui.editingTaskId = task ? task.id : null;
@@ -4745,12 +5891,15 @@
       elements.taskParentId.value = resolvedParentTaskId || "";
       elements.taskTitleInput.value = task ? task.title : "";
       elements.taskNotes.value = task ? task.notes || "" : "";
+      elements.taskDueDateTime.value = task ? (task.dueDateTime || "") : "";
       syncTaskNotesFieldToEditor();
       renderTaskBlockOptions();
       elements.taskBlockSelect.value = task ? (task.blockId || "") : (blockId || "");
+      renderTaskListOptions();
+      elements.taskListSelect.value = normalizeTaskListId(task ? task.listId : (parentTask?.listId || listId || getDefaultTaskListForCompose()));
+      renderTaskScheduleSummary();
       elements.taskMenuAddSubtaskButton.style.display = task ? "" : "none";
       elements.taskMenuDeleteButton.style.display = task ? "" : "none";
-      elements.taskSettingsPanel.classList.remove("open");
       setTaskFormattingTrayOpen(false);
       setTaskMenuOpen(false);
       closeInlineSubtaskComposer();
@@ -4856,12 +6005,14 @@
       } else if (type === "task") {
         elements.taskForm.reset();
         elements.taskNotes.value = "";
+        elements.taskDueDateTime.value = "";
         syncTaskNotesFieldToEditor();
         elements.taskBlockSelect.value = "";
         elements.taskParentId.value = "";
-        elements.taskSettingsPanel.classList.remove("open");
         setTaskFormattingTrayOpen(false);
         setTaskMenuOpen(false);
+        state.ui.scheduleModalOpen = false;
+        state.ui.scheduleDraft = null;
         closeInlineSubtaskComposer();
         state.ui.editingTaskId = null;
         state.ui.taskModalParentId = null;
@@ -4911,6 +6062,151 @@
 
     function getTaskById(taskId) {
       return state.tasks.find((task) => task.id === taskId) || null;
+    }
+
+    function parseTaskDueDateTime(value) {
+      if (typeof value !== "string" || !value) {
+        return null;
+      }
+
+      const trimmed = value.trim();
+      const [datePart, timePart] = trimmed.split("T");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart || "")) {
+        return null;
+      }
+
+      const [year, month, day] = datePart.split("-").map(Number);
+      const hasTime = /^\d{2}:\d{2}$/.test(timePart || "");
+      const hours = hasTime ? Number(timePart.slice(0, 2)) : 23;
+      const minutes = hasTime ? Number(timePart.slice(3, 5)) : 59;
+      const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      if (Number.isNaN(date.getTime())) {
+        return null;
+      }
+
+      return {
+        raw: trimmed,
+        dateKey: datePart,
+        timeValue: hasTime ? timePart : "",
+        hasTime,
+        date
+      };
+    }
+
+    function buildTaskDueDateTime(dateKey, timeValue = "") {
+      if (!dateKey) {
+        return "";
+      }
+      return timeValue ? `${dateKey}T${timeValue}` : dateKey;
+    }
+
+    function getLocalDateKey(date = new Date()) {
+      return [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0")
+      ].join("-");
+    }
+
+    function formatTaskDueMeta(value, options = {}) {
+      const parsed = parseTaskDueDateTime(value);
+      if (!parsed) {
+        return "";
+      }
+
+      const includeDate = options.includeDate !== false;
+      const includeTime = options.includeTime !== false;
+      const parts = [];
+      if (includeDate) {
+        parts.push(getRelativeDateLabel(parsed.dateKey));
+      }
+      if (includeTime && parsed.hasTime) {
+        parts.push(formatTimeValue(parsed.timeValue));
+      }
+      return parts.join(" · ");
+    }
+
+    function formatTimeValue(timeValue) {
+      if (!/^\d{2}:\d{2}$/.test(timeValue || "")) {
+        return "Any time";
+      }
+      const [hours, minutes] = timeValue.split(":").map(Number);
+      const value = new Date();
+      value.setHours(hours, minutes, 0, 0);
+      return value.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function getRelativeDateLabel(dateKey) {
+      const todayKey = getLocalDateKey();
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowKey = getLocalDateKey(tomorrow);
+      if (dateKey === todayKey) {
+        return "Today";
+      }
+      if (dateKey === tomorrowKey) {
+        return "Tomorrow";
+      }
+      const parsed = parseTaskDueDateTime(dateKey);
+      if (!parsed) {
+        return "";
+      }
+      return parsed.date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+    }
+
+    function isTaskDueToday(task) {
+      const parsed = parseTaskDueDateTime(task.dueDateTime);
+      return Boolean(parsed && parsed.dateKey === getLocalDateKey());
+    }
+
+    function isTaskDueWithinNextDays(task, dayCount) {
+      const parsed = parseTaskDueDateTime(task.dueDateTime);
+      if (!parsed) {
+        return false;
+      }
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + Math.max(0, dayCount - 1));
+      end.setHours(23, 59, 59, 999);
+      return parsed.date >= start && parsed.date <= end;
+    }
+
+    function sortTasksForScheduleView(tasks) {
+      return [...tasks].sort((leftTask, rightTask) => {
+        const leftDue = parseTaskDueDateTime(leftTask.dueDateTime);
+        const rightDue = parseTaskDueDateTime(rightTask.dueDateTime);
+        const leftDateKey = leftDue?.dateKey || "";
+        const rightDateKey = rightDue?.dateKey || "";
+        if (leftDateKey !== rightDateKey) {
+          return leftDateKey.localeCompare(rightDateKey);
+        }
+        if (leftDue?.hasTime && rightDue?.hasTime && leftDue.timeValue !== rightDue.timeValue) {
+          return leftDue.timeValue.localeCompare(rightDue.timeValue);
+        }
+        if (leftDue?.hasTime !== rightDue?.hasTime) {
+          return leftDue?.hasTime ? -1 : 1;
+        }
+        return leftTask.title.localeCompare(rightTask.title);
+      });
+    }
+
+    function getTaskListById(listId) {
+      const normalizedListId = normalizeTaskListId(listId);
+      return state.taskLists.find((list) => list.id === normalizedListId) || null;
+    }
+
+    function normalizeTaskListId(listId, taskLists = state.taskLists) {
+      if (typeof listId !== "string" || !listId) {
+        return INBOX_LIST_ID;
+      }
+      return taskLists.some((list) => list.id === listId) ? listId : INBOX_LIST_ID;
+    }
+
+    function getDefaultTaskListForCompose() {
+      return [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter)
+        ? INBOX_LIST_ID
+        : normalizeTaskListId(state.ui.activeTaskListFilter);
     }
 
     function getChildTasks(parentTaskId) {
@@ -4995,10 +6291,24 @@
         title: task.title,
         notes: task.notes || "",
         blockId: task.blockId || null,
+        listId: normalizeTaskListId(task.listId),
+        dueDateTime: typeof task.dueDateTime === "string" ? task.dueDateTime : "",
         parentTaskId: task.parentTaskId || null,
         isDone: Boolean(task.isDone),
         isCollapsed: Boolean(task.isCollapsed)
       }));
+    }
+
+    function cloneTaskLists(taskLists) {
+      return taskLists.map((list) => ({
+        id: list.id,
+        name: list.name
+      }));
+    }
+
+    function cloneTimelineTasksForSave() {
+      const blockIds = new Set(state.blocks.map((block) => block.id));
+      return cloneTasks(state.tasks.filter((task) => task.blockId && blockIds.has(task.blockId)));
     }
 
     function normalizeSavedPhases(phases) {
@@ -5029,7 +6339,7 @@
         : [];
     }
 
-    function normalizeSavedTasks(tasks, blocks) {
+    function normalizeSavedTasks(tasks, blocks, taskLists = state.taskLists) {
       if (!Array.isArray(tasks)) {
         return [];
       }
@@ -5039,6 +6349,8 @@
         title: typeof task?.title === "string" && task.title.trim() ? task.title.trim() : "Untitled task",
         notes: typeof task?.notes === "string" ? task.notes : "",
         blockId: typeof task?.blockId === "string" && blocks.some((block) => block.id === task.blockId) ? task.blockId : null,
+        listId: typeof task?.listId === "string" && task.listId ? task.listId : INBOX_LIST_ID,
+        dueDateTime: typeof task?.dueDateTime === "string" ? task.dueDateTime : "",
         parentTaskId: typeof task?.parentTaskId === "string" && task.parentTaskId ? task.parentTaskId : null,
         isDone: Boolean(task?.isDone),
         isCollapsed: Boolean(task?.isCollapsed)
@@ -5047,8 +6359,23 @@
       const validTaskIds = new Set(normalizedTasks.map((task) => task.id));
       return normalizedTasks.map((task) => ({
         ...task,
+        listId: normalizeTaskListId(task.listId, taskLists),
         parentTaskId: task.parentTaskId && validTaskIds.has(task.parentTaskId) ? task.parentTaskId : null
       }));
+    }
+
+    function normalizeSavedTaskLists(taskLists) {
+      const normalizedLists = Array.isArray(taskLists)
+        ? taskLists
+            .map((list) => ({
+              id: typeof list?.id === "string" && list.id ? list.id : crypto.randomUUID(),
+              name: typeof list?.name === "string" && list.name.trim() ? list.name.trim() : ""
+            }))
+            .filter((list) => list.name)
+        : [];
+
+      const withoutInbox = normalizedLists.filter((list) => list.id !== INBOX_LIST_ID);
+      return [{ id: INBOX_LIST_ID, name: "Inbox" }, ...withoutInbox];
     }
 
     function buildDefaultTimelineName() {
@@ -5216,11 +6543,13 @@
       return {
         phases: state.phases,
         blocks: state.blocks,
+        taskLists: state.taskLists,
         tasks: state.tasks,
         savedTimelines: state.savedTimelines,
         ui: {
           isCompactTimeline: state.ui.isCompactTimeline,
-          activeTab: state.ui.activeTab
+          activeTab: state.ui.activeTab,
+          activeTaskListFilter: state.ui.activeTaskListFilter
         },
         updatedAt: new Date().toISOString()
       };
@@ -5229,6 +6558,7 @@
     function applyPersistedState(parsed) {
       const savedPhases = Array.isArray(parsed?.phases) ? parsed.phases : [];
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
+      const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists);
       const savedTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
       const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
 
@@ -5240,7 +6570,14 @@
           details: typeof phase.details === "string" ? phase.details.trim() : "",
           isActive: Boolean(phase.isActive)
         }));
+        if (!state.phases.some((phase) => phase.isActive) && state.phases.length) {
+          state.phases[0].isActive = true;
+        }
       }
+
+      state.taskLists = savedTaskLists;
+
+      const fallbackPhaseId = getActivePhases()[0]?.id || state.phases[0]?.id || "";
 
       state.blocks = savedBlocks
         .filter((block) => typeof block?.phaseId === "string")
@@ -5248,20 +6585,19 @@
           id: typeof block.id === "string" && block.id ? block.id : crypto.randomUUID(),
           title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
           notes: typeof block.notes === "string" ? block.notes : "",
-          phaseId: block.phaseId,
+          phaseId: state.phases.some((phase) => phase.id === block.phaseId) ? block.phaseId : fallbackPhaseId,
           startTime: normalizeTimeValue(block.startTime),
           endTime: normalizeTimeValue(block.endTime)
         }))
-        .filter((block) => state.phases.some((phase) => phase.id === block.phaseId));
+        .filter((block) => block.phaseId);
 
-      state.tasks = normalizeSavedTasks(savedTasks, state.blocks);
+      state.tasks = normalizeSavedTasks(savedTasks, state.blocks, state.taskLists);
 
       state.savedTimelines = savedTimelines
         .map((item) => {
-          const phases = normalizeSavedPhases(item?.phases);
-          const blocks = normalizeSavedBlocks(item?.blocks, phases);
-          const tasks = normalizeSavedTasks(item?.tasks, blocks);
-          if (!phases.length) {
+          const blocks = normalizeSavedBlocks(item?.blocks, state.phases);
+          const tasks = normalizeSavedTasks(item?.tasks, blocks, state.taskLists);
+          if (!blocks.length && !tasks.length) {
             return null;
           }
 
@@ -5269,8 +6605,6 @@
             id: typeof item?.id === "string" && item.id ? item.id : crypto.randomUUID(),
             name: typeof item?.name === "string" && item.name.trim() ? item.name.trim() : "Saved timeline",
             savedAt: typeof item?.savedAt === "string" && item.savedAt ? item.savedAt : new Date().toISOString(),
-            selectedPhaseId: typeof item?.selectedPhaseId === "string" ? item.selectedPhaseId : (phases.find((phase) => phase.isActive)?.id || phases[0]?.id || ""),
-            phases,
             blocks,
             tasks
           };
@@ -5281,6 +6615,9 @@
       state.ui.activeTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.activeTab)
         ? parsed.ui.activeTab
         : "timeline";
+      state.ui.activeTaskListFilter = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(parsed?.ui?.activeTaskListFilter)
+        ? parsed.ui.activeTaskListFilter
+        : normalizeTaskListId(parsed?.ui?.activeTaskListFilter);
     }
 
     function initializeFirebase() {
@@ -5671,15 +7008,15 @@
 
     function formatBlockTimeRange(startTime, endTime, isOvernight = false) {
       const overnightSuffix = isOvernight && state.ui.isCompactTimeline ? " *" : isOvernight ? " - Overnight" : "";
-      return `${formatTimeValue(startTime)} - ${formatTimeValue(endTime)}${overnightSuffix}`;
+      return `${formatClockTimeValue(startTime)} - ${formatClockTimeValue(endTime)}${overnightSuffix}`;
     }
 
     function formatTimeRange(startTime, endTime, isOvernight = false) {
       const overnightSuffix = isOvernight ? " · Overnight" : "";
-      return `${formatTimeValue(startTime)} - ${formatTimeValue(endTime)}${overnightSuffix}`;
+      return `${formatClockTimeValue(startTime)} - ${formatClockTimeValue(endTime)}${overnightSuffix}`;
     }
 
-    function formatTimeValue(time) {
+    function formatClockTimeValue(time) {
       const [rawHour, rawMinute] = time.split(":").map(Number);
       const suffix = rawHour >= 12 ? "PM" : "AM";
       const hour = rawHour % 12 === 0 ? 12 : rawHour % 12;
