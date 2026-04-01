@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-01-4";
+    window.APP_ASSET_VERSION = "2026-04-01-5";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-4">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-4">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-4">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-01-5">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-01-5">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-01-5">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -3061,6 +3061,7 @@
 
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
+    const DRAG_HOLD_DELAY_MS = 180;
     const STORAGE_KEY = "lifestage-focus-state-v1";
     const LEGACY_DEVICE_ID_KEY = "lifestage-focus-device-id-v1";
     const FIREBASE_COLLECTION = "lifestageFocusStates";
@@ -5155,11 +5156,18 @@
       activeTaskDrag = {
         taskId: handle.dataset.dragTaskHandle,
         pointerId: event.pointerId,
+        startX: event.clientX,
         startY: event.clientY,
         deltaY: 0,
         moved: false,
+        activated: false,
         item,
-        hoverTaskId: null
+        hoverTaskId: null,
+        activationTimer: window.setTimeout(() => {
+          if (activeTaskDrag && activeTaskDrag.pointerId === event.pointerId) {
+            activeTaskDrag.activated = true;
+          }
+        }, DRAG_HOLD_DELAY_MS)
       };
 
       item.setPointerCapture(event.pointerId);
@@ -5171,6 +5179,16 @@
       }
 
       activeTaskDrag.deltaY = event.clientY - activeTaskDrag.startY;
+      if (!activeTaskDrag.activated) {
+        const deltaX = event.clientX - activeTaskDrag.startX;
+        if (Math.abs(deltaX) > 8 || Math.abs(activeTaskDrag.deltaY) > 8) {
+          window.clearTimeout(activeTaskDrag.activationTimer);
+          activeTaskDrag.item.releasePointerCapture(event.pointerId);
+          activeTaskDrag = null;
+        }
+        return;
+      }
+
       if (!activeTaskDrag.moved && Math.abs(activeTaskDrag.deltaY) < 8) {
         return;
       }
@@ -5189,6 +5207,7 @@
         return;
       }
 
+      window.clearTimeout(activeTaskDrag.activationTimer);
       const { taskId, item, moved, hoverTaskId } = activeTaskDrag;
       item.style.transform = "";
       item.classList.remove("dragging");
@@ -5307,12 +5326,19 @@
       activeBlockDrag = {
         blockId,
         pointerId: event.pointerId,
+        startX: event.clientX,
         startY: event.clientY,
         deltaY: 0,
         moved: false,
+        activated: false,
         blockElement,
         block,
-        hoverBlockId: null
+        hoverBlockId: null,
+        activationTimer: window.setTimeout(() => {
+          if (activeBlockDrag && activeBlockDrag.pointerId === event.pointerId) {
+            activeBlockDrag.activated = true;
+          }
+        }, DRAG_HOLD_DELAY_MS)
       };
 
       blockElement.setPointerCapture(event.pointerId);
@@ -5327,6 +5353,19 @@
       }
 
       activeBlockDrag.deltaY = event.clientY - activeBlockDrag.startY;
+      if (!activeBlockDrag.activated) {
+        const deltaX = event.clientX - activeBlockDrag.startX;
+        if (Math.abs(deltaX) > 8 || Math.abs(activeBlockDrag.deltaY) > 8) {
+          window.clearTimeout(activeBlockDrag.activationTimer);
+          activeBlockDrag.blockElement.releasePointerCapture(event.pointerId);
+          activeBlockDrag.blockElement.removeEventListener("pointermove", handleBlockDragMove);
+          activeBlockDrag.blockElement.removeEventListener("pointerup", handleBlockDragEnd);
+          activeBlockDrag.blockElement.removeEventListener("pointercancel", handleBlockDragEnd);
+          activeBlockDrag = null;
+        }
+        return;
+      }
+
       if (!activeBlockDrag.moved && Math.abs(activeBlockDrag.deltaY) < 8) {
         return;
       }
@@ -5345,6 +5384,7 @@
         return;
       }
 
+      window.clearTimeout(activeBlockDrag.activationTimer);
       const { blockElement, moved, blockId } = activeBlockDrag;
       blockElement.style.transform = "";
       blockElement.classList.remove("dragging");
