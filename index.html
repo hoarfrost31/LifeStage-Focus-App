@@ -1410,7 +1410,9 @@
 
     .task-modal-header {
       position: relative;
-      padding-top: 10px;
+      padding-top: 0;
+      margin-bottom: 4px;
+      min-height: 0;
       touch-action: none;
     }
 
@@ -1427,9 +1429,10 @@
     }
 
     .task-modal-topbar {
-      min-height: 24px;
+      width: 0;
+      min-height: 0;
       min-width: 0;
-      flex: 1;
+      flex: 0 0 0;
     }
 
     .task-menu-wrap {
@@ -1438,10 +1441,10 @@
     }
 
     .task-menu-button {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       border: 0;
-      border-radius: 12px;
+      border-radius: 8px;
       background: transparent;
       color: var(--muted);
       display: inline-flex;
@@ -1449,6 +1452,12 @@
       justify-content: center;
       cursor: pointer;
       padding: 0;
+    }
+
+    .task-menu-button svg {
+      width: 12px;
+      height: 12px;
+      display: block;
     }
 
     .task-context-menu {
@@ -1544,7 +1553,7 @@
 
     .task-edit-zone {
       display: grid;
-      gap: 14px;
+      gap: 8px;
       flex: 1;
       min-height: 0;
     }
@@ -2691,6 +2700,8 @@
       elements.taskForm.addEventListener("submit", handleTaskSubmit);
       elements.taskTitleInput.addEventListener("keydown", handleTaskTitleKeydown);
       elements.taskRichToolbar.addEventListener("click", handleTaskToolbarClick);
+      elements.taskRichToolbar.addEventListener("pointerdown", preserveTaskEditorFocus);
+      elements.taskRichToolbar.addEventListener("touchstart", preserveTaskEditorFocus, { passive: false });
       elements.taskUndoButton.addEventListener("click", handleTaskUndo);
       elements.taskRedoButton.addEventListener("click", handleTaskRedo);
       elements.taskFormatToggleButton.addEventListener("click", handleTaskFormatTrayToggle);
@@ -2717,6 +2728,8 @@
       elements.taskMenuButton.addEventListener("click", handleTaskMenuToggle);
       elements.taskMenuButton.addEventListener("pointerdown", stopTaskMenuInteraction);
       elements.taskMenuButton.addEventListener("touchstart", stopTaskMenuInteraction, { passive: false });
+      elements.taskContextMenu.addEventListener("pointerdown", stopTaskMenuInteraction);
+      elements.taskContextMenu.addEventListener("touchstart", stopTaskMenuInteraction, { passive: false });
       elements.taskMenuAddSubtaskButton.addEventListener("click", handleTaskMenuAddSubtask);
       elements.taskMenuCloseButton.addEventListener("click", () => closeModal("task"));
       elements.taskMenuDeleteButton.addEventListener("click", handleTaskDelete);
@@ -3458,6 +3471,17 @@
       handleTaskNotesEditorInput();
     }
 
+    function preserveTaskEditorFocus(event) {
+      if (!event.target.closest("button")) {
+        return;
+      }
+      event.stopPropagation();
+      if (event.type === "pointerdown") {
+        event.preventDefault();
+      }
+      restoreTaskEditingFocus();
+    }
+
     function handleTaskUndo() {
       ensureTaskModalEditing();
       elements.taskNotesEditor.focus();
@@ -3518,6 +3542,7 @@
     function handleTaskFormatTrayToggle() {
       ensureTaskModalEditing();
       setTaskFormattingTrayOpen(!state.ui.taskFormattingTrayOpen);
+      restoreTaskEditingFocus();
     }
 
     function handleDocumentPointerDown(event) {
@@ -3554,11 +3579,56 @@
     }
 
     function stopTaskBottomBarInteraction(event) {
+      if (event.target.closest("button")) {
+        if (event.type === "pointerdown") {
+          event.preventDefault();
+        }
+        restoreTaskEditingFocus();
+      }
       event.stopPropagation();
     }
 
     function stopTaskMenuInteraction(event) {
+      if (event.target.closest("button")) {
+        if (event.type === "pointerdown") {
+          event.preventDefault();
+        }
+        restoreTaskEditingFocus();
+      }
       event.stopPropagation();
+    }
+
+    function restoreTaskEditingFocus() {
+      if (!isTaskModalOpen() || !state.ui.taskModalIsEditing) {
+        return;
+      }
+
+      const selection = window.getSelection();
+      const shouldRestoreNotesSelection = Boolean(
+        selection &&
+        selection.rangeCount &&
+        elements.taskNotesEditor.contains(selection.anchorNode)
+      );
+      const savedRange = shouldRestoreNotesSelection ? selection.getRangeAt(0).cloneRange() : null;
+      const wasTitleFocused = document.activeElement === elements.taskTitleInput;
+
+      requestAnimationFrame(() => {
+        if (!isTaskModalOpen() || !state.ui.taskModalIsEditing) {
+          return;
+        }
+
+        if (wasTitleFocused) {
+          elements.taskTitleInput.focus({ preventScroll: true });
+          return;
+        }
+
+        elements.taskNotesEditor.focus({ preventScroll: true });
+        if (savedRange) {
+          const nextSelection = window.getSelection();
+          nextSelection.removeAllRanges();
+          nextSelection.addRange(savedRange);
+        }
+      });
     }
 
     function buildTaskFromModalDraft() {
