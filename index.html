@@ -73,6 +73,7 @@
       flex-direction: column;
       gap: 10px;
       position: relative;
+      padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
     }
 
     .phase-rail,
@@ -153,10 +154,13 @@
     }
 
     .bottom-nav-card {
-      position: sticky;
+      position: fixed;
+      left: 50%;
       bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%);
+      width: min(calc(100vw - 24px), 420px);
       padding: 5px;
-      z-index: 8;
+      z-index: 18;
       background:
         linear-gradient(180deg, rgba(28, 28, 28, 0.96), rgba(16, 16, 16, 0.98));
       box-shadow:
@@ -180,14 +184,14 @@
       font: inherit;
       font-weight: 600;
       font-size: 0.8rem;
-      padding: 10px 12px;
+      padding: 0;
       cursor: pointer;
       touch-action: manipulation;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      min-height: 42px;
+      gap: 0;
+      min-height: 44px;
     }
 
     .tab-button.active {
@@ -199,8 +203,8 @@
     }
 
     .tab-icon {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -859,7 +863,8 @@
       background: transparent;
       padding: 0;
       min-height: 0;
-      overflow: visible;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .block-notes-editor,
@@ -1773,10 +1778,12 @@
     }
 
     .task-edit-zone {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 8px;
       flex: 1;
       min-height: 0;
+      overflow: hidden;
     }
 
     .task-title-field {
@@ -1788,6 +1795,7 @@
       font-size: 1.12rem;
       font-weight: 600;
       line-height: 1.3;
+      flex: 0 0 auto;
     }
 
     .task-title-field[readonly] {
@@ -2577,7 +2585,7 @@
 
     <section class="card bottom-nav-card">
       <div class="bottom-nav">
-        <button class="tab-button" id="tab-tasks" type="button" data-tab="tasks">
+        <button class="tab-button" id="tab-tasks" type="button" data-tab="tasks" aria-label="Tasks">
           <span class="tab-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="2.4" y="3.1" width="2.2" height="2.2" rx="0.8" stroke="currentColor" stroke-width="1.2"/>
@@ -2587,9 +2595,8 @@
               <path d="M6.6 4.2h6.9M6.6 8h6.9M6.6 11.8h6.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
             </svg>
           </span>
-          <span>Tasks</span>
         </button>
-        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline">
+        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline" aria-label="Timeline">
           <span class="tab-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 4.2h10M3 8h10M3 11.8h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -2598,9 +2605,8 @@
               <circle cx="6.8" cy="11.8" r="1.2" fill="currentColor"/>
             </svg>
           </span>
-          <span>Timeline</span>
         </button>
-        <button class="tab-button" id="tab-phases" type="button" data-tab="phases">
+        <button class="tab-button" id="tab-phases" type="button" data-tab="phases" aria-label="Phases">
           <span class="tab-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="2.5" y="3" width="11" height="2.4" rx="1.2" fill="currentColor"/>
@@ -2608,7 +2614,6 @@
               <rect x="2.5" y="10.6" width="11" height="2.4" rx="1.2" fill="currentColor" opacity="0.66"/>
             </svg>
           </span>
-          <span>Phases</span>
         </button>
         <div class="top-badges">
           <button class="install-button" id="install-app-button" type="button">Install app</button>
@@ -5059,17 +5064,16 @@
       }
 
       const deltaY = activeTaskSheetDrag.deltaY;
+      activeTaskSheetDrag = null;
       elements.taskModalBackdrop.classList.remove("dragging");
       elements.taskModalSheet.style.setProperty("--task-sheet-drag-offset", "0px");
       if (deltaY <= -70) {
         setTaskModalSheetState("full");
       } else if (deltaY >= 70) {
-        commitTaskModalChanges();
-        setTaskModalEditing(false);
+        closeModal("task");
       } else {
         setTaskModalSheetState(state.ui.taskModalSheetState);
       }
-      activeTaskSheetDrag = null;
     }
 
     function handleTaskDragStart(event) {
