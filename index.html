@@ -1318,6 +1318,40 @@
       flex-direction: column;
     }
 
+    #block-modal-backdrop {
+      display: flex;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    #block-modal-backdrop.open {
+      visibility: visible;
+    }
+
+    #block-modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #block-modal-backdrop .modal {
+      transform: translateY(56px);
+      opacity: 0.92;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+      will-change: transform, opacity;
+    }
+
+    #block-modal-backdrop.active .modal {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #block-modal-backdrop.closing .modal {
+      transform: translateY(100%);
+      opacity: 0.92;
+    }
+
     #task-modal-backdrop {
       display: flex;
       visibility: hidden;
@@ -1336,7 +1370,7 @@
     }
 
     #task-modal-backdrop .modal {
-      --task-sheet-rest-offset: 56px;
+      --task-sheet-rest-offset: 0px;
       --task-sheet-drag-offset: 0px;
       transform: translateY(calc(var(--task-sheet-rest-offset) + var(--task-sheet-drag-offset)));
       opacity: 0.92;
@@ -1353,7 +1387,7 @@
     }
 
     #task-modal-backdrop.sheet-half .modal {
-      --task-sheet-rest-offset: 56px;
+      --task-sheet-rest-offset: 0px;
     }
 
     #task-modal-backdrop.dragging .modal {
@@ -1389,6 +1423,68 @@
       height: 4px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.16);
+      cursor: pointer;
+    }
+
+    .task-modal-topbar {
+      min-height: 24px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .task-menu-wrap {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .task-menu-button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .task-context-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 180px;
+      padding: 8px;
+      border-radius: 16px;
+      background: rgba(24, 24, 24, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 4;
+    }
+
+    .task-context-menu.open {
+      display: flex;
+    }
+
+    .task-context-menu button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font: inherit;
+      text-align: left;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .task-context-menu button.danger {
+      color: var(--danger);
     }
 
     .modal-header h3 {
@@ -1515,6 +1611,44 @@
       font-style: italic;
     }
 
+    .block-bottom-actions,
+    .block-bottom-formatting {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .block-bottom-formatting {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      padding: 0 2px;
+      border-radius: 16px;
+      background: rgba(26, 26, 26, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+    }
+
+    .block-bottom-actions.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+    }
+
+    .block-bottom-formatting.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
     .task-modal-bottom-bar {
       position: relative;
       min-height: 44px;
@@ -1556,6 +1690,11 @@
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
+    }
+
+    .task-bottom-spacer {
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     .task-format-back {
@@ -2043,7 +2182,19 @@
         <div>
           <h3 id="block-modal-title">Block</h3>
         </div>
-        <button class="close-button" type="button" data-close-modal="block">&times;</button>
+        <div class="task-menu-wrap">
+          <button class="task-menu-button" id="block-menu-button" type="button" aria-label="Block menu" aria-expanded="false">
+            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="3.2" r="1.2"/>
+              <circle cx="8" cy="8" r="1.2"/>
+              <circle cx="8" cy="12.8" r="1.2"/>
+            </svg>
+          </button>
+          <div class="task-context-menu" id="block-context-menu" aria-hidden="true">
+            <button type="button" id="block-menu-close-button">Close</button>
+            <button class="danger" type="button" id="block-menu-delete-button">Delete block</button>
+          </div>
+        </div>
       </div>
       <form id="block-form">
         <input type="hidden" id="block-id">
@@ -2077,36 +2228,90 @@
             </label>
           </div>
         </div>
-        <div class="modal-actions block-modal-actions">
-          <button class="ghost-button modal-icon-button" id="block-settings-button" type="button" aria-label="Open block settings">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
-            </svg>
-          </button>
-          <button class="danger-button modal-icon-button" id="delete-block-button" type="button" aria-label="Delete block">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <button class="primary-button modal-icon-button" type="submit" aria-label="Save block">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+        <div class="modal-actions block-modal-actions task-modal-bottom-bar" id="block-modal-bottom-bar">
+          <div class="block-bottom-actions" id="block-bottom-actions">
+            <button class="ghost-button modal-icon-button" id="block-format-toggle-button" type="button" aria-label="Toggle formatting tools">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.6 12.4 7.1 3.6h1.8l3.5 8.8M4.7 9.5h6.6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="ghost-button modal-icon-button" id="block-settings-button" type="button" aria-label="Open block settings">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
+              </svg>
+            </button>
+            <div class="task-bottom-spacer"></div>
+            <button class="ghost-button modal-icon-button" id="block-undo-button" type="button" aria-label="Undo">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.2 5.1H4.1V3M4.1 5.1l2.1-2.1M6.3 5.1h3a3.3 3.3 0 1 1 0 6.6H6.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="ghost-button modal-icon-button" id="block-redo-button" type="button" aria-label="Redo">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.8 5.1h2.1V3M11.9 5.1 9.8 3M9.7 5.1h-3a3.3 3.3 0 1 0 0 6.6h2.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="block-bottom-formatting" id="block-bottom-formatting">
+            <button class="ghost-button task-format-back" id="block-format-back-button" type="button" aria-label="Back to actions">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="m9.8 3.6-4.2 4.2 4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <div class="task-rich-toolbar" id="block-rich-toolbar">
+              <button class="task-toolbar-button" type="button" data-command="bold" aria-label="Bold"><strong>B</strong></button>
+              <button class="task-toolbar-button" type="button" data-command="formatBlock" data-value="h1" aria-label="Heading 1">H1</button>
+              <button class="task-toolbar-button" type="button" data-command="formatBlock" data-value="h2" aria-label="Heading 2">H2</button>
+              <button class="task-toolbar-button" type="button" data-command="formatBlock" data-value="h3" aria-label="Heading 3">H3</button>
+              <button class="task-toolbar-button" type="button" data-command="formatBlock" data-value="h4" aria-label="Heading 4">H4</button>
+              <button class="task-toolbar-button" type="button" data-command="italic" aria-label="Italic"><em>I</em></button>
+              <button class="task-toolbar-button" type="button" data-command="underline" aria-label="Underline"><u>U</u></button>
+              <button class="task-toolbar-button" type="button" data-command="strikeThrough" aria-label="Strikethrough"><s>S</s></button>
+              <button class="task-toolbar-button" type="button" data-command="insertUnorderedList" aria-label="Bullet list">•</button>
+              <button class="task-toolbar-button" type="button" data-command="insertOrderedList" aria-label="Numbered list">1.</button>
+              <button class="task-toolbar-button" type="button" data-command="insertCheckbox" aria-label="Checkbox">☑</button>
+              <button class="task-toolbar-button" type="button" data-command="formatBlock" data-value="blockquote" aria-label="Quote">"</button>
+              <button class="task-toolbar-button" type="button" data-command="formatBlock" data-value="pre" aria-label="Code block">{ }</button>
+              <button class="task-toolbar-button" type="button" data-command="createLink" aria-label="Link">🔗</button>
+              <button class="task-toolbar-button" type="button" data-command="insertHorizontalRule" aria-label="Horizontal line">―</button>
+              <button class="task-toolbar-button" type="button" data-command="attachFile" aria-label="Attachment">📎</button>
+              <button class="task-toolbar-button" type="button" data-command="undo" aria-label="Undo">↶</button>
+              <button class="task-toolbar-button" type="button" data-command="redo" aria-label="Redo">↷</button>
+              <button class="task-toolbar-button" type="button" data-command="justifyLeft" aria-label="Align left">≡</button>
+              <button class="task-toolbar-button" type="button" data-command="justifyCenter" aria-label="Align center">≣</button>
+              <button class="task-toolbar-button" type="button" data-command="justifyRight" aria-label="Align right">☰</button>
+            </div>
+            <button class="ghost-button task-format-forward" id="block-format-forward-button" type="button" aria-label="Scroll right">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="m6.2 3.6 4.2 4.2-4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </form>
     </section>
   </div>
 
   <div class="modal-backdrop" id="task-modal-backdrop" aria-hidden="true">
-    <section class="modal" aria-labelledby="task-modal-title">
+    <section class="modal" aria-label="Task editor">
       <div class="modal-header task-modal-header" id="task-modal-header">
-        <span class="task-sheet-handle" aria-hidden="true"></span>
-        <div>
-          <h3 id="task-modal-title">Task</h3>
+        <span class="task-sheet-handle" id="task-sheet-handle" aria-hidden="true"></span>
+        <div class="task-modal-topbar"></div>
+        <div class="task-menu-wrap">
+          <button class="task-menu-button" id="task-menu-button" type="button" aria-label="Task menu" aria-expanded="false">
+            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="3.2" r="1.2"/>
+              <circle cx="8" cy="8" r="1.2"/>
+              <circle cx="8" cy="12.8" r="1.2"/>
+            </svg>
+          </button>
+          <div class="task-context-menu" id="task-context-menu" aria-hidden="true">
+            <button type="button" id="task-menu-add-subtask-button">Add subtask</button>
+            <button type="button" id="task-menu-close-button">Close</button>
+            <button class="danger" type="button" id="task-menu-delete-button">Delete task</button>
+          </div>
         </div>
-        <button class="close-button" type="button" data-close-modal="task">&times;</button>
       </div>
       <form id="task-form">
         <input type="hidden" id="task-id">
@@ -2118,10 +2323,9 @@
               <div class="block-notes-editor task-notes-editor" id="task-notes-editor" contenteditable="true" data-placeholder="Write anything important here..."></div>
               <textarea class="block-notes task-notes" id="task-notes" name="taskNotes" maxlength="2500" placeholder="Write anything important here..."></textarea>
               <div class="linked-tasks-panel task-subtasks-panel" id="task-subtasks-panel">
-                <div class="linked-tasks-header">
-                  <div class="linked-tasks-title">Subtasks</div>
-                  <button class="ghost-button linked-tasks-add" id="add-subtask-button" type="button" aria-label="Add subtask">+</button>
-                </div>
+              <div class="linked-tasks-header">
+                <div class="linked-tasks-title">Subtasks</div>
+              </div>
                 <div class="linked-task-inline-form" id="task-subtask-inline-form">
                   <input class="linked-task-inline-input" id="task-subtask-inline-input" type="text" maxlength="120" placeholder="Subtask">
                   <button class="primary-button linked-task-inline-action" id="save-subtask-inline-button" type="button" aria-label="Save subtask">
@@ -2159,9 +2363,15 @@
                 <circle cx="8" cy="8" r="2.3" stroke="currentColor" stroke-width="1.3"/>
               </svg>
             </button>
-            <button class="danger-button modal-icon-button" id="delete-task-button" type="button" aria-label="Delete task">
+            <div class="task-bottom-spacer"></div>
+            <button class="ghost-button modal-icon-button" id="task-undo-button" type="button" aria-label="Undo">
               <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3.8 5.1h8.4M6.2 5.1V3.8h3.6v1.3M5.2 5.1v6.3M8 5.1v6.3M10.8 5.1v6.3M4.6 5.1l.4 7.1h6l.4-7.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6.2 5.1H4.1V3M4.1 5.1l2.1-2.1M6.3 5.1h3a3.3 3.3 0 1 1 0 6.6H6.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="ghost-button modal-icon-button" id="task-redo-button" type="button" aria-label="Redo">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.8 5.1h2.1V3M11.9 5.1 9.8 3M9.7 5.1h-3a3.3 3.3 0 1 0 0 6.6h2.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
@@ -2301,6 +2511,7 @@
     let activeBlockDrag = null;
     let suppressClickUntil = 0;
     let taskModalCloseTimer = null;
+    let blockModalCloseTimer = null;
     let activeTaskSheetDrag = null;
     let isTaskModalClosing = false;
 
@@ -2329,9 +2540,11 @@
       phaseModalBackdrop: document.getElementById("phase-modal-backdrop"),
       phaseReadModalBackdrop: document.getElementById("phase-read-modal-backdrop"),
       blockModalBackdrop: document.getElementById("block-modal-backdrop"),
+      blockModalSheet: document.querySelector("#block-modal-backdrop .modal"),
       taskModalBackdrop: document.getElementById("task-modal-backdrop"),
       taskModalSheet: document.querySelector("#task-modal-backdrop .modal"),
       taskModalHeader: document.getElementById("task-modal-header"),
+      taskSheetHandle: document.getElementById("task-sheet-handle"),
       timelineSaveModalBackdrop: document.getElementById("timeline-save-modal-backdrop"),
       phaseForm: document.getElementById("phase-form"),
       phaseId: document.getElementById("phase-id"),
@@ -2354,10 +2567,22 @@
       blockTitle: document.getElementById("block-title"),
       blockNotesEditor: document.getElementById("block-notes-editor"),
       blockNotes: document.getElementById("block-notes"),
+      blockMenuButton: document.getElementById("block-menu-button"),
+      blockContextMenu: document.getElementById("block-context-menu"),
+      blockMenuCloseButton: document.getElementById("block-menu-close-button"),
+      blockMenuDeleteButton: document.getElementById("block-menu-delete-button"),
+      blockRichToolbar: document.getElementById("block-rich-toolbar"),
+      blockFormatToggleButton: document.getElementById("block-format-toggle-button"),
+      blockFormatBackButton: document.getElementById("block-format-back-button"),
+      blockFormatForwardButton: document.getElementById("block-format-forward-button"),
+      blockBottomActions: document.getElementById("block-bottom-actions"),
+      blockBottomFormatting: document.getElementById("block-bottom-formatting"),
+      blockModalBottomBar: document.getElementById("block-modal-bottom-bar"),
+      blockUndoButton: document.getElementById("block-undo-button"),
+      blockRedoButton: document.getElementById("block-redo-button"),
       blockStartTime: document.getElementById("block-start-time"),
       blockEndTime: document.getElementById("block-end-time"),
       blockPhase: document.getElementById("block-phase"),
-      deleteBlockButton: document.getElementById("delete-block-button"),
       blockSettingsButton: document.getElementById("block-settings-button"),
       blockSettingsPanel: document.getElementById("block-settings-panel"),
       taskForm: document.getElementById("task-form"),
@@ -2366,6 +2591,8 @@
       taskTitleInput: document.getElementById("task-title-input"),
       taskEditZone: document.getElementById("task-edit-zone"),
       taskRichToolbar: document.getElementById("task-rich-toolbar"),
+      taskUndoButton: document.getElementById("task-undo-button"),
+      taskRedoButton: document.getElementById("task-redo-button"),
       taskFormatToggleButton: document.getElementById("task-format-toggle-button"),
       taskFormatBackButton: document.getElementById("task-format-back-button"),
       taskFormatForwardButton: document.getElementById("task-format-forward-button"),
@@ -2377,14 +2604,17 @@
       taskBlockSelect: document.getElementById("task-block-select"),
       taskSettingsButton: document.getElementById("task-settings-button"),
       taskSettingsPanel: document.getElementById("task-settings-panel"),
-      addSubtaskButton: document.getElementById("add-subtask-button"),
+      taskMenuButton: document.getElementById("task-menu-button"),
+      taskContextMenu: document.getElementById("task-context-menu"),
+      taskMenuAddSubtaskButton: document.getElementById("task-menu-add-subtask-button"),
+      taskMenuCloseButton: document.getElementById("task-menu-close-button"),
+      taskMenuDeleteButton: document.getElementById("task-menu-delete-button"),
       taskSubtaskInlineForm: document.getElementById("task-subtask-inline-form"),
       taskSubtaskInlineInput: document.getElementById("task-subtask-inline-input"),
       saveSubtaskInlineButton: document.getElementById("save-subtask-inline-button"),
       cancelSubtaskInlineButton: document.getElementById("cancel-subtask-inline-button"),
       taskSubtasksPanel: document.getElementById("task-subtasks-panel"),
       taskSubtasksList: document.getElementById("task-subtasks-list"),
-      deleteTaskButton: document.getElementById("delete-task-button"),
       timelineSaveForm: document.getElementById("timeline-save-form"),
       timelineSaveName: document.getElementById("timeline-save-name"),
       timelineSavePhase: document.getElementById("timeline-save-phase"),
@@ -2447,6 +2677,12 @@
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.blockNotesEditor.addEventListener("input", handleBlockNotesEditorInput);
+      elements.blockRichToolbar.addEventListener("click", handleBlockToolbarClick);
+      elements.blockFormatToggleButton.addEventListener("click", handleBlockFormatTrayToggle);
+      elements.blockFormatBackButton.addEventListener("click", handleBlockFormatBackAction);
+      elements.blockFormatForwardButton.addEventListener("click", handleBlockFormatForwardAction);
+      elements.blockUndoButton.addEventListener("click", handleBlockUndo);
+      elements.blockRedoButton.addEventListener("click", handleBlockRedo);
       elements.taskNotesEditor.addEventListener("input", handleTaskNotesEditorInput);
       elements.taskNotesEditor.addEventListener("focus", ensureTaskModalEditing);
       elements.taskTitleInput.addEventListener("focus", ensureTaskModalEditing);
@@ -2455,9 +2691,12 @@
       elements.taskForm.addEventListener("submit", handleTaskSubmit);
       elements.taskTitleInput.addEventListener("keydown", handleTaskTitleKeydown);
       elements.taskRichToolbar.addEventListener("click", handleTaskToolbarClick);
+      elements.taskUndoButton.addEventListener("click", handleTaskUndo);
+      elements.taskRedoButton.addEventListener("click", handleTaskRedo);
       elements.taskFormatToggleButton.addEventListener("click", handleTaskFormatTrayToggle);
       elements.taskFormatBackButton.addEventListener("click", handleTaskFormatBackAction);
       elements.taskFormatForwardButton.addEventListener("click", handleTaskFormatForwardAction);
+      elements.taskSheetHandle.addEventListener("click", handleTaskHandleClick);
       elements.taskModalHeader.addEventListener("touchstart", handleTaskSheetTouchStart, { passive: true });
       elements.taskModalHeader.addEventListener("touchmove", handleTaskSheetTouchMove, { passive: false });
       elements.taskModalHeader.addEventListener("touchend", handleTaskSheetTouchEnd);
@@ -2465,13 +2704,23 @@
       elements.phaseForm.addEventListener("submit", handlePhaseSubmit);
       elements.deletePhaseButton.addEventListener("click", handlePhaseDelete);
       elements.blockForm.addEventListener("submit", handleBlockSubmit);
-      elements.deleteBlockButton.addEventListener("click", handleBlockDelete);
+      elements.blockMenuButton.addEventListener("click", handleBlockMenuToggle);
+      elements.blockMenuButton.addEventListener("pointerdown", stopBlockMenuInteraction);
+      elements.blockMenuButton.addEventListener("touchstart", stopBlockMenuInteraction, { passive: false });
+      elements.blockMenuCloseButton.addEventListener("click", () => closeModal("block"));
+      elements.blockMenuDeleteButton.addEventListener("click", handleBlockDelete);
       elements.blockSettingsButton.addEventListener("click", handleBlockSettingsToggle);
-      elements.deleteTaskButton.addEventListener("click", handleTaskDelete);
+      elements.blockModalBottomBar.addEventListener("pointerdown", stopBlockBottomBarInteraction);
+      elements.blockModalBottomBar.addEventListener("touchstart", stopBlockBottomBarInteraction, { passive: false });
       elements.taskModalBottomBar.addEventListener("pointerdown", stopTaskBottomBarInteraction);
       elements.taskModalBottomBar.addEventListener("touchstart", stopTaskBottomBarInteraction, { passive: false });
+      elements.taskMenuButton.addEventListener("click", handleTaskMenuToggle);
+      elements.taskMenuButton.addEventListener("pointerdown", stopTaskMenuInteraction);
+      elements.taskMenuButton.addEventListener("touchstart", stopTaskMenuInteraction, { passive: false });
+      elements.taskMenuAddSubtaskButton.addEventListener("click", handleTaskMenuAddSubtask);
+      elements.taskMenuCloseButton.addEventListener("click", () => closeModal("task"));
+      elements.taskMenuDeleteButton.addEventListener("click", handleTaskDelete);
       elements.taskSettingsButton.addEventListener("click", handleTaskSettingsToggle);
-      elements.addSubtaskButton.addEventListener("click", handleAddSubtask);
       elements.saveSubtaskInlineButton.addEventListener("click", handleInlineSubtaskSave);
       elements.cancelSubtaskInlineButton.addEventListener("click", closeInlineSubtaskComposer);
       elements.taskSubtaskInlineInput.addEventListener("keydown", handleInlineSubtaskKeydown);
@@ -2675,13 +2924,16 @@
     }
 
     function renderTaskSubtasks() {
-      elements.taskSubtasksPanel.style.display = state.ui.taskModalMode === "edit" ? "flex" : "none";
+      const isComposerOpen = elements.taskSubtaskInlineForm.classList.contains("open");
       if (state.ui.taskModalMode !== "edit") {
-        closeInlineSubtaskComposer();
+        elements.taskSubtasksPanel.style.display = "none";
+        elements.taskSubtaskInlineForm.classList.remove("open");
+        elements.taskSubtaskInlineInput.value = "";
         return;
       }
 
       const subtasks = getChildTasks(state.ui.editingTaskId);
+      elements.taskSubtasksPanel.style.display = subtasks.length || isComposerOpen ? "flex" : "none";
       if (!subtasks.length) {
         elements.taskSubtasksList.innerHTML = `<div class="linked-tasks-empty">No subtasks yet.</div>`;
         return;
@@ -2877,32 +3129,8 @@
 
     function handleBlockSubmit(event) {
       event.preventDefault();
-
-      if (!state.phases.length) {
-        return;
-      }
-
-      const id = elements.blockId.value || crypto.randomUUID();
-      const title = elements.blockTitle.value.trim();
-      const notes = elements.blockNotes.value.trim();
-      const startTime = elements.blockStartTime.value;
-      const endTime = elements.blockEndTime.value;
-      const phaseId = elements.blockPhase.value;
-
-      if (!title || !startTime || !endTime || !phaseId) {
-        return;
-      }
-
-      if (timeToMinutes(endTime) === timeToMinutes(startTime)) {
-        alert("Start time and end time cannot be the same.");
-        return;
-      }
-
-      const nextBlock = { id, title, notes, phaseId, startTime, endTime };
-      applyBlockOverride(nextBlock);
-
-      persistState({ immediate: true });
-      closeModal("block");
+      commitBlockModalChanges();
+      closeModal("block", { skipCommit: true });
       render();
     }
 
@@ -2929,12 +3157,121 @@
       syncBlockNotesEditorToField();
     }
 
+    function commitBlockModalChanges() {
+      if (!state.phases.length) {
+        return;
+      }
+
+      const id = elements.blockId.value || crypto.randomUUID();
+      const title = elements.blockTitle.value.trim();
+      const notes = elements.blockNotes.value.trim();
+      const startTime = elements.blockStartTime.value;
+      const endTime = elements.blockEndTime.value;
+      const phaseId = elements.blockPhase.value;
+
+      if (!title || !startTime || !endTime || !phaseId) {
+        return;
+      }
+
+      if (timeToMinutes(endTime) === timeToMinutes(startTime)) {
+        alert("Start time and end time cannot be the same.");
+        return;
+      }
+
+      const nextBlock = { id, title, notes, phaseId, startTime, endTime };
+      applyBlockOverride(nextBlock);
+      persistState({ immediate: true });
+    }
+
     function syncBlockNotesEditorToField() {
-      elements.blockNotes.value = elements.blockNotesEditor.textContent || "";
+      elements.blockNotes.value = normalizeTaskEditorHtml(elements.blockNotesEditor.innerHTML);
     }
 
     function syncBlockNotesFieldToEditor() {
-      elements.blockNotesEditor.textContent = elements.blockNotes.value || "";
+      elements.blockNotesEditor.innerHTML = taskNotesToEditorHtml(elements.blockNotes.value || "");
+    }
+
+    function handleBlockToolbarClick(event) {
+      const button = event.target.closest("[data-command]");
+      if (!button) {
+        return;
+      }
+
+      const command = button.dataset.command;
+      elements.blockNotesEditor.focus();
+      if (command === "createLink") {
+        const url = window.prompt("Enter link URL");
+        if (!url) {
+          return;
+        }
+        document.execCommand(command, false, url);
+      } else if (command === "formatBlock") {
+        document.execCommand(command, false, button.dataset.value || "p");
+      } else if (command === "insertCheckbox") {
+        document.execCommand("insertHTML", false, '<div><input type="checkbox" /> </div>');
+      } else if (command === "attachFile") {
+        document.execCommand("insertHTML", false, '<p>[Attachment]</p>');
+      } else {
+        document.execCommand(command, false);
+      }
+      handleBlockNotesEditorInput();
+    }
+
+    function setBlockFormattingTrayOpen(isOpen) {
+      elements.blockBottomActions.classList.toggle("hidden", isOpen);
+      elements.blockBottomFormatting.classList.toggle("visible", isOpen);
+      elements.blockFormatToggleButton.setAttribute("aria-pressed", String(isOpen));
+      if (isOpen) {
+        elements.blockRichToolbar.scrollLeft = 0;
+      }
+    }
+
+    function handleBlockFormatTrayToggle() {
+      setBlockFormattingTrayOpen(!elements.blockBottomFormatting.classList.contains("visible"));
+    }
+
+    function handleBlockFormatBackAction() {
+      if (elements.blockRichToolbar.scrollLeft > 4) {
+        elements.blockRichToolbar.scrollBy({ left: -220, behavior: "smooth" });
+        return;
+      }
+
+      setBlockFormattingTrayOpen(false);
+    }
+
+    function handleBlockFormatForwardAction() {
+      elements.blockRichToolbar.scrollBy({ left: 220, behavior: "smooth" });
+    }
+
+    function handleBlockUndo() {
+      elements.blockNotesEditor.focus();
+      document.execCommand("undo", false);
+      handleBlockNotesEditorInput();
+    }
+
+    function handleBlockRedo() {
+      elements.blockNotesEditor.focus();
+      document.execCommand("redo", false);
+      handleBlockNotesEditorInput();
+    }
+
+    function stopBlockBottomBarInteraction(event) {
+      event.stopPropagation();
+    }
+
+    function setBlockMenuOpen(isOpen) {
+      elements.blockContextMenu.classList.toggle("open", isOpen);
+      elements.blockContextMenu.setAttribute("aria-hidden", String(!isOpen));
+      elements.blockMenuButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function handleBlockMenuToggle(event) {
+      event.stopPropagation();
+      setBlockMenuOpen(!elements.blockContextMenu.classList.contains("open"));
+    }
+
+    function stopBlockMenuInteraction(event) {
+      event.stopPropagation();
     }
 
     function handleTaskNotesEditorInput() {
@@ -3055,8 +3392,6 @@
         } else if (options.focusTarget !== "none") {
           requestAnimationFrame(() => focusTaskEditorAtEnd());
         }
-      } else if (!options.keepSheetFull) {
-        setTaskModalSheetState("half");
       }
     }
 
@@ -3123,6 +3458,20 @@
       handleTaskNotesEditorInput();
     }
 
+    function handleTaskUndo() {
+      ensureTaskModalEditing();
+      elements.taskNotesEditor.focus();
+      document.execCommand("undo", false);
+      handleTaskNotesEditorInput();
+    }
+
+    function handleTaskRedo() {
+      ensureTaskModalEditing();
+      elements.taskNotesEditor.focus();
+      document.execCommand("redo", false);
+      handleTaskNotesEditorInput();
+    }
+
     function setTaskFormattingTrayOpen(isOpen) {
       state.ui.taskFormattingTrayOpen = isOpen;
       elements.taskBottomActions.classList.toggle("hidden", isOpen);
@@ -3146,17 +3495,47 @@
       elements.taskRichToolbar.scrollBy({ left: 220, behavior: "smooth" });
     }
 
+    function setTaskMenuOpen(isOpen) {
+      elements.taskContextMenu.classList.toggle("open", isOpen);
+      elements.taskContextMenu.setAttribute("aria-hidden", String(!isOpen));
+      elements.taskMenuButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function handleTaskMenuToggle(event) {
+      event.stopPropagation();
+      setTaskMenuOpen(!elements.taskContextMenu.classList.contains("open"));
+    }
+
+    function handleTaskMenuAddSubtask() {
+      setTaskMenuOpen(false);
+      handleAddSubtask();
+    }
+
+    function handleTaskHandleClick() {
+      setTaskModalSheetState("full");
+    }
+
     function handleTaskFormatTrayToggle() {
       ensureTaskModalEditing();
       setTaskFormattingTrayOpen(!state.ui.taskFormattingTrayOpen);
     }
 
     function handleDocumentPointerDown(event) {
+      if (elements.blockContextMenu && !elements.blockContextMenu.contains(event.target) && !elements.blockMenuButton.contains(event.target)) {
+        setBlockMenuOpen(false);
+      }
+
       if (!isTaskModalOpen() || !state.ui.taskModalIsEditing) {
+        if (isTaskModalOpen() && !elements.taskContextMenu.contains(event.target) && !elements.taskMenuButton.contains(event.target)) {
+          setTaskMenuOpen(false);
+        }
         return;
       }
 
       if (elements.taskModalSheet.contains(event.target)) {
+        if (!elements.taskContextMenu.contains(event.target) && !elements.taskMenuButton.contains(event.target)) {
+          setTaskMenuOpen(false);
+        }
         return;
       }
 
@@ -3175,6 +3554,10 @@
     }
 
     function stopTaskBottomBarInteraction(event) {
+      event.stopPropagation();
+    }
+
+    function stopTaskMenuInteraction(event) {
       event.stopPropagation();
     }
 
@@ -3217,7 +3600,8 @@
         state.ui.taskModalMode = "edit";
         state.ui.editingTaskId = nextTask.id;
         elements.taskId.value = nextTask.id;
-        elements.deleteTaskButton.style.display = "inline-flex";
+        elements.taskMenuAddSubtaskButton.style.display = "";
+        elements.taskMenuDeleteButton.style.display = "";
       }
 
       persistState({ immediate: true });
@@ -3908,6 +4292,8 @@
       if (!state.ui.editingTaskId) {
         return;
       }
+      setTaskMenuOpen(false);
+      elements.taskSubtasksPanel.style.display = "flex";
       elements.taskSubtaskInlineForm.classList.add("open");
       elements.taskSubtaskInlineInput.value = "";
       elements.taskSubtaskInlineInput.focus();
@@ -3916,6 +4302,9 @@
     function closeInlineSubtaskComposer() {
       elements.taskSubtaskInlineForm.classList.remove("open");
       elements.taskSubtaskInlineInput.value = "";
+      if (state.ui.taskModalMode === "edit") {
+        renderTaskSubtasks();
+      }
     }
 
     function handleInlineSubtaskKeydown(event) {
@@ -3972,6 +4361,7 @@
         return;
       }
 
+      setTaskMenuOpen(false);
       deleteTask(state.ui.editingTaskId);
       closeModal("task", { skipCommit: true });
       render();
@@ -4035,6 +4425,7 @@
         return;
       }
 
+      setBlockMenuOpen(false);
       const targetId = state.ui.editingBlockId;
       state.blocks = state.blocks.filter((block) => block.id !== targetId);
       state.tasks = state.tasks.map((task) =>
@@ -4240,8 +4631,9 @@
       elements.blockStartTime.value = block ? block.startTime : "09:00";
       elements.blockEndTime.value = block ? block.endTime : "10:00";
       elements.blockPhase.value = block ? block.phaseId : defaultPhaseId;
-      elements.deleteBlockButton.style.display = block ? "inline-flex" : "none";
       elements.blockSettingsPanel.classList.remove("open");
+      setBlockFormattingTrayOpen(false);
+      setBlockMenuOpen(false);
       renderLinkedTasks();
 
       openModal("block");
@@ -4261,13 +4653,15 @@
       syncTaskNotesFieldToEditor();
       renderTaskBlockOptions();
       elements.taskBlockSelect.value = task ? (task.blockId || "") : (blockId || "");
-      elements.deleteTaskButton.style.display = task ? "inline-flex" : "none";
+      elements.taskMenuAddSubtaskButton.style.display = task ? "" : "none";
+      elements.taskMenuDeleteButton.style.display = task ? "" : "none";
       elements.taskSettingsPanel.classList.remove("open");
       setTaskFormattingTrayOpen(false);
+      setTaskMenuOpen(false);
       closeInlineSubtaskComposer();
       renderTaskSubtasks();
-      setTaskModalSheetState(task ? "half" : "full");
-      setTaskModalEditing(!task, { focusTarget: task ? "none" : "title", keepSheetFull: !task });
+      setTaskModalSheetState("full");
+      setTaskModalEditing(!task, { focusTarget: task ? "none" : "title", keepSheetFull: true });
       openModal("task");
     }
 
@@ -4283,7 +4677,13 @@
             : elements.blockModalBackdrop;
       backdrop.classList.add("open");
       backdrop.setAttribute("aria-hidden", "false");
-      if (type === "task") {
+      if (type === "block") {
+        window.clearTimeout(blockModalCloseTimer);
+        elements.blockModalBackdrop.classList.remove("closing");
+        requestAnimationFrame(() => {
+          elements.blockModalBackdrop.classList.add("active");
+        });
+      } else if (type === "task") {
         window.clearTimeout(taskModalCloseTimer);
         isTaskModalClosing = false;
         elements.taskModalBackdrop.classList.remove("closing");
@@ -4303,7 +4703,17 @@
           : type === "timeline-save"
             ? elements.timelineSaveModalBackdrop
             : elements.blockModalBackdrop;
-      if (type === "task") {
+      if (type === "block") {
+        if (!options.skipCommit) {
+          commitBlockModalChanges();
+        }
+        elements.blockModalBackdrop.classList.add("closing");
+        elements.blockModalBackdrop.classList.remove("active");
+        blockModalCloseTimer = window.setTimeout(() => {
+          backdrop.classList.remove("open", "closing");
+          backdrop.setAttribute("aria-hidden", "true");
+        }, 300);
+      } else if (type === "task") {
         if (isTaskModalClosing) {
           return;
         }
@@ -4340,11 +4750,12 @@
         elements.taskParentId.value = "";
         elements.taskSettingsPanel.classList.remove("open");
         setTaskFormattingTrayOpen(false);
+        setTaskMenuOpen(false);
         closeInlineSubtaskComposer();
         state.ui.editingTaskId = null;
         state.ui.taskModalParentId = null;
         state.ui.taskModalIsEditing = false;
-        state.ui.taskModalSheetState = "half";
+        state.ui.taskModalSheetState = "full";
         state.ui.taskFormattingTrayOpen = false;
       } else if (type === "timeline-save") {
         elements.timelineSaveForm.reset();
@@ -4353,6 +4764,8 @@
         elements.blockNotes.value = "";
         syncBlockNotesFieldToEditor();
         elements.blockSettingsPanel.classList.remove("open");
+        setBlockFormattingTrayOpen(false);
+        setBlockMenuOpen(false);
         state.ui.editingBlockId = null;
       }
     }
