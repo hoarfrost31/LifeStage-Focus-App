@@ -443,13 +443,18 @@
       gap: 10px;
       flex: 1;
       min-height: 0;
+      position: relative;
     }
 
     .tasks-actions {
+      position: absolute;
+      right: 12px;
+      bottom: 14px;
       display: flex;
       justify-content: flex-end;
       align-items: center;
       flex-shrink: 0;
+      z-index: 2;
     }
 
     .tasks-list {
@@ -459,6 +464,7 @@
       overflow-y: auto;
       min-height: 0;
       padding-right: 2px;
+      padding-bottom: 56px;
       flex: 1;
     }
 
@@ -1376,29 +1382,6 @@
       pointer-events: none;
     }
 
-    .now-pill {
-      position: absolute;
-      top: 50%;
-      left: -66px;
-      transform: translateY(-50%);
-      background: rgba(255, 208, 133, 0.14);
-      color: #ffd085;
-      border: 1px solid rgba(255, 208, 133, 0.28);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 0.62rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    body.compact-mode .now-pill {
-      left: -60px;
-      padding: 3px 6px;
-      font-size: 0.56rem;
-    }
-
     .empty-state {
       position: absolute;
       top: 130px;
@@ -2306,6 +2289,37 @@
       background: rgba(255, 255, 255, 0.14);
     }
 
+    .schedule-day.is-repeat-preview::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .schedule-day.is-repeat-preview.is-selected::before,
+    .schedule-day.is-repeat-preview.is-today::before {
+      display: none;
+    }
+
+    .task-repeat-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.74);
+      flex-shrink: 0;
+    }
+
+    .task-repeat-chip svg {
+      width: 11px;
+      height: 11px;
+      display: block;
+    }
+
     .schedule-section {
       display: flex;
       align-items: center;
@@ -2323,6 +2337,32 @@
     .schedule-time-input {
       width: auto;
       min-width: 112px;
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .schedule-repeat-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .schedule-repeat-prefix {
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 0.82rem;
+    }
+
+    .schedule-repeat-interval {
+      width: 64px;
+      text-align: center;
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .schedule-repeat-unit {
+      min-width: 108px;
       padding: 10px 12px;
       border-radius: 14px;
     }
@@ -2795,6 +2835,8 @@
         <input type="hidden" id="task-id">
         <input type="hidden" id="task-parent-id">
         <input type="hidden" id="task-due-datetime">
+        <input type="hidden" id="task-repeat-interval" value="1">
+        <input type="hidden" id="task-repeat-unit" value="">
         <div class="form-grid">
           <div class="task-edit-zone" id="task-edit-zone">
             <input class="task-title-field" id="task-title-input" name="taskTitle" type="text" maxlength="120" required placeholder="Task">
@@ -2952,9 +2994,19 @@
         <div class="schedule-section">
           <div>
             <div>Repeat</div>
-            <div class="schedule-section-meta">UI only for now</div>
+            <div class="schedule-section-meta" id="schedule-repeat-summary">Never</div>
           </div>
-          <span class="schedule-section-meta">Never</span>
+          <div class="schedule-repeat-controls">
+            <span class="schedule-repeat-prefix">Every</span>
+            <input class="schedule-repeat-interval" id="schedule-repeat-interval" type="number" min="1" max="365" step="1" value="1" inputmode="numeric" aria-label="Repeat interval">
+            <select class="schedule-repeat-unit" id="schedule-repeat-unit" aria-label="Repeat unit">
+              <option value="">Never</option>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+              <option value="year">Year</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="modal-actions schedule-modal-actions">
@@ -3051,6 +3103,7 @@
         now: new Date(),
         phaseToReveal: null,
         isCompactTimeline: false,
+        focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
         lastSyncedAt: null
@@ -3064,6 +3117,7 @@
     let activeTaskDrag = null;
     let activeLinkedTaskDrag = null;
     let activeBlockDrag = null;
+    let activeDrawerGesture = null;
     let suppressClickUntil = 0;
     let taskModalCloseTimer = null;
     let blockModalCloseTimer = null;
@@ -3153,6 +3207,8 @@
       taskId: document.getElementById("task-id"),
       taskParentId: document.getElementById("task-parent-id"),
       taskDueDateTime: document.getElementById("task-due-datetime"),
+      taskRepeatInterval: document.getElementById("task-repeat-interval"),
+      taskRepeatUnit: document.getElementById("task-repeat-unit"),
       taskTitleInput: document.getElementById("task-title-input"),
       taskEditZone: document.getElementById("task-edit-zone"),
       taskRichToolbar: document.getElementById("task-rich-toolbar"),
@@ -3195,6 +3251,9 @@
       scheduleTimeSection: document.getElementById("schedule-time-section"),
       scheduleTimeInput: document.getElementById("schedule-time-input"),
       scheduleTimeSummary: document.getElementById("schedule-time-summary"),
+      scheduleRepeatSummary: document.getElementById("schedule-repeat-summary"),
+      scheduleRepeatInterval: document.getElementById("schedule-repeat-interval"),
+      scheduleRepeatUnit: document.getElementById("schedule-repeat-unit"),
       scheduleApplyButton: document.getElementById("schedule-apply-button"),
       scheduleClearButton: document.getElementById("schedule-clear-button"),
       timelineSaveForm: document.getElementById("timeline-save-form"),
@@ -3208,6 +3267,7 @@
       initializeFirebase();
       populateColorOptions();
       bindEvents();
+      bindDrawerGestures();
       syncBlockNotesFieldToEditor();
       syncTaskNotesFieldToEditor();
       registerServiceWorker();
@@ -3235,10 +3295,7 @@
       elements.taskDrawerNav.addEventListener("click", handleTaskDrawerClick);
       elements.taskDrawerLists.addEventListener("click", handleTaskDrawerClick);
       elements.addTaskListButton.addEventListener("click", handleAddTaskList);
-      elements.tabTasks.addEventListener("click", () => {
-        state.ui.activeTaskListFilter = INBOX_LIST_ID;
-        setActiveTab("tasks");
-      });
+      elements.tabTasks.addEventListener("click", () => setActiveTab("tasks"));
       elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
       elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
       elements.addTaskButton.addEventListener("click", () => openTaskModal(null, null, null, getDefaultTaskListForCompose()));
@@ -3329,6 +3386,8 @@
       elements.scheduleCloseButton.addEventListener("click", closeScheduleModal);
       elements.scheduleGrid.addEventListener("click", handleScheduleGridClick);
       elements.scheduleTimeInput.addEventListener("input", handleScheduleTimeInput);
+      elements.scheduleRepeatInterval.addEventListener("input", handleScheduleRepeatChange);
+      elements.scheduleRepeatUnit.addEventListener("change", handleScheduleRepeatChange);
       elements.scheduleApplyButton.addEventListener("click", applyScheduleSelection);
       elements.scheduleClearButton.addEventListener("click", clearScheduleSelection);
       elements.scheduleModalBackdrop.addEventListener("click", handleScheduleBackdropClick);
@@ -3516,9 +3575,13 @@
 
     function renderTaskScheduleSummary() {
       const parsed = parseTaskDueDateTime(elements.taskDueDateTime.value || "");
+      const repeatRule = readTaskRepeatRuleFromFields();
+      const summary = parsed
+        ? formatTaskScheduleSummary(buildTaskDueDateTime(parsed.dateKey, parsed.timeValue), repeatRule, { includeDate: true, includeTime: true })
+        : "";
       elements.taskScheduleButton.classList.toggle("active", Boolean(parsed));
       elements.taskScheduleButton.setAttribute("aria-label", parsed
-        ? `Scheduled for ${formatTaskDueMeta(elements.taskDueDateTime.value || "", { includeDate: true, includeTime: true })}`
+        ? `Scheduled for ${summary}`
         : "Schedule task");
     }
 
@@ -3536,6 +3599,9 @@
         elements.scheduleGrid.innerHTML = "";
         elements.scheduleTimeInput.value = "";
         elements.scheduleTimeSummary.textContent = "Any time";
+        elements.scheduleRepeatInterval.value = "1";
+        elements.scheduleRepeatUnit.value = "";
+        elements.scheduleRepeatSummary.textContent = "Never";
         return;
       }
 
@@ -3548,15 +3614,26 @@
       const monthDate = new Date(`${draft.monthKey}-01T00:00`);
       elements.scheduleMonthLabel.textContent = monthDate.toLocaleDateString([], { month: "short", year: "numeric" });
       elements.scheduleWeekdays.innerHTML = ["S", "M", "T", "W", "T", "F", "S"].map((day) => `<div class="schedule-weekday">${day}</div>`).join("");
-      elements.scheduleGrid.innerHTML = buildScheduleCalendarGrid(draft.monthKey, draft.dateKey);
+      elements.scheduleGrid.innerHTML = buildScheduleCalendarGrid(
+        draft.monthKey,
+        draft.dateKey,
+        normalizeRepeatRule({ interval: draft.repeatInterval, unit: draft.repeatUnit })
+      );
       elements.scheduleTimeInput.value = draft.timeValue || "";
       elements.scheduleTimeSummary.textContent = draft.timeValue ? formatTimeValue(draft.timeValue) : "Any time";
+      elements.scheduleRepeatInterval.value = String(draft.repeatInterval || 1);
+      elements.scheduleRepeatUnit.value = draft.repeatUnit || "";
+      elements.scheduleRepeatSummary.textContent = formatRepeatRuleSummary(normalizeRepeatRule({
+        interval: draft.repeatInterval,
+        unit: draft.repeatUnit
+      }));
     }
 
-    function buildScheduleCalendarGrid(monthKey, selectedDateKey) {
+    function buildScheduleCalendarGrid(monthKey, selectedDateKey, repeatRule = null) {
       const monthDate = new Date(`${monthKey}-01T00:00`);
       const start = new Date(monthDate);
       start.setDate(1 - monthDate.getDay());
+      const repeatPreviewKeys = new Set(getRepeatPreviewDateKeys(selectedDateKey, repeatRule, monthKey));
       return Array.from({ length: 42 }, (_, index) => {
         const cellDate = new Date(start);
         cellDate.setDate(start.getDate() + index);
@@ -3564,7 +3641,8 @@
         const isSelected = selectedDateKey === dateKey;
         const isToday = dateKey === getLocalDateKey();
         const isOutside = cellDate.getMonth() !== monthDate.getMonth();
-        return `<button class="schedule-day ${isSelected ? "is-selected" : ""} ${isToday ? "is-today" : ""} ${isOutside ? "is-outside" : ""}" type="button" data-schedule-date="${dateKey}">${cellDate.getDate()}</button>`;
+        const isRepeatPreview = repeatPreviewKeys.has(dateKey);
+        return `<button class="schedule-day ${isSelected ? "is-selected" : ""} ${isToday ? "is-today" : ""} ${isOutside ? "is-outside" : ""} ${isRepeatPreview ? "is-repeat-preview" : ""}" type="button" data-schedule-date="${dateKey}">${cellDate.getDate()}</button>`;
       }).join("");
     }
 
@@ -3576,7 +3654,9 @@
         activeTab: focus === "duration" ? "duration" : "date",
         dateKey: baseDateKey,
         timeValue: parsed?.timeValue || "",
-        monthKey: baseDateKey.slice(0, 7)
+        monthKey: baseDateKey.slice(0, 7),
+        repeatInterval: readTaskRepeatRuleFromFields()?.interval || 1,
+        repeatUnit: readTaskRepeatRuleFromFields()?.unit || ""
       };
       state.ui.scheduleModalOpen = true;
       renderScheduleModal();
@@ -3638,6 +3718,15 @@
       renderScheduleModal();
     }
 
+    function handleScheduleRepeatChange() {
+      if (!state.ui.scheduleDraft) {
+        return;
+      }
+      state.ui.scheduleDraft.repeatInterval = normalizeRepeatInterval(elements.scheduleRepeatInterval.value);
+      state.ui.scheduleDraft.repeatUnit = elements.scheduleRepeatUnit.value || "";
+      renderScheduleModal();
+    }
+
     function handleScheduleQuickAction(event) {
       const action = event.currentTarget.dataset.scheduleQuick;
       if (!state.ui.scheduleDraft) {
@@ -3665,11 +3754,16 @@
         return;
       }
       const nextValue = buildTaskDueDateTime(state.ui.scheduleDraft.dateKey, state.ui.scheduleDraft.timeValue);
+      const nextRepeatRule = normalizeRepeatRule({
+        interval: state.ui.scheduleDraft.repeatInterval,
+        unit: state.ui.scheduleDraft.repeatUnit
+      });
       elements.taskDueDateTime.value = nextValue;
+      writeTaskRepeatRuleToFields(nextRepeatRule);
       renderTaskScheduleSummary();
       if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
         state.tasks = state.tasks.map((task) =>
-          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: nextValue } : task
+          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: nextValue, repeatRule: nextRepeatRule } : task
         );
         persistState({ immediate: true });
         render();
@@ -3683,16 +3777,19 @@
       }
       state.ui.scheduleDraft.dateKey = "";
       state.ui.scheduleDraft.timeValue = "";
+      state.ui.scheduleDraft.repeatInterval = 1;
+      state.ui.scheduleDraft.repeatUnit = "";
       renderScheduleModal();
       applyScheduleSelection();
     }
 
     function clearTaskSchedule() {
       elements.taskDueDateTime.value = "";
+      writeTaskRepeatRuleToFields(null);
       renderTaskScheduleSummary();
       if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
         state.tasks = state.tasks.map((task) =>
-          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: "" } : task
+          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: "", repeatRule: null } : task
         );
         persistState({ immediate: true });
         render();
@@ -3739,7 +3836,9 @@
       const overnight = block ? timeToMinutes(block.endTime) <= timeToMinutes(block.startTime) : false;
       const subtasks = getChildTasks(task.id);
       const isExpanded = subtasks.length ? !task.isCollapsed : false;
-      const dueMeta = formatTaskDueMeta(task.dueDateTime, { includeDate: true, includeTime: true });
+      const occurrence = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
+      const dueMeta = occurrence ? formatTaskDueMeta(occurrence.raw, { includeDate: true, includeTime: true }) : "";
+      const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const showScheduleMeta = depth === 0;
 
       return `
@@ -3762,6 +3861,7 @@
               ${showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : ""}
               ${showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
               ${dueMeta ? `<span class="task-due-chip">${escapeHtml(dueMeta)}</span>` : ""}
+              ${repeatMeta}
             </div>
           </button>
           <div class="task-row-menu-wrap">
@@ -3829,7 +3929,7 @@
     function renderScheduledTaskGroups(tasks) {
       const groups = new Map();
       tasks.forEach((task) => {
-        const parsedDue = parseTaskDueDateTime(task.dueDateTime);
+        const parsedDue = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
         if (!parsedDue?.dateKey) {
           return;
         }
@@ -3850,7 +3950,9 @@
 
     function renderScheduledTaskItem(task) {
       const block = task.blockId ? getBlockById(task.blockId) : null;
-      const dueMeta = formatTaskDueMeta(task.dueDateTime, { includeDate: false, includeTime: true }) || "Any time";
+      const occurrence = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
+      const dueMeta = occurrence ? formatTaskDueMeta(occurrence.raw, { includeDate: false, includeTime: true }) || "Any time" : "Any time";
+      const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const listName = getTaskListById(task.listId)?.name || "Inbox";
       return `
         <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}">
@@ -3865,6 +3967,7 @@
             <div class="task-meta">
               <span class="task-due-chip">${escapeHtml(dueMeta)}</span>
               <span class="task-list-chip">${escapeHtml(listName)}</span>
+              ${repeatMeta}
               ${block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
             </div>
           </button>
@@ -3901,6 +4004,7 @@
 
     function setTaskDrawerOpen(isOpen) {
       state.ui.isTaskDrawerOpen = isOpen;
+      clearDrawerGestureStyles();
       render();
     }
 
@@ -4011,6 +4115,9 @@
     function setActiveTab(tab) {
       state.ui.activeTab = tab;
       state.ui.isTaskDrawerOpen = false;
+      if (tab === "timeline" && !state.ui.isCompactTimeline) {
+        state.ui.focusTimelineNowOnRender = true;
+      }
       persistState();
       render();
     }
@@ -4137,8 +4244,25 @@
       const nowLine = document.createElement("div");
       nowLine.className = "now-line";
       nowLine.style.top = `${timelineOffsetForMinute(nowMinutes)}px`;
-      nowLine.innerHTML = `<span class="now-pill">Now - ${formatDisplayTime(state.ui.now)}</span>`;
       elements.timeline.appendChild(nowLine);
+
+      if (state.ui.activeTab === "timeline" && !state.ui.isCompactTimeline && state.ui.focusTimelineNowOnRender) {
+        requestAnimationFrame(() => scrollTimelineToNow(nowMinutes));
+        state.ui.focusTimelineNowOnRender = false;
+      }
+    }
+
+    function scrollTimelineToNow(nowMinutes) {
+      const container = elements.timelineScroll;
+      if (!container) {
+        return;
+      }
+      const targetOffset = timelineOffsetForMinute(nowMinutes);
+      const targetScrollTop = Math.max(0, targetOffset - (container.clientHeight * 0.42));
+      container.scrollTo({
+        top: targetScrollTop,
+        behavior: "smooth"
+      });
     }
 
     function handlePhaseSubmit(event) {
@@ -4180,6 +4304,9 @@
 
     function handleCompactToggle() {
       state.ui.isCompactTimeline = !state.ui.isCompactTimeline;
+      if (state.ui.activeTab === "timeline" && !state.ui.isCompactTimeline) {
+        state.ui.focusTimelineNowOnRender = true;
+      }
       persistState();
       render();
     }
@@ -4192,6 +4319,120 @@
       elements.phaseContextMenu.classList.toggle("open", isOpen);
       elements.phaseContextMenu.setAttribute("aria-hidden", String(!isOpen));
       elements.phaseMenuButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function bindDrawerGestures() {
+      document.addEventListener("touchstart", handleDrawerTouchStart, { passive: true });
+      document.addEventListener("touchmove", handleDrawerTouchMove, { passive: false });
+      document.addEventListener("touchend", handleDrawerTouchEnd);
+      document.addEventListener("touchcancel", handleDrawerTouchEnd);
+    }
+
+    function handleDrawerTouchStart(event) {
+      if (event.touches.length !== 1 || !canUseDrawerGesture()) {
+        activeDrawerGesture = null;
+        return;
+      }
+
+      const touch = event.touches[0];
+      const drawerWidth = getDrawerWidth();
+      const isOpen = state.ui.isTaskDrawerOpen;
+      const isEdgeOpenGesture = !isOpen && touch.clientX <= 22;
+      const isDrawerCloseGesture = isOpen && touch.clientX <= drawerWidth + 28;
+      if (!isEdgeOpenGesture && !isDrawerCloseGesture) {
+        activeDrawerGesture = null;
+        return;
+      }
+
+      activeDrawerGesture = {
+        mode: isOpen ? "close" : "open",
+        startX: touch.clientX,
+        startY: touch.clientY,
+        deltaX: 0,
+        engaged: false,
+        drawerWidth
+      };
+    }
+
+    function handleDrawerTouchMove(event) {
+      if (!activeDrawerGesture || event.touches.length !== 1) {
+        return;
+      }
+
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - activeDrawerGesture.startX;
+      const deltaY = touch.clientY - activeDrawerGesture.startY;
+      activeDrawerGesture.deltaX = deltaX;
+
+      if (!activeDrawerGesture.engaged) {
+        if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
+          activeDrawerGesture = null;
+          return;
+        }
+        if (Math.abs(deltaX) < 8) {
+          return;
+        }
+        activeDrawerGesture.engaged = true;
+      }
+
+      const drawerWidth = activeDrawerGesture.drawerWidth;
+      const translateX = activeDrawerGesture.mode === "open"
+        ? Math.max(-drawerWidth, Math.min(0, -drawerWidth + Math.max(0, deltaX)))
+        : Math.max(-drawerWidth, Math.min(0, Math.min(0, deltaX)));
+      applyDrawerGestureStyles(translateX, drawerWidth);
+      event.preventDefault();
+    }
+
+    function handleDrawerTouchEnd() {
+      if (!activeDrawerGesture) {
+        return;
+      }
+
+      const { mode, deltaX, engaged, drawerWidth } = activeDrawerGesture;
+      clearDrawerGestureStyles();
+
+      if (engaged) {
+        if (mode === "open" && deltaX > Math.min(88, drawerWidth * 0.3)) {
+          setTaskDrawerOpen(true);
+        } else if (mode === "close" && deltaX < -Math.min(72, drawerWidth * 0.24)) {
+          setTaskDrawerOpen(false);
+        } else {
+          render();
+        }
+      }
+
+      activeDrawerGesture = null;
+    }
+
+    function canUseDrawerGesture() {
+      return state.ui.activeTab === "tasks"
+        && !state.ui.scheduleModalOpen
+        && !isTaskModalOpen()
+        && !elements.blockModalBackdrop.classList.contains("open")
+        && !elements.phaseModalBackdrop.classList.contains("open")
+        && !elements.phaseReadModalBackdrop.classList.contains("open")
+        && !elements.timelineSaveModalBackdrop.classList.contains("open");
+    }
+
+    function getDrawerWidth() {
+      return Math.max(elements.taskDrawer.getBoundingClientRect().width || 0, 260);
+    }
+
+    function applyDrawerGestureStyles(translateX, drawerWidth) {
+      const openness = 1 - Math.min(1, Math.abs(translateX) / drawerWidth);
+      elements.taskDrawer.style.transition = "none";
+      elements.drawerBackdrop.style.transition = "none";
+      elements.taskDrawer.style.transform = `translateX(${translateX}px)`;
+      elements.drawerBackdrop.style.opacity = String(openness);
+      elements.drawerBackdrop.style.pointerEvents = openness > 0.02 ? "auto" : "none";
+    }
+
+    function clearDrawerGestureStyles() {
+      elements.taskDrawer.style.transition = "";
+      elements.drawerBackdrop.style.transition = "";
+      elements.taskDrawer.style.transform = "";
+      elements.drawerBackdrop.style.opacity = "";
+      elements.drawerBackdrop.style.pointerEvents = "";
     }
 
     function closeTaskRowMenus(exceptTaskId = null) {
@@ -4740,6 +4981,7 @@
       const parentTaskId = elements.taskParentId.value || null;
       const listId = normalizeTaskListId(elements.taskListSelect.value || null);
       const dueDateTime = elements.taskDueDateTime.value || "";
+      const repeatRule = readTaskRepeatRuleFromFields();
       return {
         id: elements.taskId.value || crypto.randomUUID(),
         title,
@@ -4747,7 +4989,8 @@
         blockId,
         parentTaskId,
         listId,
-        dueDateTime
+        dueDateTime,
+        repeatRule
       };
     }
 
@@ -4767,6 +5010,7 @@
         parentTaskId: draft.parentTaskId,
         listId: draft.parentTaskId ? (getTaskById(draft.parentTaskId)?.listId || draft.listId) : draft.listId,
         dueDateTime: draft.dueDateTime || "",
+        repeatRule: draft.dueDateTime ? draft.repeatRule : null,
         isDone: existingTask ? Boolean(existingTask.isDone) : false,
         isCollapsed: existingTask ? Boolean(existingTask.isCollapsed) : false
       };
@@ -5540,6 +5784,7 @@
         parentTaskId: state.ui.editingTaskId,
         listId: normalizeTaskListId(parentTask?.listId),
         dueDateTime: "",
+        repeatRule: null,
         isDone: false,
         isCollapsed: false
       };
@@ -5608,9 +5853,20 @@
     }
 
     function toggleTask(taskId) {
-      state.tasks = state.tasks.map((task) =>
-        task.id === taskId ? { ...task, isDone: !task.isDone } : task
-      );
+      state.tasks = state.tasks.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+        const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
+        if (nextOccurrence) {
+          return {
+            ...task,
+            dueDateTime: nextOccurrence.raw,
+            isDone: false
+          };
+        }
+        return { ...task, isDone: !task.isDone };
+      });
       persistState({ immediate: true });
       render();
     }
@@ -5892,6 +6148,7 @@
       elements.taskTitleInput.value = task ? task.title : "";
       elements.taskNotes.value = task ? task.notes || "" : "";
       elements.taskDueDateTime.value = task ? (task.dueDateTime || "") : "";
+      writeTaskRepeatRuleToFields(task ? task.repeatRule : null);
       syncTaskNotesFieldToEditor();
       renderTaskBlockOptions();
       elements.taskBlockSelect.value = task ? (task.blockId || "") : (blockId || "");
@@ -6006,6 +6263,7 @@
         elements.taskForm.reset();
         elements.taskNotes.value = "";
         elements.taskDueDateTime.value = "";
+        writeTaskRepeatRuleToFields(null);
         syncTaskNotesFieldToEditor();
         elements.taskBlockSelect.value = "";
         elements.taskParentId.value = "";
@@ -6100,6 +6358,93 @@
       return timeValue ? `${dateKey}T${timeValue}` : dateKey;
     }
 
+    function normalizeRepeatInterval(value) {
+      const parsed = Number.parseInt(String(value || ""), 10);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+    }
+
+    function normalizeRepeatRule(rule) {
+      const unit = typeof rule?.unit === "string" ? rule.unit : "";
+      if (!["day", "week", "month", "year"].includes(unit)) {
+        return null;
+      }
+      return {
+        interval: normalizeRepeatInterval(rule?.interval),
+        unit
+      };
+    }
+
+    function readTaskRepeatRuleFromFields() {
+      return normalizeRepeatRule({
+        interval: elements.taskRepeatInterval.value,
+        unit: elements.taskRepeatUnit.value
+      });
+    }
+
+    function writeTaskRepeatRuleToFields(rule) {
+      const normalizedRule = normalizeRepeatRule(rule);
+      elements.taskRepeatInterval.value = String(normalizedRule?.interval || 1);
+      elements.taskRepeatUnit.value = normalizedRule?.unit || "";
+    }
+
+    function formatRepeatRuleSummary(rule) {
+      const normalizedRule = normalizeRepeatRule(rule);
+      if (!normalizedRule) {
+        return "Never";
+      }
+      const unitLabel = normalizedRule.unit.charAt(0).toUpperCase() + normalizedRule.unit.slice(1);
+      if (normalizedRule.interval === 1) {
+        return `Every ${unitLabel}`;
+      }
+      return `Every ${normalizedRule.interval} ${unitLabel}s`;
+    }
+
+    function getRepeatIconMarkup(label = "Repeating task") {
+      return `<span class="task-repeat-chip" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.3 5.2V2.9H10M12.2 2.9 9.5 5.6M4.1 4.4a4.5 4.5 0 0 1 6.8-.6M3.7 10.8v2.3H6M3.8 13.1l2.7-2.7M11.9 11.6a4.5 4.5 0 0 1-6.8.6" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+    }
+
+    function getRepeatPreviewDateKeys(selectedDateKey, repeatRule, monthKey) {
+      const normalizedRule = normalizeRepeatRule(repeatRule);
+      const selected = parseTaskDueDateTime(selectedDateKey);
+      if (!normalizedRule || !selected || !monthKey) {
+        return [];
+      }
+
+      const monthStart = new Date(`${monthKey}-01T00:00`);
+      const monthEnd = new Date(monthStart);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      monthEnd.setDate(0);
+      monthEnd.setHours(23, 59, 59, 999);
+
+      const keys = [];
+      let cursor = new Date(selected.date);
+      let guard = 0;
+      while (guard < 24) {
+        cursor = addRepeatIntervalToDate(cursor, normalizedRule);
+        if (cursor > monthEnd) {
+          break;
+        }
+        if (cursor >= monthStart) {
+          keys.push(getLocalDateKey(cursor));
+        }
+        guard += 1;
+      }
+      return keys;
+    }
+
+    function formatTaskScheduleSummary(dueDateTime, repeatRule, options = {}) {
+      const parsed = parseTaskDueDateTime(dueDateTime);
+      let dueSummary = formatTaskDueMeta(dueDateTime, options);
+      if (parsed && !dueSummary && options.includeTime !== false) {
+        dueSummary = "Any time";
+      }
+      const repeatSummary = formatRepeatRuleSummary(repeatRule);
+      if (!dueSummary) {
+        return repeatSummary === "Never" ? "" : repeatSummary;
+      }
+      return repeatSummary === "Never" ? dueSummary : `${dueSummary} · ${repeatSummary}`;
+    }
+
     function getLocalDateKey(date = new Date()) {
       return [
         date.getFullYear(),
@@ -6154,13 +6499,99 @@
       return parsed.date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
     }
 
+    function addRepeatIntervalToDate(date, repeatRule) {
+      const normalizedRule = normalizeRepeatRule(repeatRule);
+      if (!normalizedRule) {
+        return new Date(date);
+      }
+      const nextDate = new Date(date);
+      if (normalizedRule.unit === "day") {
+        nextDate.setDate(nextDate.getDate() + normalizedRule.interval);
+      } else if (normalizedRule.unit === "week") {
+        nextDate.setDate(nextDate.getDate() + (normalizedRule.interval * 7));
+      } else if (normalizedRule.unit === "month") {
+        nextDate.setMonth(nextDate.getMonth() + normalizedRule.interval);
+      } else if (normalizedRule.unit === "year") {
+        nextDate.setFullYear(nextDate.getFullYear() + normalizedRule.interval);
+      }
+      return nextDate;
+    }
+
+    function getTaskOccurrenceInfo(task, options = {}) {
+      const parsed = parseTaskDueDateTime(task?.dueDateTime);
+      if (!parsed) {
+        return null;
+      }
+
+      const repeatRule = normalizeRepeatRule(task?.repeatRule);
+      if (!repeatRule) {
+        return {
+          ...parsed,
+          repeatRule: null
+        };
+      }
+
+      const referenceDate = options.referenceDate instanceof Date
+        ? new Date(options.referenceDate)
+        : new Date();
+      if (options.floorToDay !== false) {
+        referenceDate.setHours(0, 0, 0, 0);
+      }
+
+      let occurrenceDate = new Date(parsed.date);
+      let guard = 0;
+      while (occurrenceDate < referenceDate && guard < 512) {
+        occurrenceDate = addRepeatIntervalToDate(occurrenceDate, repeatRule);
+        guard += 1;
+      }
+
+      const nextDateKey = getLocalDateKey(occurrenceDate);
+      return {
+        raw: buildTaskDueDateTime(nextDateKey, parsed.timeValue),
+        dateKey: nextDateKey,
+        timeValue: parsed.timeValue,
+        hasTime: parsed.hasTime,
+        date: occurrenceDate,
+        repeatRule
+      };
+    }
+
+    function getNextTaskOccurrenceAfterCurrent(task) {
+      const repeatRule = normalizeRepeatRule(task?.repeatRule);
+      if (!repeatRule) {
+        return null;
+      }
+      const currentOccurrence = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
+      if (!currentOccurrence) {
+        return null;
+      }
+
+      let nextDate = addRepeatIntervalToDate(currentOccurrence.date, repeatRule);
+      let guard = 0;
+      const now = new Date();
+      while (nextDate <= now && guard < 512) {
+        nextDate = addRepeatIntervalToDate(nextDate, repeatRule);
+        guard += 1;
+      }
+
+      const dateKey = getLocalDateKey(nextDate);
+      return {
+        raw: buildTaskDueDateTime(dateKey, currentOccurrence.timeValue),
+        dateKey,
+        timeValue: currentOccurrence.timeValue,
+        hasTime: currentOccurrence.hasTime,
+        date: nextDate,
+        repeatRule
+      };
+    }
+
     function isTaskDueToday(task) {
-      const parsed = parseTaskDueDateTime(task.dueDateTime);
+      const parsed = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
       return Boolean(parsed && parsed.dateKey === getLocalDateKey());
     }
 
     function isTaskDueWithinNextDays(task, dayCount) {
-      const parsed = parseTaskDueDateTime(task.dueDateTime);
+      const parsed = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
       if (!parsed) {
         return false;
       }
@@ -6174,8 +6605,8 @@
 
     function sortTasksForScheduleView(tasks) {
       return [...tasks].sort((leftTask, rightTask) => {
-        const leftDue = parseTaskDueDateTime(leftTask.dueDateTime);
-        const rightDue = parseTaskDueDateTime(rightTask.dueDateTime);
+        const leftDue = getTaskOccurrenceInfo(leftTask, { referenceDate: new Date(), floorToDay: true });
+        const rightDue = getTaskOccurrenceInfo(rightTask, { referenceDate: new Date(), floorToDay: true });
         const leftDateKey = leftDue?.dateKey || "";
         const rightDateKey = rightDue?.dateKey || "";
         if (leftDateKey !== rightDateKey) {
@@ -6293,6 +6724,7 @@
         blockId: task.blockId || null,
         listId: normalizeTaskListId(task.listId),
         dueDateTime: typeof task.dueDateTime === "string" ? task.dueDateTime : "",
+        repeatRule: normalizeRepeatRule(task.repeatRule),
         parentTaskId: task.parentTaskId || null,
         isDone: Boolean(task.isDone),
         isCollapsed: Boolean(task.isCollapsed)
@@ -6351,6 +6783,7 @@
         blockId: typeof task?.blockId === "string" && blocks.some((block) => block.id === task.blockId) ? task.blockId : null,
         listId: typeof task?.listId === "string" && task.listId ? task.listId : INBOX_LIST_ID,
         dueDateTime: typeof task?.dueDateTime === "string" ? task.dueDateTime : "",
+        repeatRule: normalizeRepeatRule(task?.repeatRule),
         parentTaskId: typeof task?.parentTaskId === "string" && task.parentTaskId ? task.parentTaskId : null,
         isDone: Boolean(task?.isDone),
         isCollapsed: Boolean(task?.isCollapsed)
