@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-04-42";
+    window.APP_ASSET_VERSION = "2026-04-05-1";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-42">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-42">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-42">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-1">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-1">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-1">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -6168,7 +6168,7 @@
       activeBlockDrag.moved = true;
       activeBlockDrag.blockElement.classList.add("dragging");
       activeBlockDrag.blockElement.style.transform = `translateY(${activeBlockDrag.deltaY}px)`;
-      const hoverBlockId = getBlockDropTargetId(event.clientX, event.clientY, activeBlockDrag);
+      const hoverBlockId = getBlockSwapTargetId(activeBlockDrag);
       activeBlockDrag.hoverBlockId = hoverBlockId;
       updateBlockDragPreview(hoverBlockId, activeBlockDrag.deltaY);
       event.preventDefault();
@@ -6246,6 +6246,34 @@
       return nearestBlock?.id || null;
     }
 
+    function getBlockSwapTargetId(dragState) {
+      if (!dragState?.blockElement) {
+        return null;
+      }
+
+      const draggedRect = dragState.blockElement.getBoundingClientRect();
+      const candidates = [...elements.timeline.querySelectorAll(".timeline-block")]
+        .filter((element) => element.dataset.blockId && element.dataset.blockId !== dragState.blockId);
+
+      let bestId = null;
+      let bestOverlap = 0;
+
+      candidates.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        const overlap = Math.min(draggedRect.bottom, rect.bottom) - Math.max(draggedRect.top, rect.top);
+        if (overlap <= 0) {
+          return;
+        }
+        const ratio = overlap / rect.height;
+        if (ratio >= 0.5 && overlap > bestOverlap) {
+          bestOverlap = overlap;
+          bestId = element.dataset.blockId;
+        }
+      });
+
+      return bestId;
+    }
+
     function updateBlockDragPreview(hoverBlockId, deltaY) {
       clearBlockDragPreview();
       if (!activeBlockDrag?.moved) {
@@ -6264,7 +6292,10 @@
           return;
         }
 
-        targetElement.style.transform = `translateY(${activeBlockDrag.blockElement.getBoundingClientRect().height + 8}px)`;
+        const draggedRect = activeBlockDrag.blockElement.getBoundingClientRect();
+        const targetRect = targetElement.getBoundingClientRect();
+        const direction = draggedRect.top < targetRect.top ? -1 : 1;
+        targetElement.style.transform = `translateY(${direction * (draggedRect.height + 8)}px)`;
         return;
       }
     }
