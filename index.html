@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-04-32";
+    window.APP_ASSET_VERSION = "2026-04-04-35";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-32">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-32">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-32">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-35">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-35">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-35">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -289,6 +289,11 @@
       box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
     }
 
+    :root {
+      --floating-action-right: calc((100vw - min(420px, calc(100vw - 24px))) / 2 + 18px);
+      --floating-action-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    }
+
     .danger-button {
       background: rgba(255, 127, 140, 0.12);
       color: var(--danger);
@@ -506,14 +511,14 @@
     }
 
     .tasks-actions {
-      position: absolute;
-      right: 18px;
-      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      position: fixed;
+      right: var(--floating-action-right);
+      bottom: var(--floating-action-bottom);
       display: flex;
       justify-content: flex-end;
       align-items: center;
       flex-shrink: 0;
-      z-index: 2;
+      z-index: 19;
     }
 
     .tasks-list-toolbar {
@@ -634,7 +639,7 @@
       display: block;
       min-width: 0;
       cursor: pointer;
-      touch-action: none;
+      touch-action: pan-y;
     }
 
     .task-title {
@@ -1435,18 +1440,19 @@
     }
 
     .timeline-actions {
-      position: absolute;
-      right: 18px;
-      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-      z-index: 3;
+      position: fixed;
+      right: var(--floating-action-right);
+      bottom: var(--floating-action-bottom);
+      z-index: 19;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-end;
       gap: 8px;
     }
 
     .timeline-actions .mode-toggle {
-      width: 38px;
-      height: 38px;
+      width: 46px;
+      height: 46px;
       padding: 0;
       border-radius: 999px;
       display: inline-flex;
@@ -1455,10 +1461,10 @@
     }
 
     .phases-actions {
-      position: absolute;
-      right: 18px;
-      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-      z-index: 3;
+      position: fixed;
+      right: var(--floating-action-right);
+      bottom: var(--floating-action-bottom);
+      z-index: 19;
     }
 
     .timeline-summary {
@@ -1757,8 +1763,8 @@
     }
 
     .mode-toggle svg {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       display: block;
     }
 
@@ -5933,16 +5939,19 @@
         deltaY: 0,
         moved: false,
         activated: false,
+        hasPointerCapture: false,
         item,
         hoverTaskId: null,
         activationTimer: window.setTimeout(() => {
           if (activeTaskDrag && activeTaskDrag.pointerId === event.pointerId) {
             activeTaskDrag.activated = true;
+            if (!activeTaskDrag.hasPointerCapture) {
+              activeTaskDrag.item.setPointerCapture(event.pointerId);
+              activeTaskDrag.hasPointerCapture = true;
+            }
           }
         }, DRAG_HOLD_DELAY_MS)
       };
-
-      item.setPointerCapture(event.pointerId);
     }
 
     function handleTaskDragMove(event) {
@@ -5955,7 +5964,9 @@
         const deltaX = event.clientX - activeTaskDrag.startX;
         if (Math.abs(deltaX) > 8 || Math.abs(activeTaskDrag.deltaY) > 8) {
           window.clearTimeout(activeTaskDrag.activationTimer);
-          activeTaskDrag.item.releasePointerCapture(event.pointerId);
+          if (activeTaskDrag.hasPointerCapture) {
+            activeTaskDrag.item.releasePointerCapture(event.pointerId);
+          }
           activeTaskDrag = null;
         }
         return;
@@ -5984,7 +5995,9 @@
       item.style.transform = "";
       item.classList.remove("dragging");
       clearTaskDragPreview();
-      item.releasePointerCapture(event.pointerId);
+      if (activeTaskDrag.hasPointerCapture) {
+        item.releasePointerCapture(event.pointerId);
+      }
 
       if (moved) {
         suppressClickUntil = Date.now() + 300;
