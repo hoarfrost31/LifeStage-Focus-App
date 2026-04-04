@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-04-9";
+    window.APP_ASSET_VERSION = "2026-04-04-30";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-9">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-9">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-9">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-30">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-30">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-30">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -428,6 +428,13 @@
       gap: 10px;
     }
 
+    .task-drawer-item-text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .task-drawer-icon {
       width: 18px;
       height: 18px;
@@ -443,6 +450,39 @@
       color: rgba(255, 255, 255, 0.42);
       font-size: 0.72rem;
       flex-shrink: 0;
+    }
+
+    .task-drawer-item-end {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .task-drawer-delete {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 10px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.42);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .task-drawer-delete:hover {
+      background: rgba(255, 127, 140, 0.14);
+      color: var(--danger);
+    }
+
+    .task-drawer-delete svg {
+      width: 13px;
+      height: 13px;
+      display: block;
     }
 
     .task-drawer-footer {
@@ -981,38 +1021,214 @@
     .phase-tab-controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      width: 100%;
+      min-width: 0;
+      position: relative;
+    }
+
+    .custom-dropdown {
+      position: relative;
       width: 100%;
       min-width: 0;
     }
 
-    .phase-tab-select {
+    .custom-dropdown-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
       min-width: 0;
-      flex: 1 1 auto;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(18, 18, 18, 0.96);
-      color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font: inherit;
     }
 
-    .phase-tab-action {
-      width: 34px;
-      height: 34px;
+    .phase-tabs-header .custom-dropdown-stack {
+      padding-top: 4px;
+    }
+
+    .custom-dropdown-label {
+      padding-left: 2px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .custom-dropdown-trigger {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(18, 18, 18, 0.96);
+      color: var(--text);
+      font: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .custom-dropdown-trigger-label {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .custom-dropdown-trigger-icon {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 auto;
+      opacity: 0.72;
+      transition: transform 0.18s ease;
+    }
+
+    .custom-dropdown.open .custom-dropdown-trigger-icon {
+      transform: rotate(180deg);
+    }
+
+    .custom-dropdown-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 8;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(20, 20, 20, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(18px);
+    }
+
+    .custom-dropdown.open .custom-dropdown-panel {
+      display: flex;
+    }
+
+    .custom-dropdown-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .custom-dropdown-title {
+      color: rgba(255, 255, 255, 0.52);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .custom-dropdown-add {
+      min-height: 32px;
+      padding: 0 12px;
       border-radius: 999px;
-      padding: 0;
+      font-size: 0.76rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       flex: 0 0 auto;
-      font-size: 1rem;
+    }
+
+    .custom-dropdown-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .custom-dropdown-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 10px 10px 9px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: transform 0.14s ease;
+    }
+
+    .custom-dropdown-item.active {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .custom-dropdown-item.dragging {
+      opacity: 0.92;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+      transition: none;
+    }
+
+    .custom-dropdown-grab {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.52);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      padding: 0;
+      touch-action: none;
+    }
+
+    .custom-dropdown-grab svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .custom-dropdown-item-label {
+      min-width: 0;
+      font-size: 0.88rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .custom-dropdown-item-action {
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 0;
+      font: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      cursor: pointer;
+    }
+
+    .custom-dropdown-item-action {
+      width: 30px;
+      padding: 0;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.9rem;
       line-height: 1;
     }
 
-    .phase-tab-action:disabled {
-      opacity: 0.36;
-      pointer-events: none;
+    .custom-dropdown-empty {
+      padding: 14px 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
     }
 
     .phase-empty {
@@ -1073,6 +1289,7 @@
     .phase-chip:not(.active) {
       background: rgba(20, 20, 20, 0.86);
       border-color: rgba(255, 255, 255, 0.04);
+      padding: 12px 15px;
     }
 
     .phase-chip:not(.active)::before {
@@ -1104,6 +1321,12 @@
       background: rgba(255, 255, 255, 0.18);
     }
 
+    .phase-chip:not(.active) .phase-topline {
+      margin-bottom: 0;
+      min-width: 0;
+      justify-content: flex-start;
+    }
+
     .phase-badge {
       margin-left: auto;
       font-size: 0.68rem;
@@ -1117,6 +1340,14 @@
       font-size: 0.98rem;
       font-weight: 600;
       line-height: 1.3;
+    }
+
+    .phase-chip:not(.active) .phase-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .phase-description {
@@ -1139,6 +1370,13 @@
       margin-top: 12px;
       color: var(--muted);
       font-size: 0.78rem;
+    }
+
+    .phase-chip:not(.active) .phase-description,
+    .phase-chip:not(.active) .phase-badge,
+    .phase-chip:not(.active) .phase-meta-count,
+    .phase-chip:not(.active) .phase-meta {
+      display: none;
     }
 
     .phase-edit {
@@ -1165,6 +1403,12 @@
     .phase-toggle.active {
       background: rgba(255, 255, 255, 0.14);
       color: var(--text);
+    }
+
+    .phase-chip.active .phase-badge,
+    .phase-chip.active .phase-meta-count,
+    .phase-chip.active .phase-meta {
+      display: none;
     }
 
     .color-select-row {
@@ -2674,6 +2918,8 @@
     .timeline-card .section-header {
       padding-left: 18px;
       padding-right: 18px;
+      position: relative;
+      z-index: 4;
     }
 
     .timeline-card .header-actions {
@@ -2681,20 +2927,8 @@
       min-width: 0;
     }
 
-    .timeline-header-picker .phase-tab-controls {
-      gap: 10px;
-      width: 100%;
-    }
-
-    .timeline-header-picker .phase-tab-select {
-      min-width: 0;
-      flex: 1 1 auto;
-      padding: 8px 12px;
-    }
-
-    .timeline-header-picker .phase-tab-action {
-      width: 34px;
-      height: 34px;
+    .timeline-header-picker .custom-dropdown-panel {
+      right: 0;
     }
 
     .sr-only {
@@ -2754,12 +2988,26 @@
       <div class="section-header compact-header">
         <div class="header-actions phase-tabs-header">
           <div class="phase-tab-controls">
-            <select class="phase-tab-select" id="phase-tab-select" aria-label="Phase tab"></select>
-            <button class="ghost-button phase-tab-action" id="add-phase-tab-button" type="button" aria-label="Add phase tab">+</button>
-            <button class="ghost-button phase-tab-action" id="rename-phase-tab-button" type="button" aria-label="Rename phase tab">✎</button>
-            <button class="ghost-button phase-tab-action" id="move-phase-tab-up-button" type="button" aria-label="Move phase tab up">↑</button>
-            <button class="ghost-button phase-tab-action" id="move-phase-tab-down-button" type="button" aria-label="Move phase tab down">↓</button>
-            <button class="ghost-button phase-tab-action" id="delete-phase-tab-button" type="button" aria-label="Delete phase tab">×</button>
+            <div class="custom-dropdown-stack">
+              <div class="custom-dropdown-label">LifePhase</div>
+              <div class="custom-dropdown" id="phase-tab-dropdown">
+                <button class="custom-dropdown-trigger" id="phase-tab-dropdown-trigger" type="button" aria-label="Open phase tabs" aria-expanded="false">
+                  <span class="custom-dropdown-trigger-label" id="phase-tab-dropdown-label">Main</span>
+                  <span class="custom-dropdown-trigger-icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m4.2 6.2 3.8 3.8 3.8-3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                </button>
+                <div class="custom-dropdown-panel" id="phase-tab-dropdown-panel" aria-hidden="true">
+                  <div class="custom-dropdown-toolbar">
+                    <span class="custom-dropdown-title">Phase Tabs</span>
+                    <button class="ghost-button custom-dropdown-add" id="add-phase-tab-button" type="button">+ Add Tab</button>
+                  </div>
+                  <div class="custom-dropdown-list" id="phase-tab-dropdown-list"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2774,12 +3022,26 @@
         <div class="header-actions">
           <div class="timeline-header-picker">
             <div class="phase-tab-controls">
-              <select class="phase-tab-select" id="timeline-select" aria-label="Saved timeline"></select>
-              <button class="ghost-button phase-tab-action" id="add-timeline-button" type="button" aria-label="Add timeline">+</button>
-              <button class="ghost-button phase-tab-action" id="rename-timeline-button" type="button" aria-label="Rename timeline">✎</button>
-              <button class="ghost-button phase-tab-action" id="move-timeline-up-button" type="button" aria-label="Move timeline up">↑</button>
-              <button class="ghost-button phase-tab-action" id="move-timeline-down-button" type="button" aria-label="Move timeline down">↓</button>
-              <button class="ghost-button phase-tab-action" id="delete-timeline-button" type="button" aria-label="Delete timeline">×</button>
+              <div class="custom-dropdown-stack">
+                <div class="custom-dropdown-label">Timelines</div>
+                <div class="custom-dropdown" id="timeline-dropdown">
+                  <button class="custom-dropdown-trigger" id="timeline-dropdown-trigger" type="button" aria-label="Open saved timelines" aria-expanded="false">
+                    <span class="custom-dropdown-trigger-label" id="timeline-dropdown-label">No saved timelines</span>
+                    <span class="custom-dropdown-trigger-icon" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="m4.2 6.2 3.8 3.8 3.8-3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                  <div class="custom-dropdown-panel" id="timeline-dropdown-panel" aria-hidden="true">
+                    <div class="custom-dropdown-toolbar">
+                      <span class="custom-dropdown-title">Saved Timelines</span>
+                      <button class="ghost-button custom-dropdown-add" id="add-timeline-button" type="button">+ Save Current</button>
+                    </div>
+                    <div class="custom-dropdown-list" id="timeline-dropdown-list"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <span id="active-phase-label" class="sr-only">No active phases</span>
@@ -2853,6 +3115,8 @@
             </svg>
           </button>
           <div class="task-context-menu" id="phase-context-menu" aria-hidden="true">
+            <button type="button" id="phase-menu-move-up-button">Move up</button>
+            <button type="button" id="phase-menu-move-down-button">Move down</button>
             <button type="button" id="phase-menu-close-button">Close</button>
             <button class="danger" type="button" id="phase-menu-delete-button">Delete phase</button>
           </div>
@@ -2860,10 +3124,15 @@
       </div>
       <form id="phase-form">
         <input type="hidden" id="phase-id">
+        <input type="hidden" id="phase-is-active" value="false">
         <div class="form-grid">
           <input id="phase-name" name="phaseName" type="text" maxlength="40" required placeholder="Phase">
           <textarea id="phase-details" name="phaseDetails" maxlength="600" placeholder="Details"></textarea>
           <div class="phase-settings-panel" id="phase-settings-panel">
+            <label>
+              Tab
+              <select id="phase-tab" name="phaseTab"></select>
+            </label>
             <div class="color-select-row">
               <span class="color-preview-dot" id="phase-color-preview" aria-hidden="true"></span>
               <select id="phase-color" name="phaseColor" required></select>
@@ -2871,6 +3140,7 @@
           </div>
         </div>
         <div class="modal-actions phase-modal-actions">
+          <button class="ghost-button" id="phase-active-toggle-button" type="button">Set Active</button>
           <button class="ghost-button modal-icon-button" id="phase-settings-button" type="button" aria-label="Open phase settings">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 2.6v2.1M8 11.3v2.1M3.5 8h2.1M10.4 8h2.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
@@ -2901,6 +3171,7 @@
       </div>
       <div class="modal-actions">
         <button class="ghost-button" type="button" data-close-modal="phase-read">Close</button>
+        <button class="ghost-button" id="phase-read-toggle-button" type="button">Set Active</button>
         <button class="primary-button" id="phase-read-edit-button" type="button">Edit Phase</button>
       </div>
     </section>
@@ -3297,6 +3568,8 @@
         scheduleDraft: null,
         viewingPhaseId: null,
         activePhaseTabId: DEFAULT_PHASE_TAB_ID,
+        activeTimelineId: "",
+        openHeaderDropdown: "",
         phaseModalMode: "create",
         editingPhaseId: null,
         blockModalMode: "create",
@@ -3331,6 +3604,7 @@
     let phaseModalCloseTimer = null;
     let activeTaskSheetDrag = null;
     let isTaskModalClosing = false;
+    let activeHeaderDropdownDrag = null;
 
     const elements = {
       phaseRail: document.getElementById("phase-rail"),
@@ -3357,12 +3631,17 @@
       tasksCard: document.querySelector(".tasks-card"),
       phasesCard: document.querySelector(".phases-card"),
       timelineCard: document.querySelector(".timeline-card"),
-      phaseTabSelect: document.getElementById("phase-tab-select"),
+      phaseTabDropdown: document.getElementById("phase-tab-dropdown"),
+      phaseTabDropdownTrigger: document.getElementById("phase-tab-dropdown-trigger"),
+      phaseTabDropdownLabel: document.getElementById("phase-tab-dropdown-label"),
+      phaseTabDropdownPanel: document.getElementById("phase-tab-dropdown-panel"),
+      phaseTabDropdownList: document.getElementById("phase-tab-dropdown-list"),
       addPhaseTabButton: document.getElementById("add-phase-tab-button"),
-      renamePhaseTabButton: document.getElementById("rename-phase-tab-button"),
-      movePhaseTabUpButton: document.getElementById("move-phase-tab-up-button"),
-      movePhaseTabDownButton: document.getElementById("move-phase-tab-down-button"),
-      deletePhaseTabButton: document.getElementById("delete-phase-tab-button"),
+      timelineDropdown: document.getElementById("timeline-dropdown"),
+      timelineDropdownTrigger: document.getElementById("timeline-dropdown-trigger"),
+      timelineDropdownLabel: document.getElementById("timeline-dropdown-label"),
+      timelineDropdownPanel: document.getElementById("timeline-dropdown-panel"),
+      timelineDropdownList: document.getElementById("timeline-dropdown-list"),
       addPhaseButton: document.getElementById("add-phase-button"),
       syncStatusLabel: document.getElementById("sync-status-label"),
       toggleCompactButton: document.getElementById("toggle-compact-button"),
@@ -3378,20 +3657,26 @@
       taskSheetHandle: document.getElementById("task-sheet-handle"),
       phaseForm: document.getElementById("phase-form"),
       phaseId: document.getElementById("phase-id"),
+      phaseIsActive: document.getElementById("phase-is-active"),
       phaseName: document.getElementById("phase-name"),
+      phaseTab: document.getElementById("phase-tab"),
       phaseColor: document.getElementById("phase-color"),
       phaseColorPreview: document.getElementById("phase-color-preview"),
       phaseDetails: document.getElementById("phase-details"),
+      phaseActiveToggleButton: document.getElementById("phase-active-toggle-button"),
       phaseSettingsButton: document.getElementById("phase-settings-button"),
       phaseSettingsPanel: document.getElementById("phase-settings-panel"),
       phaseMenuButton: document.getElementById("phase-menu-button"),
       phaseContextMenu: document.getElementById("phase-context-menu"),
+      phaseMenuMoveUpButton: document.getElementById("phase-menu-move-up-button"),
+      phaseMenuMoveDownButton: document.getElementById("phase-menu-move-down-button"),
       phaseMenuCloseButton: document.getElementById("phase-menu-close-button"),
       phaseMenuDeleteButton: document.getElementById("phase-menu-delete-button"),
       phaseReadTitle: document.getElementById("phase-read-title"),
       phaseReadStatus: document.getElementById("phase-read-status"),
       phaseReadBody: document.getElementById("phase-read-body"),
       phaseReadCard: document.getElementById("phase-read-card"),
+      phaseReadToggleButton: document.getElementById("phase-read-toggle-button"),
       phaseReadEditButton: document.getElementById("phase-read-edit-button"),
       blockForm: document.getElementById("block-form"),
       blockId: document.getElementById("block-id"),
@@ -3471,12 +3756,7 @@
       scheduleRepeatUnit: document.getElementById("schedule-repeat-unit"),
       scheduleApplyButton: document.getElementById("schedule-apply-button"),
       scheduleClearButton: document.getElementById("schedule-clear-button"),
-      timelineSelect: document.getElementById("timeline-select"),
-      addTimelineButton: document.getElementById("add-timeline-button"),
-      renameTimelineButton: document.getElementById("rename-timeline-button"),
-      moveTimelineUpButton: document.getElementById("move-timeline-up-button"),
-      moveTimelineDownButton: document.getElementById("move-timeline-down-button"),
-      deleteTimelineButton: document.getElementById("delete-timeline-button")
+      addTimelineButton: document.getElementById("add-timeline-button")
     };
 
     async function initialize() {
@@ -3506,6 +3786,12 @@
       elements.phaseColorPreview.style.setProperty("--phase-color", value);
     }
 
+    function updatePhaseActiveToggleButton() {
+      const isActive = elements.phaseIsActive.value === "true";
+      elements.phaseActiveToggleButton.textContent = isActive ? "Set Inactive" : "Set Active";
+      elements.phaseActiveToggleButton.classList.toggle("active", isActive);
+    }
+
     function bindEvents() {
       elements.taskDrawerToggle.addEventListener("click", () => setTaskDrawerOpen(true));
       elements.drawerBackdrop.addEventListener("click", () => setTaskDrawerOpen(false));
@@ -3528,18 +3814,21 @@
       elements.linkedTasksList.addEventListener("pointermove", handleLinkedTaskDragMove);
       elements.linkedTasksList.addEventListener("pointerup", handleLinkedTaskDragEnd);
       elements.linkedTasksList.addEventListener("pointercancel", handleLinkedTaskDragEnd);
-       elements.phaseTabSelect.addEventListener("change", handlePhaseTabSelectChange);
-       elements.addPhaseTabButton.addEventListener("click", handleAddPhaseTab);
-       elements.renamePhaseTabButton.addEventListener("click", handleRenamePhaseTab);
-       elements.movePhaseTabUpButton.addEventListener("click", () => handleMovePhaseTab(-1));
-       elements.movePhaseTabDownButton.addEventListener("click", () => handleMovePhaseTab(1));
-       elements.deletePhaseTabButton.addEventListener("click", handleDeletePhaseTab);
+      elements.phaseTabDropdownTrigger.addEventListener("click", () => toggleHeaderDropdown("phase-tabs"));
+      elements.phaseTabDropdownList.addEventListener("click", handlePhaseTabDropdownClick);
+      elements.phaseTabDropdownList.addEventListener("pointerdown", handleHeaderDropdownDragStart);
+      elements.phaseTabDropdownList.addEventListener("pointermove", handleHeaderDropdownDragMove);
+      elements.phaseTabDropdownList.addEventListener("pointerup", handleHeaderDropdownDragEnd);
+      elements.phaseTabDropdownList.addEventListener("pointercancel", handleHeaderDropdownDragEnd);
+      elements.addPhaseTabButton.addEventListener("click", handleAddPhaseTab);
       elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
+      elements.phaseActiveToggleButton.addEventListener("click", handlePhaseActiveToggle);
       elements.phaseSettingsButton.addEventListener("click", handlePhaseSettingsToggle);
       elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
+      elements.phaseReadToggleButton.addEventListener("click", handlePhaseReadToggleActive);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.blockNotesEditor.addEventListener("input", handleBlockNotesEditorInput);
       elements.blockRichToolbar.addEventListener("click", handleBlockToolbarClick);
@@ -3576,6 +3865,8 @@
       elements.phaseMenuButton.addEventListener("touchstart", stopPhaseMenuInteraction, { passive: false });
       elements.phaseContextMenu.addEventListener("pointerdown", stopPhaseMenuInteraction);
       elements.phaseContextMenu.addEventListener("touchstart", stopPhaseMenuInteraction, { passive: false });
+      elements.phaseMenuMoveUpButton.addEventListener("click", () => handleMovePhaseWithinTab(-1));
+      elements.phaseMenuMoveDownButton.addEventListener("click", () => handleMovePhaseWithinTab(1));
       elements.phaseMenuCloseButton.addEventListener("click", () => closeModal("phase"));
       elements.phaseMenuDeleteButton.addEventListener("click", handlePhaseDelete);
       elements.blockForm.addEventListener("submit", handleBlockSubmit);
@@ -3620,12 +3911,13 @@
       document.querySelectorAll("[data-schedule-quick]").forEach((button) => {
         button.addEventListener("click", handleScheduleQuickAction);
       });
-      elements.timelineSelect.addEventListener("change", handleTimelineSelectChange);
+      elements.timelineDropdownTrigger.addEventListener("click", () => toggleHeaderDropdown("timelines"));
+      elements.timelineDropdownList.addEventListener("click", handleTimelineDropdownClick);
+      elements.timelineDropdownList.addEventListener("pointerdown", handleHeaderDropdownDragStart);
+      elements.timelineDropdownList.addEventListener("pointermove", handleHeaderDropdownDragMove);
+      elements.timelineDropdownList.addEventListener("pointerup", handleHeaderDropdownDragEnd);
+      elements.timelineDropdownList.addEventListener("pointercancel", handleHeaderDropdownDragEnd);
       elements.addTimelineButton.addEventListener("click", handleAddTimelineSnapshot);
-      elements.renameTimelineButton.addEventListener("click", handleRenameSelectedTimeline);
-      elements.moveTimelineUpButton.addEventListener("click", () => handleMoveSelectedTimeline(-1));
-      elements.moveTimelineDownButton.addEventListener("click", () => handleMoveSelectedTimeline(1));
-      elements.deleteTimelineButton.addEventListener("click", handleDeleteSelectedTimeline);
 
       document.querySelectorAll("[data-close-modal]").forEach((button) => {
         button.addEventListener("click", () => closeModal(button.dataset.closeModal));
@@ -3690,15 +3982,27 @@
 
     function renderPhaseTabControls() {
       const activeTabId = getActivePhaseTabId();
-      elements.phaseTabSelect.innerHTML = state.phaseTabs.map((tab) =>
+      const activeTab = state.phaseTabs.find((tab) => tab.id === activeTabId) || state.phaseTabs[0] || null;
+      elements.phaseTabDropdownLabel.textContent = activeTab?.name || "No tabs";
+      elements.phaseTabDropdown.classList.toggle("open", state.ui.openHeaderDropdown === "phase-tabs");
+      elements.phaseTabDropdownPanel.setAttribute("aria-hidden", String(state.ui.openHeaderDropdown !== "phase-tabs"));
+      elements.phaseTabDropdownTrigger.setAttribute("aria-expanded", String(state.ui.openHeaderDropdown === "phase-tabs"));
+      elements.phaseTabDropdownList.innerHTML = state.phaseTabs.length
+        ? state.phaseTabs.map((tab) => renderHeaderDropdownItem({
+            itemId: tab.id,
+            label: tab.name,
+            isActive: tab.id === activeTabId,
+            kind: "phase-tab"
+          })).join("")
+        : `<div class="custom-dropdown-empty">No tabs yet.</div>`;
+    }
+
+    function renderPhaseModalTabOptions(selectedTabId = getActivePhaseTabId()) {
+      const normalizedTabId = normalizePhaseTabId(selectedTabId);
+      elements.phaseTab.innerHTML = state.phaseTabs.map((tab) =>
         `<option value="${tab.id}">${escapeHtml(tab.name)}</option>`
       ).join("");
-      elements.phaseTabSelect.value = activeTabId;
-      const activeIndex = state.phaseTabs.findIndex((tab) => tab.id === activeTabId);
-      elements.renamePhaseTabButton.disabled = activeIndex < 0;
-      elements.movePhaseTabUpButton.disabled = activeIndex <= 0;
-      elements.movePhaseTabDownButton.disabled = activeIndex < 0 || activeIndex >= state.phaseTabs.length - 1;
-      elements.deletePhaseTabButton.disabled = state.phaseTabs.length <= 1;
+      elements.phaseTab.value = normalizedTabId;
     }
 
     function renderPhaseRail() {
@@ -3712,39 +4016,28 @@
       }
 
       phasesInTab.forEach((phase, index) => {
+        const isActive = Boolean(phase.isActive);
         const button = document.createElement("button");
         button.type = "button";
-        button.className = `phase-chip ${phase.isActive ? "active" : ""}`;
+        button.className = `phase-chip ${isActive ? "active" : ""}`;
         button.style.setProperty("--phase-color", phase.color);
         button.innerHTML = `
           <div class="phase-topline">
             <span class="phase-dot" aria-hidden="true"></span>
-            <span class="phase-badge">${phase.isActive ? "Active" : "Phase"}</span>
+            <div class="phase-name">${escapeHtml(phase.name)}</div>
+            <span class="phase-badge">Phase</span>
           </div>
-          <div class="phase-name">${escapeHtml(phase.name)}</div>
           <div class="phase-description">${escapeHtml(phase.details?.trim() || "No details added yet.")}</div>
           <div class="phase-meta">
-            <span>${countBlocksForPhase(phase.id)} blocks</span>
+            <span class="phase-meta-count">${countBlocksForPhase(phase.id)} blocks</span>
             <div class="header-actions">
-              <button class="phase-toggle ${phase.isActive ? "active" : ""}" type="button">${phase.isActive ? "Active" : "Inactive"}</button>
+              <button class="phase-toggle ${isActive ? "active" : ""}" type="button">Toggle</button>
               <span class="phase-edit">Edit</span>
             </div>
           </div>
         `;
 
-        button.addEventListener("click", () => openPhaseReadModal(phase.id));
-
-        const editTrigger = button.querySelector(".phase-edit");
-        editTrigger.addEventListener("click", (event) => {
-          event.stopPropagation();
-          openPhaseModal(phase.id);
-        });
-
-        const toggleTrigger = button.querySelector(".phase-toggle");
-        toggleTrigger.addEventListener("click", (event) => {
-          event.stopPropagation();
-          setActivePhase(phase.id);
-        });
+        button.addEventListener("click", () => openPhaseModal(phase.id));
 
         elements.phaseRail.appendChild(button);
 
@@ -3829,9 +4122,16 @@
           <button class="task-drawer-item ${activeFilter === list.id ? "active" : ""}" type="button" data-task-filter="${list.id}">
             <span class="task-drawer-item-main">
               <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon("list")}</span>
-              <span>${escapeHtml(list.name)}</span>
+              <span class="task-drawer-item-text">${escapeHtml(list.name)}</span>
             </span>
-            <span class="task-drawer-count">${getTasksForFilter(list.id).length}</span>
+            <span class="task-drawer-item-end">
+              <span class="task-drawer-count">${getTasksForFilter(list.id).length}</span>
+              <span class="task-drawer-delete" data-delete-task-list="${list.id}" role="button" aria-label="Delete ${escapeHtml(list.name)} list">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4.8 5.4v6.2M8 5.4v6.2M11.2 5.4v6.2M3.4 3.8h9.2M6.2 3.8V2.7h3.6v1.1M4.1 3.8h7.8l-.5 8.4a1.2 1.2 0 0 1-1.2 1.1H5.8a1.2 1.2 0 0 1-1.2-1.1l-.5-8.4Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </span>
           </button>
         `).join("") || `<div class="saved-timeline-empty">No custom lists yet.</div>`;
     }
@@ -4300,6 +4600,13 @@
     }
 
     function handleTaskDrawerClick(event) {
+      const deleteButton = event.target.closest("[data-delete-task-list]");
+      if (deleteButton) {
+        event.stopPropagation();
+        handleDeleteTaskList(deleteButton.dataset.deleteTaskList);
+        return;
+      }
+
       const filterButton = event.target.closest("[data-task-filter]");
       if (!filterButton) {
         return;
@@ -4330,6 +4637,49 @@
       state.ui.activeTaskListFilter = state.taskLists[state.taskLists.length - 1].id;
       state.ui.activeTab = "tasks";
       state.ui.isTaskDrawerOpen = false;
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleDeleteTaskList(listId) {
+      const normalizedListId = normalizeTaskListId(listId);
+      if (normalizedListId === INBOX_LIST_ID) {
+        return;
+      }
+
+      const list = getTaskListById(normalizedListId);
+      if (!list) {
+        return;
+      }
+
+      const sectionsToRemove = state.sections.filter((section) => section.listId === normalizedListId);
+      const sectionIdsToRemove = new Set(sectionsToRemove.map((section) => section.id));
+      const movedTaskCount = state.tasks.filter((task) => normalizeTaskListId(task.listId) === normalizedListId).length;
+      const shouldDelete = window.confirm(
+        `Delete "${list.name}"? ${movedTaskCount} task${movedTaskCount === 1 ? "" : "s"} will move to Inbox.`
+      );
+      if (!shouldDelete) {
+        return;
+      }
+
+      state.taskLists = state.taskLists.filter((item) => item.id !== normalizedListId);
+      state.sections = state.sections.filter((section) => section.listId !== normalizedListId);
+      state.tasks = state.tasks.map((task) => {
+        if (normalizeTaskListId(task.listId) !== normalizedListId) {
+          return sectionIdsToRemove.has(task.sectionId) ? { ...task, sectionId: null } : task;
+        }
+
+        return {
+          ...task,
+          listId: INBOX_LIST_ID,
+          sectionId: null
+        };
+      });
+
+      if (normalizeTaskListId(state.ui.activeTaskListFilter) === normalizedListId) {
+        state.ui.activeTaskListFilter = INBOX_LIST_ID;
+      }
+
       persistState({ immediate: true });
       render();
     }
@@ -4584,9 +4934,8 @@
       const name = elements.phaseName.value.trim();
       const color = elements.phaseColor.value;
       const details = elements.phaseDetails.value.trim();
-      const tabId = state.ui.phaseModalMode === "edit"
-        ? (getPhaseById(id)?.tabId || getActivePhaseTabId())
-        : getActivePhaseTabId();
+      const tabId = normalizePhaseTabId(elements.phaseTab.value || getActivePhaseTabId());
+      const isActive = elements.phaseIsActive.value === "true";
 
       if (!name) {
         return;
@@ -4594,14 +4943,15 @@
 
       if (state.ui.phaseModalMode === "edit") {
         state.phases = state.phases.map((phase) =>
-          phase.id === id ? { ...phase, name, color, details, tabId } : phase
+          phase.id === id ? { ...phase, name, color, details, tabId, isActive } : phase
         );
         state.ui.phaseToReveal = id;
       } else {
-        state.phases.push({ id, tabId, name, color, details, isActive: false });
+        state.phases.push({ id, tabId, name, color, details, isActive });
         state.ui.phaseToReveal = id;
       }
 
+      state.ui.activePhaseTabId = tabId;
       persistState({ immediate: true });
     }
 
@@ -4623,6 +4973,11 @@
 
     function handlePhaseSettingsToggle() {
       elements.phaseSettingsPanel.classList.toggle("open");
+    }
+
+    function handlePhaseActiveToggle() {
+      elements.phaseIsActive.value = elements.phaseIsActive.value === "true" ? "false" : "true";
+      updatePhaseActiveToggleButton();
     }
 
     function setPhaseMenuOpen(isOpen) {
@@ -5185,6 +5540,10 @@
     }
 
     function handleDocumentPointerDown(event) {
+      if (!event.target.closest(".custom-dropdown")) {
+        closeHeaderDropdowns();
+      }
+
       if (!event.target.closest(".task-row-menu-wrap")) {
         closeTaskRowMenus();
       }
@@ -6313,8 +6672,42 @@
        render();
      }
 
-     function handlePhaseTabSelectChange() {
-       state.ui.activePhaseTabId = normalizePhaseTabId(elements.phaseTabSelect.value);
+    function handleMovePhaseWithinTab(direction) {
+      if (state.ui.phaseModalMode !== "edit" || !state.ui.editingPhaseId) {
+        return;
+      }
+
+      const phaseId = state.ui.editingPhaseId;
+      const phase = getPhaseById(phaseId);
+      if (!phase) {
+        return;
+      }
+
+      const sameTabIndexes = state.phases.reduce((indexes, item, index) => {
+        if (normalizePhaseTabId(item.tabId) === normalizePhaseTabId(phase.tabId)) {
+          indexes.push(index);
+        }
+        return indexes;
+      }, []);
+      const currentTabPosition = sameTabIndexes.findIndex((index) => state.phases[index]?.id === phaseId);
+      const targetTabPosition = currentTabPosition + direction;
+      if (currentTabPosition < 0 || targetTabPosition < 0 || targetTabPosition >= sameTabIndexes.length) {
+        return;
+      }
+
+      const nextPhases = [...state.phases];
+      const currentIndex = sameTabIndexes[currentTabPosition];
+      const targetIndex = sameTabIndexes[targetTabPosition];
+      [nextPhases[currentIndex], nextPhases[targetIndex]] = [nextPhases[targetIndex], nextPhases[currentIndex]];
+      state.phases = nextPhases;
+      state.ui.phaseToReveal = phaseId;
+      persistState({ immediate: true });
+      setPhaseMenuOpen(false);
+      render();
+    }
+
+     function handlePhaseTabSelectChange(tabId) {
+       state.ui.activePhaseTabId = normalizePhaseTabId(tabId);
       persistState();
       render();
     }
@@ -6336,6 +6729,7 @@
       };
       state.phaseTabs.push(nextTab);
       state.ui.activePhaseTabId = nextTab.id;
+      state.ui.openHeaderDropdown = "phase-tabs";
       persistState({ immediate: true });
       render();
     }
@@ -6393,21 +6787,30 @@
         return;
       }
 
+      const phasesToRemove = state.phases.filter((phase) => phase.tabId === targetTabId);
+      const removedPhaseIds = new Set(phasesToRemove.map((phase) => phase.id));
+      const removedBlockIds = new Set(
+        state.blocks.filter((block) => removedPhaseIds.has(block.phaseId)).map((block) => block.id)
+      );
+
       const shouldDelete = window.confirm(
-        `Delete "${targetTab?.name || "this tab"}"? Phases inside it will be moved to "${fallbackTab.name}".`
+        `Delete "${targetTab?.name || "this tab"}"? This will also delete ${phasesToRemove.length} phase${phasesToRemove.length === 1 ? "" : "s"} inside it.`
       );
       if (!shouldDelete) {
         return;
       }
 
-       state.phases = state.phases.map((phase) =>
-         phase.tabId === targetTabId ? { ...phase, tabId: fallbackTab.id } : phase
-       );
-       state.phaseTabs = state.phaseTabs.filter((tab) => tab.id !== targetTabId);
-       state.ui.activePhaseTabId = fallbackTab.id;
-       persistState({ immediate: true });
-       render();
-     }
+      state.phases = state.phases.filter((phase) => !removedPhaseIds.has(phase.id));
+      state.blocks = state.blocks.filter((block) => !removedPhaseIds.has(block.phaseId));
+      state.tasks = state.tasks.map((task) =>
+        task.blockId && removedBlockIds.has(task.blockId) ? { ...task, blockId: null } : task
+      );
+      state.phaseTabs = state.phaseTabs.filter((tab) => tab.id !== targetTabId);
+      state.ui.activePhaseTabId = fallbackTab.id;
+      state.ui.phaseToReveal = state.phases.find((phase) => phase.tabId === fallbackTab.id)?.id ?? null;
+      persistState({ immediate: true });
+      render();
+    }
 
     function handleBlockDelete() {
       if (state.ui.blockModalMode !== "edit") {
@@ -6442,21 +6845,24 @@
       };
 
       state.savedTimelines.unshift(snapshot);
+      state.ui.activeTimelineId = snapshot.id;
+      state.ui.openHeaderDropdown = "timelines";
       persistState({ immediate: true });
       renderTimelinePicker(snapshot.id);
       render();
     }
 
-    function handleTimelineSelectChange() {
-      const selectedTimeline = getSelectedTimeline();
+    function handleTimelineSelectChange(timelineId) {
+      state.ui.activeTimelineId = timelineId;
+      const selectedTimeline = getSelectedTimeline(timelineId);
       if (!selectedTimeline) {
         return;
       }
       loadSavedTimeline(selectedTimeline.id);
     }
 
-    function handleRenameSelectedTimeline() {
-      const selectedTimeline = getSelectedTimeline();
+    function handleRenameSelectedTimeline(timelineId = state.ui.activeTimelineId) {
+      const selectedTimeline = getSelectedTimeline(timelineId);
       if (!selectedTimeline) {
         return;
       }
@@ -6474,12 +6880,13 @@
       state.savedTimelines = state.savedTimelines.map((item) =>
         item.id === selectedTimeline.id ? { ...item, name: trimmedName } : item
       );
+      state.ui.activeTimelineId = selectedTimeline.id;
       persistState({ immediate: true });
       renderTimelinePicker(selectedTimeline.id);
     }
 
-    function handleMoveSelectedTimeline(direction) {
-      const selectedTimeline = getSelectedTimeline();
+    function handleMoveSelectedTimeline(direction, timelineId = state.ui.activeTimelineId) {
+      const selectedTimeline = getSelectedTimeline(timelineId);
       if (!selectedTimeline) {
         return;
       }
@@ -6498,8 +6905,8 @@
       renderTimelinePicker(selectedTimeline.id);
     }
 
-    function handleDeleteSelectedTimeline() {
-      const selectedTimeline = getSelectedTimeline();
+    function handleDeleteSelectedTimeline(timelineId = state.ui.activeTimelineId) {
+      const selectedTimeline = getSelectedTimeline(timelineId);
       if (!selectedTimeline) {
         return;
       }
@@ -6544,39 +6951,264 @@
 
     function deleteSavedTimeline(savedTimelineId) {
       state.savedTimelines = state.savedTimelines.filter((item) => item.id !== savedTimelineId);
+      if (state.ui.activeTimelineId === savedTimelineId) {
+        state.ui.activeTimelineId = state.savedTimelines[0]?.id || "";
+      }
       persistState({ immediate: true });
       renderTimelinePicker();
     }
 
-    function getSelectedTimeline() {
-      const selectedTimelineId = elements.timelineSelect.value;
+    function getSelectedTimeline(selectedTimelineId = state.ui.activeTimelineId) {
       return state.savedTimelines.find((item) => item.id === selectedTimelineId) || null;
     }
 
     function renderTimelinePicker(preferredTimelineId = "") {
       const fallbackTimelineId = state.savedTimelines[0]?.id || "";
-      const currentTimelineId = elements.timelineSelect.value;
+      const currentTimelineId = state.ui.activeTimelineId;
       const activeTimelineId = preferredTimelineId && state.savedTimelines.some((item) => item.id === preferredTimelineId)
         ? preferredTimelineId
         : (currentTimelineId && state.savedTimelines.some((item) => item.id === currentTimelineId) ? currentTimelineId : fallbackTimelineId);
-
-      elements.timelineSelect.innerHTML = state.savedTimelines.length
-        ? state.savedTimelines.map((item) => `<option value="${item.id}">${escapeHtml(item.name)}</option>`).join("")
-        : `<option value="">No saved timelines</option>`;
-      elements.timelineSelect.value = activeTimelineId;
-
+      state.ui.activeTimelineId = activeTimelineId;
       const selectedTimeline = state.savedTimelines.find((item) => item.id === activeTimelineId) || null;
-      const selectedIndex = state.savedTimelines.findIndex((item) => item.id === activeTimelineId);
+      elements.timelineDropdownLabel.textContent = selectedTimeline?.name || "No saved timelines";
+      elements.timelineDropdown.classList.toggle("open", state.ui.openHeaderDropdown === "timelines");
+      elements.timelineDropdownPanel.setAttribute("aria-hidden", String(state.ui.openHeaderDropdown !== "timelines"));
+      elements.timelineDropdownTrigger.setAttribute("aria-expanded", String(state.ui.openHeaderDropdown === "timelines"));
+      elements.timelineDropdownList.innerHTML = state.savedTimelines.length
+        ? state.savedTimelines.map((item) => renderHeaderDropdownItem({
+            itemId: item.id,
+            label: item.name,
+            isActive: item.id === activeTimelineId,
+            kind: "timeline"
+          })).join("")
+        : `<div class="custom-dropdown-empty">No saved timelines yet.</div>`;
+    }
 
-      elements.timelineSelect.disabled = !selectedTimeline;
-      elements.renameTimelineButton.disabled = !selectedTimeline;
-      elements.moveTimelineUpButton.disabled = !selectedTimeline || selectedIndex <= 0;
-      elements.moveTimelineDownButton.disabled = !selectedTimeline || selectedIndex >= state.savedTimelines.length - 1;
-      elements.deleteTimelineButton.disabled = !selectedTimeline;
+    function renderHeaderDropdownItem({ itemId, label, isActive, kind }) {
+      const renameLabel = kind === "phase-tab" ? "Rename tab" : "Rename timeline";
+      const deleteLabel = kind === "phase-tab" ? "Delete tab" : "Delete timeline";
+      return `
+        <div class="custom-dropdown-item ${isActive ? "active" : ""}" data-dropdown-kind="${kind}" data-dropdown-item-id="${itemId}">
+          <button class="custom-dropdown-grab" type="button" data-dropdown-drag-handle="${kind}:${itemId}" aria-label="Reorder">
+            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="5" cy="4.4" r="1"/>
+              <circle cx="11" cy="4.4" r="1"/>
+              <circle cx="5" cy="8" r="1"/>
+              <circle cx="11" cy="8" r="1"/>
+              <circle cx="5" cy="11.6" r="1"/>
+              <circle cx="11" cy="11.6" r="1"/>
+            </svg>
+          </button>
+          <div class="custom-dropdown-item-label">${escapeHtml(label)}</div>
+          <div class="header-actions">
+            <button class="custom-dropdown-item-action" type="button" data-dropdown-rename="${kind}:${itemId}" aria-label="${renameLabel}">✎</button>
+            <button class="custom-dropdown-item-action" type="button" data-dropdown-delete="${kind}:${itemId}" aria-label="${deleteLabel}">×</button>
+          </div>
+        </div>
+      `;
+    }
 
-      if (!selectedTimeline) {
+    function toggleHeaderDropdown(kind) {
+      state.ui.openHeaderDropdown = state.ui.openHeaderDropdown === kind ? "" : kind;
+      render();
+    }
+
+    function closeHeaderDropdowns() {
+      if (!state.ui.openHeaderDropdown) {
         return;
       }
+      state.ui.openHeaderDropdown = "";
+      render();
+    }
+
+    function handlePhaseTabDropdownClick(event) {
+      const item = event.target.closest(".custom-dropdown-item");
+      if (item && !event.target.closest("[data-dropdown-rename]") && !event.target.closest("[data-dropdown-delete]") && !event.target.closest("[data-dropdown-drag-handle]")) {
+        const tabId = item.dataset.dropdownItemId;
+        handlePhaseTabSelectChange(tabId);
+        state.ui.openHeaderDropdown = "";
+        render();
+        return;
+      }
+
+      const renameButton = event.target.closest("[data-dropdown-rename]");
+      if (renameButton) {
+        const [, tabId] = renameButton.dataset.dropdownRename.split(":");
+        state.ui.activePhaseTabId = normalizePhaseTabId(tabId);
+        handleRenamePhaseTab();
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-dropdown-delete]");
+      if (deleteButton) {
+        const [, tabId] = deleteButton.dataset.dropdownDelete.split(":");
+        state.ui.activePhaseTabId = normalizePhaseTabId(tabId);
+        handleDeletePhaseTab();
+      }
+    }
+
+    function handleTimelineDropdownClick(event) {
+      const item = event.target.closest(".custom-dropdown-item");
+      if (item && !event.target.closest("[data-dropdown-rename]") && !event.target.closest("[data-dropdown-delete]") && !event.target.closest("[data-dropdown-drag-handle]")) {
+        const timelineId = item.dataset.dropdownItemId;
+        handleTimelineSelectChange(timelineId);
+        state.ui.openHeaderDropdown = "";
+        render();
+        return;
+      }
+
+      const renameButton = event.target.closest("[data-dropdown-rename]");
+      if (renameButton) {
+        const [, timelineId] = renameButton.dataset.dropdownRename.split(":");
+        handleRenameSelectedTimeline(timelineId);
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-dropdown-delete]");
+      if (deleteButton) {
+        const [, timelineId] = deleteButton.dataset.dropdownDelete.split(":");
+        handleDeleteSelectedTimeline(timelineId);
+      }
+    }
+
+    function handleHeaderDropdownDragStart(event) {
+      const handle = event.target.closest("[data-dropdown-drag-handle]");
+      if (!handle) {
+        return;
+      }
+
+      const [kind, itemId] = handle.dataset.dropdownDragHandle.split(":");
+      const item = handle.closest(".custom-dropdown-item");
+      if (!item) {
+        return;
+      }
+      const list = kind === "phase-tab" ? elements.phaseTabDropdownList : elements.timelineDropdownList;
+      const orderedItems = [...list.querySelectorAll(".custom-dropdown-item")];
+
+      activeHeaderDropdownDrag = {
+        kind,
+        itemId,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        item,
+        list,
+        itemHeight: item.getBoundingClientRect().height,
+        gapOffset: item.getBoundingClientRect().height + 6,
+        sourceIndex: orderedItems.findIndex((entry) => entry.dataset.dropdownItemId === itemId),
+        targetIndex: orderedItems.findIndex((entry) => entry.dataset.dropdownItemId === itemId),
+        itemOrder: orderedItems.map((entry) => ({
+          id: entry.dataset.dropdownItemId,
+          midpoint: entry.getBoundingClientRect().top + (entry.getBoundingClientRect().height / 2)
+        })),
+        reducedOrder: orderedItems
+          .filter((entry) => entry.dataset.dropdownItemId !== itemId)
+          .map((entry) => entry.dataset.dropdownItemId)
+      };
+      item.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    }
+
+    function handleHeaderDropdownDragMove(event) {
+      if (!activeHeaderDropdownDrag || activeHeaderDropdownDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      activeHeaderDropdownDrag.deltaY = event.clientY - activeHeaderDropdownDrag.startY;
+      if (!activeHeaderDropdownDrag.moved && Math.abs(activeHeaderDropdownDrag.deltaY) < 8) {
+        return;
+      }
+
+      activeHeaderDropdownDrag.moved = true;
+      activeHeaderDropdownDrag.item.classList.add("dragging");
+      activeHeaderDropdownDrag.item.style.transform = `translateY(${activeHeaderDropdownDrag.deltaY}px)`;
+      activeHeaderDropdownDrag.targetIndex = getHeaderDropdownDragTargetIndex(event.clientY, activeHeaderDropdownDrag);
+      updateHeaderDropdownGapPreview(activeHeaderDropdownDrag);
+      event.preventDefault();
+    }
+
+    function handleHeaderDropdownDragEnd(event) {
+      if (!activeHeaderDropdownDrag || activeHeaderDropdownDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      const { kind, itemId, item, moved, targetIndex } = activeHeaderDropdownDrag;
+      item.style.transform = "";
+      item.classList.remove("dragging");
+      clearHeaderDropdownGapPreview(kind);
+      item.releasePointerCapture(event.pointerId);
+
+      if (moved && Number.isInteger(targetIndex) && targetIndex !== activeHeaderDropdownDrag.sourceIndex) {
+        reorderHeaderDropdownItem(kind, itemId, targetIndex);
+      }
+
+      activeHeaderDropdownDrag = null;
+    }
+
+    function getHeaderDropdownDragTargetIndex(clientY, dragState) {
+      if (!dragState.reducedOrder.length) {
+        return dragState.sourceIndex;
+      }
+
+      let insertionIndex = 0;
+      for (const entry of dragState.itemOrder) {
+        if (entry.id === dragState.itemId) {
+          continue;
+        }
+        if (clientY > entry.midpoint) {
+          insertionIndex += 1;
+        }
+      }
+
+      return insertionIndex;
+    }
+
+    function updateHeaderDropdownGapPreview(dragState) {
+      clearHeaderDropdownGapPreview(dragState.kind);
+      if (!dragState.moved) {
+        return;
+      }
+
+      const items = [...dragState.list.querySelectorAll(".custom-dropdown-item")].filter((item) => item.dataset.dropdownItemId !== dragState.itemId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
+    }
+
+    function clearHeaderDropdownGapPreview(kind) {
+      const list = kind === "phase-tab" ? elements.phaseTabDropdownList : elements.timelineDropdownList;
+      list.querySelectorAll(".custom-dropdown-item").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+    }
+
+    function reorderHeaderDropdownItem(kind, sourceId, targetIndex) {
+      const sourceItems = kind === "phase-tab" ? [...state.phaseTabs] : [...state.savedTimelines];
+      const sourceIndex = sourceItems.findIndex((item) => item.id === sourceId);
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) {
+        render();
+        return;
+      }
+
+      const [movedItem] = sourceItems.splice(sourceIndex, 1);
+      sourceItems.splice(Math.min(targetIndex, sourceItems.length), 0, movedItem);
+      if (kind === "phase-tab") {
+        state.phaseTabs = sourceItems;
+        state.ui.activePhaseTabId = sourceId;
+      } else {
+        state.savedTimelines = sourceItems;
+        state.ui.activeTimelineId = sourceId;
+      }
+      persistState({ immediate: true });
+      render();
     }
 
     function renderSavedTimelineTaskChip(item) {
@@ -6604,16 +7236,24 @@
 
     function openPhaseModal(phaseId = null) {
       const phase = phaseId ? getPhaseById(phaseId) : null;
+      const phaseTabId = phase ? phase.tabId : getActivePhaseTabId();
 
       state.ui.phaseModalMode = phase ? "edit" : "create";
       state.ui.editingPhaseId = phase ? phase.id : null;
       elements.phaseId.value = phase ? phase.id : "";
+      elements.phaseIsActive.value = phase ? String(Boolean(phase.isActive)) : "false";
       elements.phaseName.value = phase ? phase.name : "";
+      renderPhaseModalTabOptions(phaseTabId);
       elements.phaseColor.value = phase ? phase.color : COLOR_OPTIONS[0].value;
       updatePhaseColorPreview();
+      updatePhaseActiveToggleButton();
       elements.phaseDetails.value = phase ? phase.details || "" : "";
       elements.phaseSettingsPanel.classList.remove("open");
       setPhaseMenuOpen(false);
+      const phasesInTab = getPhasesForTab(phaseTabId);
+      const phaseIndex = phase ? phasesInTab.findIndex((item) => item.id === phase.id) : -1;
+      elements.phaseMenuMoveUpButton.disabled = !phase || phaseIndex <= 0;
+      elements.phaseMenuMoveDownButton.disabled = !phase || phaseIndex < 0 || phaseIndex >= phasesInTab.length - 1;
       elements.phaseMenuDeleteButton.style.display = phase ? "" : "none";
 
       openModal("phase");
@@ -6626,11 +7266,20 @@
       }
 
       state.ui.viewingPhaseId = phaseId;
+      updatePhaseReadModal(phase);
+      openModal("phase-read");
+    }
+
+    function updatePhaseReadModal(phase) {
+      if (!phase) {
+        return;
+      }
+
       elements.phaseReadTitle.textContent = phase.name;
       elements.phaseReadStatus.textContent = phase.isActive ? "Active phase" : "Inactive phase";
       elements.phaseReadBody.textContent = phase.details?.trim() || "No details added yet.";
       elements.phaseReadCard.style.setProperty("--phase-color", phase.color);
-      openModal("phase-read");
+      elements.phaseReadToggleButton.textContent = phase.isActive ? "Set Inactive" : "Set Active";
     }
 
     function handlePhaseReadEdit() {
@@ -6639,6 +7288,24 @@
       if (phaseId) {
         openPhaseModal(phaseId);
       }
+    }
+
+    function handlePhaseReadToggleActive() {
+      const phaseId = state.ui.viewingPhaseId;
+      if (!phaseId) {
+        return;
+      }
+
+      state.phases = state.phases.map((phase) =>
+        phase.id === phaseId ? { ...phase, isActive: !phase.isActive } : phase
+      );
+      state.ui.phaseToReveal = phaseId;
+      const updatedPhase = getPhaseById(phaseId);
+      if (updatedPhase) {
+        updatePhaseReadModal(updatedPhase);
+      }
+      persistState({ immediate: true });
+      render();
     }
 
     function openBlockModal(blockId = null) {
@@ -7327,7 +7994,8 @@
       return cloneTasks(state.tasks.filter((task) => task.blockId && blockIds.has(task.blockId)));
     }
 
-    function normalizeSavedPhaseTabs(phaseTabs) {
+    function normalizeSavedPhaseTabs(phaseTabs, phases = [], options = {}) {
+      const allowInference = options.allowInference !== false;
       const normalizedTabs = Array.isArray(phaseTabs)
         ? phaseTabs
             .map((tab) => ({
@@ -7336,7 +8004,25 @@
             }))
             .filter((tab) => tab.name)
         : [];
-      return normalizedTabs.length ? normalizedTabs : [{ id: DEFAULT_PHASE_TAB_ID, name: "Main" }];
+      const knownTabIds = new Set(normalizedTabs.map((tab) => tab.id));
+      const inferredTabIds = allowInference && Array.isArray(phases)
+        ? phases
+            .map((phase) => (typeof phase?.tabId === "string" ? phase.tabId.trim() : ""))
+            .filter((tabId) => tabId && !knownTabIds.has(tabId))
+        : [];
+
+      if (!normalizedTabs.length && !inferredTabIds.length) {
+        return [{ id: DEFAULT_PHASE_TAB_ID, name: "Main" }];
+      }
+
+      inferredTabIds.forEach((tabId, index) => {
+        normalizedTabs.push({
+          id: tabId,
+          name: normalizedTabs.length || index ? `Tab ${normalizedTabs.length + 1}` : "Main"
+        });
+      });
+
+      return normalizedTabs;
     }
 
     function normalizeSavedPhases(phases, phaseTabs = state.phaseTabs) {
@@ -7353,6 +8039,7 @@
     }
 
     function normalizeSavedBlocks(blocks, phases) {
+      const fallbackPhaseId = phases.find((phase) => phase.isActive)?.id || phases[0]?.id || "";
       return Array.isArray(blocks)
         ? blocks
             .filter((block) => typeof block?.phaseId === "string")
@@ -7360,11 +8047,11 @@
               id: typeof block.id === "string" && block.id ? block.id : crypto.randomUUID(),
               title: typeof block.title === "string" && block.title.trim() ? block.title.trim() : "Untitled block",
               notes: typeof block.notes === "string" ? block.notes : "",
-              phaseId: block.phaseId,
+              phaseId: phases.some((phase) => phase.id === block.phaseId) ? block.phaseId : fallbackPhaseId,
               startTime: normalizeTimeValue(block.startTime),
               endTime: normalizeTimeValue(block.endTime)
             }))
-            .filter((block) => phases.some((phase) => phase.id === block.phaseId))
+            .filter((block) => Boolean(block.phaseId))
         : [];
     }
 
@@ -7598,15 +8285,19 @@
           isCompactTimeline: state.ui.isCompactTimeline,
           activeTab: state.ui.activeTab,
           activeTaskListFilter: state.ui.activeTaskListFilter,
-          activePhaseTabId: state.ui.activePhaseTabId
+          activePhaseTabId: state.ui.activePhaseTabId,
+          activeTimelineId: state.ui.activeTimelineId
         },
         updatedAt: new Date().toISOString()
       };
     }
 
     function applyPersistedState(parsed) {
-      const savedPhaseTabs = normalizeSavedPhaseTabs(parsed?.phaseTabs);
       const savedPhases = Array.isArray(parsed?.phases) ? parsed.phases : [];
+      const hasExplicitPhaseTabs = Array.isArray(parsed?.phaseTabs);
+      const savedPhaseTabs = normalizeSavedPhaseTabs(parsed?.phaseTabs, savedPhases, {
+        allowInference: !hasExplicitPhaseTabs
+      });
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
       const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists);
       const savedSections = normalizeSavedSections(parsed?.sections, savedTaskLists);
@@ -7614,17 +8305,10 @@
       const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
 
       state.phaseTabs = savedPhaseTabs;
-
-      if (savedPhases.length) {
-        state.phases = normalizeSavedPhases(savedPhases, state.phaseTabs).map((phase) => ({
-          ...phase,
-          details: typeof phase.details === "string" ? phase.details.trim() : ""
-        }));
-        if (!state.phases.some((phase) => phase.isActive) && state.phases.length) {
-          state.phases[0].isActive = true;
-        }
-      }
-
+      state.phases = normalizeSavedPhases(savedPhases, state.phaseTabs).map((phase) => ({
+        ...phase,
+        details: typeof phase.details === "string" ? phase.details.trim() : ""
+      }));
       state.taskLists = savedTaskLists;
       state.sections = savedSections;
 
@@ -7670,6 +8354,8 @@
         ? parsed.ui.activeTaskListFilter
         : normalizeTaskListId(parsed?.ui?.activeTaskListFilter);
       state.ui.activePhaseTabId = normalizePhaseTabId(parsed?.ui?.activePhaseTabId, state.phaseTabs);
+      state.ui.activeTimelineId = typeof parsed?.ui?.activeTimelineId === "string" ? parsed.ui.activeTimelineId : "";
+      state.ui.openHeaderDropdown = "";
     }
 
     function initializeFirebase() {
@@ -7698,9 +8384,15 @@
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data?.payload) {
-            applyPersistedState(data.payload);
-          state.ui.lastSyncedAt = data.updatedAt || null;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+            const localPayload = readLocalPayloadForMigration();
+            if (comparePayloadRecency(localPayload, data.payload) > 0) {
+              await savePayloadToShared(localPayload);
+              state.ui.lastSyncedAt = localPayload.updatedAt || null;
+            } else {
+              applyPersistedState(data.payload);
+              state.ui.lastSyncedAt = data.updatedAt || data.payload.updatedAt || null;
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+            }
             render();
           }
         } else {
@@ -7789,8 +8481,17 @@
             return;
           }
 
+          const localPayload = readLocalPayloadForMigration();
+          if (comparePayloadRecency(localPayload, data.payload) > 0) {
+            void savePayloadToShared(localPayload);
+            state.ui.lastSyncedAt = localPayload.updatedAt || null;
+            state.ui.syncStatus = "Synced";
+            renderSyncStatus();
+            return;
+          }
+
           applyPersistedState(data.payload);
-          state.ui.lastSyncedAt = data.updatedAt || null;
+          state.ui.lastSyncedAt = data.updatedAt || data.payload.updatedAt || null;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
           state.ui.syncStatus = "Synced";
           render();
@@ -7863,6 +8564,19 @@
       const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
 
       return phases.length > 0 || blocks.length > 0 || tasks.length > 0;
+    }
+
+    function getPayloadUpdatedAt(payload) {
+      if (!payload || typeof payload?.updatedAt !== "string") {
+        return 0;
+      }
+
+      const timestamp = Date.parse(payload.updatedAt);
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function comparePayloadRecency(leftPayload, rightPayload) {
+      return getPayloadUpdatedAt(leftPayload) - getPayloadUpdatedAt(rightPayload);
     }
 
     async function savePayloadToShared(payload) {
