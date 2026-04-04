@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-04-35";
+    window.APP_ASSET_VERSION = "2026-04-04-39";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-35">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-35">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-35">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-39">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-39">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-39">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -511,13 +511,16 @@
     }
 
     .tasks-actions {
-      position: fixed;
-      right: var(--floating-action-right);
-      bottom: var(--floating-action-bottom);
       display: flex;
       justify-content: flex-end;
       align-items: center;
       flex-shrink: 0;
+    }
+
+    #add-task-button {
+      position: fixed;
+      right: var(--floating-action-right);
+      bottom: var(--floating-action-bottom);
       z-index: 19;
     }
 
@@ -4151,7 +4154,7 @@
             <div class="phase-name">${escapeHtml(phase.name)}</div>
             <span class="phase-badge">Phase</span>
           </div>
-          <div class="phase-description">${escapeHtml(phase.details?.trim() || "No details added yet.")}</div>
+          ${phase.details?.trim() ? `<div class="phase-description">${escapeHtml(phase.details.trim())}</div>` : ""}
           <div class="phase-meta">
             <span class="phase-meta-count">${countBlocksForPhase(phase.id)} blocks</span>
             <div class="header-actions">
@@ -4776,36 +4779,25 @@
         return;
       }
 
-      const sectionsToRemove = state.sections.filter((section) => section.listId === normalizedListId);
-      const sectionIdsToRemove = new Set(sectionsToRemove.map((section) => section.id));
-      const movedTaskCount = state.tasks.filter((task) => normalizeTaskListId(task.listId) === normalizedListId).length;
-      const shouldDelete = window.confirm(
-        `Delete "${list.name}"? ${movedTaskCount} task${movedTaskCount === 1 ? "" : "s"} will move to Inbox.`
-      );
-      if (!shouldDelete) {
-        return;
-      }
+      const deletedTaskCount = state.tasks.filter((task) => normalizeTaskListId(task.listId) === normalizedListId).length;
+      openAppDialog({
+        mode: "confirm",
+        title: "Delete Task List",
+        message: `Delete "${list.name}"? ${deletedTaskCount} task${deletedTaskCount === 1 ? "" : "s"} in this list will also be deleted.`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          state.taskLists = state.taskLists.filter((item) => item.id !== normalizedListId);
+          state.sections = state.sections.filter((section) => section.listId !== normalizedListId);
+          state.tasks = state.tasks.filter((task) => normalizeTaskListId(task.listId) !== normalizedListId);
 
-      state.taskLists = state.taskLists.filter((item) => item.id !== normalizedListId);
-      state.sections = state.sections.filter((section) => section.listId !== normalizedListId);
-      state.tasks = state.tasks.map((task) => {
-        if (normalizeTaskListId(task.listId) !== normalizedListId) {
-          return sectionIdsToRemove.has(task.sectionId) ? { ...task, sectionId: null } : task;
+          if (normalizeTaskListId(state.ui.activeTaskListFilter) === normalizedListId) {
+            state.ui.activeTaskListFilter = INBOX_LIST_ID;
+          }
+
+          persistState({ immediate: true });
+          render();
         }
-
-        return {
-          ...task,
-          listId: INBOX_LIST_ID,
-          sectionId: null
-        };
       });
-
-      if (normalizeTaskListId(state.ui.activeTaskListFilter) === normalizedListId) {
-        state.ui.activeTaskListFilter = INBOX_LIST_ID;
-      }
-
-      persistState({ immediate: true });
-      render();
     }
 
     function handleAddSection() {
