@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-04-40";
+    window.APP_ASSET_VERSION = "2026-04-04-41";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-40">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-40">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-40">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-41">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-41">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-41">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -516,18 +516,26 @@
       position: relative;
     }
 
-    .tasks-actions {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      flex-shrink: 0;
+    .floating-actions-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 19;
+      pointer-events: none;
     }
 
-    #add-task-button {
-      position: fixed;
+    .floating-action-group {
+      position: absolute;
       right: var(--floating-action-right, 18px);
       bottom: var(--floating-action-bottom, calc(88px + env(safe-area-inset-bottom, 0px)));
-      z-index: 19;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .floating-action-group > * {
+      pointer-events: auto;
     }
 
     .tasks-list-toolbar {
@@ -1449,10 +1457,9 @@
     }
 
     .timeline-actions {
-      position: fixed;
+      position: absolute;
       right: var(--floating-action-right, 18px);
       bottom: var(--floating-action-bottom, calc(88px + env(safe-area-inset-bottom, 0px)));
-      z-index: 19;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -1470,10 +1477,9 @@
     }
 
     .phases-actions {
-      position: fixed;
+      position: absolute;
       right: var(--floating-action-right, 18px);
       bottom: var(--floating-action-bottom, calc(88px + env(safe-area-inset-bottom, 0px)));
-      z-index: 19;
     }
 
     .timeline-summary {
@@ -3013,9 +3019,6 @@
         <div class="tasks-list-toolbar" id="tasks-list-toolbar">
           <button class="ghost-button tasks-section-add" id="add-section-button" type="button">+ Add Section</button>
         </div>
-        <div class="tasks-actions">
-          <button class="primary-button floating-add-button" id="add-task-button" type="button" aria-label="Add task">+</button>
-        </div>
         <div class="tasks-list" id="tasks-list" aria-label="Tasks"></div>
       </div>
     </section>
@@ -3048,9 +3051,6 @@
         </div>
       </div>
       <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
-      <div class="phases-actions">
-        <button class="primary-button floating-add-button" id="add-phase-button" type="button" aria-label="Add phase">+</button>
-      </div>
     </section>
 
     <section class="card timeline-card">
@@ -3086,7 +3086,16 @@
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
       </div>
-      <div class="timeline-actions">
+    </section>
+
+    <div class="floating-actions-layer" id="floating-actions-layer">
+      <div class="floating-action-group" id="task-actions-float">
+        <button class="primary-button floating-add-button" id="add-task-button" type="button" aria-label="Add task">+</button>
+      </div>
+      <div class="floating-action-group phases-actions" id="phase-actions-float">
+        <button class="primary-button floating-add-button" id="add-phase-button" type="button" aria-label="Add phase">+</button>
+      </div>
+      <div class="timeline-actions" id="timeline-actions">
         <button class="mode-toggle" id="toggle-compact-button" type="button" aria-label="Toggle compact timeline view">
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 5.1h10M3 8h10M3 10.9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -3094,7 +3103,7 @@
         </button>
         <button class="primary-button floating-add-button" id="add-block-button" type="button" aria-label="Add block">+</button>
       </div>
-    </section>
+    </div>
 
     <section class="card bottom-nav-card">
       <div class="bottom-nav">
@@ -3698,6 +3707,7 @@
       timelineDropdownLabel: document.getElementById("timeline-dropdown-label"),
       timelineDropdownPanel: document.getElementById("timeline-dropdown-panel"),
       timelineDropdownList: document.getElementById("timeline-dropdown-list"),
+      timelineActions: document.getElementById("timeline-actions"),
       addPhaseButton: document.getElementById("add-phase-button"),
       syncStatusLabel: document.getElementById("sync-status-label"),
       toggleCompactButton: document.getElementById("toggle-compact-button"),
@@ -4095,7 +4105,9 @@
       elements.tasksCard.classList.toggle("panel-hidden", state.ui.activeTab !== "tasks");
       elements.phasesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "phases");
       elements.timelineCard.classList.toggle("panel-hidden", state.ui.activeTab !== "timeline");
-      elements.addBlockButton.style.display = state.ui.activeTab === "timeline" ? "block" : "none";
+      elements.addTaskButton.style.display = state.ui.activeTab === "tasks" ? "block" : "none";
+      elements.addPhaseButton.style.display = state.ui.activeTab === "phases" ? "block" : "none";
+      elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       renderTaskDrawer();
       renderTasks();
       renderPhaseTabControls();
