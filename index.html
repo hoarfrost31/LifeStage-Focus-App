@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-04-31";
+    window.APP_ASSET_VERSION = "2026-04-04-32";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-31">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-31">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-31">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-04-32">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-04-32">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-04-32">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -1888,6 +1888,27 @@
       box-shadow: var(--shadow);
     }
 
+    .app-dialog {
+      max-width: 380px;
+      border-radius: 24px;
+      padding: 20px;
+    }
+
+    .app-dialog-message {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .app-dialog-input-wrap {
+      margin-top: 16px;
+    }
+
+    .app-dialog-input-wrap[hidden] {
+      display: none;
+    }
+
     #phase-modal-backdrop .modal,
     #block-modal-backdrop .modal,
     #task-modal-backdrop .modal {
@@ -3177,6 +3198,25 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="app-dialog-backdrop" aria-hidden="true">
+    <section class="modal app-dialog" aria-labelledby="app-dialog-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="app-dialog-title">Dialog</h3>
+          <p class="app-dialog-message" id="app-dialog-message"></p>
+        </div>
+        <button class="close-button" id="app-dialog-close-button" type="button" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="app-dialog-input-wrap" id="app-dialog-input-wrap" hidden>
+        <input id="app-dialog-input" type="text" maxlength="80" placeholder="">
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-button" id="app-dialog-cancel-button" type="button">Cancel</button>
+        <button class="primary-button" id="app-dialog-confirm-button" type="button">Confirm</button>
+      </div>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="block-modal-backdrop" aria-hidden="true">
     <section class="modal" aria-labelledby="block-modal-title">
       <div class="modal-header">
@@ -3603,6 +3643,7 @@
     let blockModalCloseTimer = null;
     let phaseModalCloseTimer = null;
     let activeTaskSheetDrag = null;
+    let appDialogState = null;
     let isTaskModalClosing = false;
     let activeHeaderDropdownDrag = null;
 
@@ -3678,6 +3719,14 @@
       phaseReadCard: document.getElementById("phase-read-card"),
       phaseReadToggleButton: document.getElementById("phase-read-toggle-button"),
       phaseReadEditButton: document.getElementById("phase-read-edit-button"),
+      appDialogBackdrop: document.getElementById("app-dialog-backdrop"),
+      appDialogTitle: document.getElementById("app-dialog-title"),
+      appDialogMessage: document.getElementById("app-dialog-message"),
+      appDialogInputWrap: document.getElementById("app-dialog-input-wrap"),
+      appDialogInput: document.getElementById("app-dialog-input"),
+      appDialogCloseButton: document.getElementById("app-dialog-close-button"),
+      appDialogCancelButton: document.getElementById("app-dialog-cancel-button"),
+      appDialogConfirmButton: document.getElementById("app-dialog-confirm-button"),
       blockForm: document.getElementById("block-form"),
       blockId: document.getElementById("block-id"),
       blockTitle: document.getElementById("block-title"),
@@ -3786,6 +3835,70 @@
       elements.phaseColorPreview.style.setProperty("--phase-color", value);
     }
 
+    function openAppDialog(config) {
+      appDialogState = {
+        mode: config?.mode === "confirm" ? "confirm" : "prompt",
+        onConfirm: typeof config?.onConfirm === "function" ? config.onConfirm : null
+      };
+
+      elements.appDialogTitle.textContent = config?.title || "Dialog";
+      elements.appDialogMessage.textContent = config?.message || "";
+      elements.appDialogCancelButton.textContent = config?.cancelLabel || "Cancel";
+      elements.appDialogConfirmButton.textContent = config?.confirmLabel || "Confirm";
+
+      const isPrompt = appDialogState.mode === "prompt";
+      elements.appDialogInputWrap.hidden = !isPrompt;
+      elements.appDialogInput.value = isPrompt ? (config?.defaultValue || "") : "";
+      elements.appDialogInput.placeholder = isPrompt ? (config?.placeholder || "") : "";
+
+      elements.appDialogBackdrop.classList.add("open");
+      elements.appDialogBackdrop.setAttribute("aria-hidden", "false");
+
+      requestAnimationFrame(() => {
+        if (isPrompt) {
+          elements.appDialogInput.focus();
+          elements.appDialogInput.select();
+        } else {
+          elements.appDialogConfirmButton.focus();
+        }
+      });
+    }
+
+    function closeAppDialog() {
+      appDialogState = null;
+      elements.appDialogBackdrop.classList.remove("open");
+      elements.appDialogBackdrop.setAttribute("aria-hidden", "true");
+      elements.appDialogInput.value = "";
+    }
+
+    function confirmAppDialog() {
+      if (!appDialogState?.onConfirm) {
+        closeAppDialog();
+        return;
+      }
+
+      const callback = appDialogState.onConfirm;
+      const value = appDialogState.mode === "prompt" ? elements.appDialogInput.value : undefined;
+      closeAppDialog();
+      callback(value);
+    }
+
+    function handleAppDialogBackdropClick(event) {
+      if (event.target === elements.appDialogBackdrop) {
+        closeAppDialog();
+      }
+    }
+
+    function handleAppDialogInputKeydown(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        confirmAppDialog();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        closeAppDialog();
+      }
+    }
+
     function updatePhaseActiveToggleButton() {
       const isActive = elements.phaseIsActive.value === "true";
       elements.phaseActiveToggleButton.textContent = isActive ? "Set Inactive" : "Set Active";
@@ -3829,6 +3942,11 @@
       elements.installAppButton.addEventListener("click", handleInstallApp);
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
       elements.phaseReadToggleButton.addEventListener("click", handlePhaseReadToggleActive);
+      elements.appDialogCloseButton.addEventListener("click", closeAppDialog);
+      elements.appDialogCancelButton.addEventListener("click", closeAppDialog);
+      elements.appDialogConfirmButton.addEventListener("click", confirmAppDialog);
+      elements.appDialogBackdrop.addEventListener("click", handleAppDialogBackdropClick);
+      elements.appDialogInput.addEventListener("keydown", handleAppDialogInputKeydown);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.blockNotesEditor.addEventListener("input", handleBlockNotesEditorInput);
       elements.blockRichToolbar.addEventListener("click", handleBlockToolbarClick);
@@ -6713,25 +6831,29 @@
     }
 
     function handleAddPhaseTab() {
-      const name = window.prompt("Tab name");
-      if (!name) {
-        return;
-      }
+      openAppDialog({
+        mode: "prompt",
+        title: "New Phase Tab",
+        message: "Create a new tab to organize your phases.",
+        placeholder: "Tab name",
+        confirmLabel: "Add Tab",
+        onConfirm: (name) => {
+          const trimmedName = String(name || "").trim();
+          if (!trimmedName) {
+            return;
+          }
 
-      const trimmedName = name.trim();
-      if (!trimmedName) {
-        return;
-      }
-
-      const nextTab = {
-        id: crypto.randomUUID(),
-        name: trimmedName
-      };
-      state.phaseTabs.push(nextTab);
-      state.ui.activePhaseTabId = nextTab.id;
-      state.ui.openHeaderDropdown = "phase-tabs";
-      persistState({ immediate: true });
-      render();
+          const nextTab = {
+            id: crypto.randomUUID(),
+            name: trimmedName
+          };
+          state.phaseTabs.push(nextTab);
+          state.ui.activePhaseTabId = nextTab.id;
+          state.ui.openHeaderDropdown = "phase-tabs";
+          persistState({ immediate: true });
+          render();
+        }
+      });
     }
 
     function handleRenamePhaseTab() {
@@ -6741,21 +6863,26 @@
         return;
       }
 
-      const name = window.prompt("Rename tab", activeTab.name);
-      if (!name) {
-        return;
-      }
+      openAppDialog({
+        mode: "prompt",
+        title: "Rename Phase Tab",
+        message: "Update the name for this phase tab.",
+        defaultValue: activeTab.name,
+        placeholder: "Tab name",
+        confirmLabel: "Save",
+        onConfirm: (name) => {
+          const trimmedName = String(name || "").trim();
+          if (!trimmedName) {
+            return;
+          }
 
-      const trimmedName = name.trim();
-      if (!trimmedName) {
-        return;
-      }
-
-      state.phaseTabs = state.phaseTabs.map((tab) =>
-        tab.id === activeTabId ? { ...tab, name: trimmedName } : tab
-      );
-      persistState({ immediate: true });
-      render();
+          state.phaseTabs = state.phaseTabs.map((tab) =>
+            tab.id === activeTabId ? { ...tab, name: trimmedName } : tab
+          );
+          persistState({ immediate: true });
+          render();
+        }
+      });
     }
 
     function handleMovePhaseTab(direction) {
@@ -6793,23 +6920,24 @@
         state.blocks.filter((block) => removedPhaseIds.has(block.phaseId)).map((block) => block.id)
       );
 
-      const shouldDelete = window.confirm(
-        `Delete "${targetTab?.name || "this tab"}"? This will also delete ${phasesToRemove.length} phase${phasesToRemove.length === 1 ? "" : "s"} inside it.`
-      );
-      if (!shouldDelete) {
-        return;
-      }
-
-      state.phases = state.phases.filter((phase) => !removedPhaseIds.has(phase.id));
-      state.blocks = state.blocks.filter((block) => !removedPhaseIds.has(block.phaseId));
-      state.tasks = state.tasks.map((task) =>
-        task.blockId && removedBlockIds.has(task.blockId) ? { ...task, blockId: null } : task
-      );
-      state.phaseTabs = state.phaseTabs.filter((tab) => tab.id !== targetTabId);
-      state.ui.activePhaseTabId = fallbackTab.id;
-      state.ui.phaseToReveal = state.phases.find((phase) => phase.tabId === fallbackTab.id)?.id ?? null;
-      persistState({ immediate: true });
-      render();
+      openAppDialog({
+        mode: "confirm",
+        title: "Delete Phase Tab",
+        message: `Delete "${targetTab?.name || "this tab"}"? This will also delete ${phasesToRemove.length} phase${phasesToRemove.length === 1 ? "" : "s"} inside it.`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          state.phases = state.phases.filter((phase) => !removedPhaseIds.has(phase.id));
+          state.blocks = state.blocks.filter((block) => !removedPhaseIds.has(block.phaseId));
+          state.tasks = state.tasks.map((task) =>
+            task.blockId && removedBlockIds.has(task.blockId) ? { ...task, blockId: null } : task
+          );
+          state.phaseTabs = state.phaseTabs.filter((tab) => tab.id !== targetTabId);
+          state.ui.activePhaseTabId = fallbackTab.id;
+          state.ui.phaseToReveal = state.phases.find((phase) => phase.tabId === fallbackTab.id)?.id ?? null;
+          persistState({ immediate: true });
+          render();
+        }
+      });
     }
 
     function handleBlockDelete() {
@@ -6830,26 +6958,31 @@
 
     function handleAddTimelineSnapshot() {
       const proposedName = buildDefaultTimelineName();
-      const inputName = window.prompt("Timeline name", proposedName);
-      if (!inputName) {
-        return;
-      }
+      openAppDialog({
+        mode: "prompt",
+        title: "Save Timeline",
+        message: "Save the current timeline as a reusable snapshot.",
+        defaultValue: proposedName,
+        placeholder: "Timeline name",
+        confirmLabel: "Save Timeline",
+        onConfirm: (inputName) => {
+          const name = String(inputName || "").trim() || proposedName;
+          const snapshot = {
+            id: crypto.randomUUID(),
+            name,
+            savedAt: new Date().toISOString(),
+            blocks: cloneBlocks(state.blocks),
+            tasks: cloneTimelineTasksForSave()
+          };
 
-      const name = inputName.trim() || proposedName;
-      const snapshot = {
-        id: crypto.randomUUID(),
-        name,
-        savedAt: new Date().toISOString(),
-        blocks: cloneBlocks(state.blocks),
-        tasks: cloneTimelineTasksForSave()
-      };
-
-      state.savedTimelines.unshift(snapshot);
-      state.ui.activeTimelineId = snapshot.id;
-      state.ui.openHeaderDropdown = "timelines";
-      persistState({ immediate: true });
-      renderTimelinePicker(snapshot.id);
-      render();
+          state.savedTimelines.unshift(snapshot);
+          state.ui.activeTimelineId = snapshot.id;
+          state.ui.openHeaderDropdown = "timelines";
+          persistState({ immediate: true });
+          renderTimelinePicker(snapshot.id);
+          render();
+        }
+      });
     }
 
     function handleTimelineSelectChange(timelineId) {
@@ -6867,22 +7000,27 @@
         return;
       }
 
-      const nextName = window.prompt("Rename timeline", selectedTimeline.name);
-      if (!nextName) {
-        return;
-      }
+      openAppDialog({
+        mode: "prompt",
+        title: "Rename Timeline",
+        message: "Update the name for this saved timeline.",
+        defaultValue: selectedTimeline.name,
+        placeholder: "Timeline name",
+        confirmLabel: "Save",
+        onConfirm: (nextName) => {
+          const trimmedName = String(nextName || "").trim();
+          if (!trimmedName) {
+            return;
+          }
 
-      const trimmedName = nextName.trim();
-      if (!trimmedName) {
-        return;
-      }
-
-      state.savedTimelines = state.savedTimelines.map((item) =>
-        item.id === selectedTimeline.id ? { ...item, name: trimmedName } : item
-      );
-      state.ui.activeTimelineId = selectedTimeline.id;
-      persistState({ immediate: true });
-      renderTimelinePicker(selectedTimeline.id);
+          state.savedTimelines = state.savedTimelines.map((item) =>
+            item.id === selectedTimeline.id ? { ...item, name: trimmedName } : item
+          );
+          state.ui.activeTimelineId = selectedTimeline.id;
+          persistState({ immediate: true });
+          renderTimelinePicker(selectedTimeline.id);
+        }
+      });
     }
 
     function handleMoveSelectedTimeline(direction, timelineId = state.ui.activeTimelineId) {
@@ -6911,12 +7049,15 @@
         return;
       }
 
-      const shouldDelete = window.confirm(`Delete "${selectedTimeline.name}"?`);
-      if (!shouldDelete) {
-        return;
-      }
-
-      deleteSavedTimeline(selectedTimeline.id);
+      openAppDialog({
+        mode: "confirm",
+        title: "Delete Timeline",
+        message: `Delete "${selectedTimeline.name}"?`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          deleteSavedTimeline(selectedTimeline.id);
+        }
+      });
     }
 
     function loadSavedTimeline(savedTimelineId) {
