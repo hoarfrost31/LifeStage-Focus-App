@@ -1614,6 +1614,56 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .today-block:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
+      transform: scale(1.01);
+    }
+
+    .today-block:active {
+      transform: scale(1.01);
+    }
+
+    .today-block.is-active {
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+      transform: scale(1.01);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .today-block.is-active .today-block-indicator {
+      opacity: 1;
+    }
+
+    .today-block.tone-morning {
+      background:
+        linear-gradient(135deg, rgba(34, 197, 94, 0.06), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(140deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.98));
+    }
+
+    .today-block.tone-afternoon {
+      background:
+        linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(140deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.98));
+    }
+
+    .today-block.tone-evening {
+      background:
+        linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(140deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.98));
+    }
+
+    .today-block.tone-night {
+      background:
+        linear-gradient(135deg, rgba(148, 163, 184, 0.05), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(140deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.98));
     }
 
     .today-block-time {
@@ -1621,6 +1671,19 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: rgba(255, 255, 255, 0.58);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .today-block-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
     .today-block-title {
@@ -1674,6 +1737,50 @@
     .today-task-title {
       font-size: 0.84rem;
       color: var(--text);
+    }
+
+    .today-task-empty {
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      padding: 12px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .today-task-empty:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .today-task-composer {
+      display: none;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .today-block.composer-open .today-task-composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+    }
+
+    .today-task-input {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(18, 18, 18, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    .today-task-add {
+      min-width: 70px;
+      height: 38px;
+      border-radius: 14px;
+      padding: 0 12px;
     }
 
     .timeline-actions {
@@ -4683,6 +4790,7 @@
       elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
       elements.themesList.addEventListener("click", handleThemesListClick);
       elements.todayList.addEventListener("click", handleTodayListClick);
+      elements.todayList.addEventListener("keydown", handleTodayListKeydown);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
       elements.linkedTasksList.addEventListener("pointerdown", handleLinkedTaskDragStart);
       elements.linkedTasksList.addEventListener("pointermove", handleLinkedTaskDragMove);
@@ -5179,6 +5287,9 @@
       elements.todayList.innerHTML = blocks.map((block) => {
         const tasks = getTasksForBlock(block.id, { topLevelOnly: true });
         const overnight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
+        const now = state.ui.now || new Date();
+        const isActive = isTimeWithinBlock(now, block);
+        const tone = getBlockToneClass(block.startTime);
         const taskMarkup = tasks.length
           ? tasks.map((task) => `
             <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}">
@@ -5190,13 +5301,20 @@
               <div class="today-task-title">${escapeHtml(task.title)}</div>
             </div>
           `).join("")
-          : `<div class="milestone-empty">No tasks yet.</div>`;
+          : `<div class="today-task-empty" data-add-task-inline="${block.id}">+ Add task</div>`;
         return `
-          <div class="today-block" data-block-id="${block.id}">
-            <div class="today-block-time">${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</div>
+          <div class="today-block ${tone} ${isActive ? "is-active" : ""}" data-block-id="${block.id}" data-open-task-inline="${block.id}">
+            <div class="today-block-time">
+              <span class="today-block-indicator" aria-hidden="true"></span>
+              ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}
+            </div>
             <div class="today-block-title">${escapeHtml(block.title)}</div>
             <div class="today-block-tasks">
               ${taskMarkup}
+            </div>
+            <div class="today-task-composer">
+              <input class="today-task-input" type="text" maxlength="120" placeholder="Add task..." data-task-input="${block.id}">
+              <button class="primary-button today-task-add" type="button" data-add-task-confirm="${block.id}">Add</button>
             </div>
           </div>
         `;
@@ -5204,6 +5322,19 @@
     }
 
     function handleTodayListClick(event) {
+      const addInlineTrigger = event.target.closest("[data-add-task-inline]");
+      if (addInlineTrigger) {
+        const blockId = addInlineTrigger.dataset.addTaskInline;
+        openInlineTaskComposer(blockId);
+        return;
+      }
+
+      const openInline = event.target.closest("[data-open-task-inline]");
+      if (openInline && !event.target.closest("[data-toggle-task]") && !event.target.closest("[data-edit-task]")) {
+        openInlineTaskComposer(openInline.dataset.openTaskInline);
+        return;
+      }
+
       const toggleButton = event.target.closest("[data-toggle-task]");
       if (toggleButton) {
         toggleTask(toggleButton.dataset.toggleTask);
@@ -5212,7 +5343,90 @@
       const taskItem = event.target.closest("[data-edit-task]");
       if (taskItem) {
         openTaskModal(taskItem.dataset.editTask);
+        return;
       }
+
+      const addConfirm = event.target.closest("[data-add-task-confirm]");
+      if (addConfirm) {
+        const blockId = addConfirm.dataset.addTaskConfirm;
+        commitInlineTask(blockId);
+      }
+    }
+
+    function handleTodayListKeydown(event) {
+      const input = event.target.closest("[data-task-input]");
+      if (!input) {
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const blockId = input.dataset.taskInput;
+        commitInlineTask(blockId);
+      }
+    }
+
+    function openInlineTaskComposer(blockId) {
+      const blockElement = elements.todayList.querySelector(`[data-block-id="${blockId}"]`);
+      if (!blockElement) {
+        return;
+      }
+      blockElement.classList.add("composer-open");
+      const input = blockElement.querySelector(`[data-task-input="${blockId}"]`);
+      input?.focus();
+    }
+
+    function commitInlineTask(blockId) {
+      const blockElement = elements.todayList.querySelector(`[data-block-id="${blockId}"]`);
+      if (!blockElement) {
+        return;
+      }
+      const input = blockElement.querySelector(`[data-task-input="${blockId}"]`);
+      const value = input?.value?.trim() || "";
+      if (!value) {
+        return;
+      }
+      state.tasks.push({
+        id: crypto.randomUUID(),
+        title: value,
+        notes: "",
+        blockId,
+        parentTaskId: null,
+        listId: normalizeTaskListId(INBOX_LIST_ID),
+        dueDateTime: "",
+        repeatRule: null,
+        isDone: false,
+        isCollapsed: false
+      });
+      persistState({ immediate: true });
+      render();
+    }
+
+    function isTimeWithinBlock(now, block) {
+      const start = timeToMinutes(block.startTime);
+      const end = timeToMinutes(block.endTime);
+      const current = now.getHours() * 60 + now.getMinutes();
+      if (start === end) {
+        return false;
+      }
+      if (end > start) {
+        return current >= start && current < end;
+      }
+      return current >= start || current < end;
+    }
+
+    function getBlockToneClass(startTime) {
+      const startMinutes = timeToMinutes(startTime);
+      const hour = Math.floor(startMinutes / 60);
+      if (hour >= 5 && hour < 11) {
+        return "tone-morning";
+      }
+      if (hour >= 11 && hour < 17) {
+        return "tone-afternoon";
+      }
+      if (hour >= 17 && hour < 21) {
+        return "tone-evening";
+      }
+      return "tone-night";
     }
 
     function computePhaseProgress(milestones) {
