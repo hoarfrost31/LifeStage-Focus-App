@@ -2991,6 +2991,18 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      color: var(--text);
+    }
+
+    .milestone-task-toggle svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+      opacity: 0;
+    }
+
+    .milestone-task.done .milestone-task-toggle svg {
+      opacity: 1;
     }
 
     .milestone-task-title {
@@ -2998,6 +3010,29 @@
       color: var(--text);
       line-height: 1.35;
       word-break: break-word;
+    }
+
+    .milestone-task-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .milestone-task-icon {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .milestone-task-icon svg {
+      width: 14px;
+      height: 14px;
+      display: block;
     }
 
     .milestone-empty {
@@ -4910,19 +4945,25 @@
           : (tasks.length
             ? tasks.map((task) => `
               <div class="milestone-task ${task.isDone ? "done" : ""}">
-                <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}"></button>
+                <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
                 <div class="milestone-task-title">${escapeHtml(task.title)}</div>
-                <button class="ghost-button micro-button" type="button" data-edit-milestone-task="${task.id}" aria-label="Edit task">
-                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 11.6v1.4h1.4l6.7-6.7-1.4-1.4L3 11.6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M9.7 4.3l1.4 1.4 1.2-1.2a1 1 0 0 0 0-1.4l-.1-.1a1 1 0 0 0-1.4 0l-1.1 1.3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}" aria-label="Delete task">
-                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4.5 5.3v6.2M8 5.3v6.2M11.5 5.3v6.2M3.6 3.9h8.8M6.2 3.9V2.8h3.6v1.1M4 3.9h8l-.5 8.4a1.2 1.2 0 0 1-1.2 1.1H5.7a1.2 1.2 0 0 1-1.2-1.1L4 3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
+                <div class="milestone-task-actions">
+                  <button class="ghost-button milestone-task-icon" type="button" data-edit-milestone-task="${task.id}" aria-label="Edit task">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 11.6v1.4h1.4l6.7-6.7-1.4-1.4L3 11.6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M9.7 4.3l1.4 1.4 1.2-1.2a1 1 0 0 0 0-1.4l-.1-.1a1 1 0 0 0-1.4 0l-1.1 1.3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button class="ghost-button milestone-task-icon danger-text" type="button" data-delete-milestone-task="${task.id}" aria-label="Delete task">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4.5 5.3v6.2M8 5.3v6.2M11.5 5.3v6.2M3.6 3.9h8.8M6.2 3.9V2.8h3.6v1.1M4 3.9h8l-.5 8.4a1.2 1.2 0 0 1-1.2 1.1H5.7a1.2 1.2 0 0 1-1.2-1.1L4 3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             `).join("")
             : `<div class="milestone-empty">No tasks yet.</div>`);
