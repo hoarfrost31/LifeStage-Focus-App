@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-05-8";
+    window.APP_ASSET_VERSION = "2026-04-05-9";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-8">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-8">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-8">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-9">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-9">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-9">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -6139,6 +6139,8 @@
         deltaY: 0,
         moved: false,
         activated: false,
+        scrollLocked: false,
+        originalScrollOverflow: elements.timelineScroll.style.overflowY || "",
         cachedRects: new Map(
           [...elements.timeline.querySelectorAll(".timeline-block")].map((element) => {
             const rect = element.getBoundingClientRect();
@@ -6183,6 +6185,11 @@
         return;
       }
 
+      if (!activeBlockDrag.scrollLocked) {
+        activeBlockDrag.scrollLocked = true;
+        elements.timelineScroll.style.overflowY = "hidden";
+      }
+
       if (!activeBlockDrag.moved && Math.abs(activeBlockDrag.deltaY) < 8) {
         return;
       }
@@ -6191,6 +6198,7 @@
       activeBlockDrag.blockElement.classList.remove("drag-ready");
       activeBlockDrag.blockElement.classList.add("dragging");
       activeBlockDrag.blockElement.style.transform = `translateY(${activeBlockDrag.deltaY}px)`;
+      handleBlockAutoScroll(event);
       const hoverBlockId = getBlockSwapTargetId(activeBlockDrag);
       activeBlockDrag.hoverBlockId = hoverBlockId;
       updateBlockDragPreview(hoverBlockId, activeBlockDrag.deltaY);
@@ -6209,6 +6217,9 @@
       blockElement.classList.remove("dragging");
       clearBlockDragPreview();
       activeBlockDrag.lastPreviewId = null;
+      if (activeBlockDrag.scrollLocked) {
+        elements.timelineScroll.style.overflowY = activeBlockDrag.originalScrollOverflow;
+      }
       blockElement.releasePointerCapture(event.pointerId);
       blockElement.removeEventListener("pointermove", handleBlockDragMove);
       blockElement.removeEventListener("pointerup", handleBlockDragEnd);
@@ -6242,6 +6253,45 @@
       }
 
       activeBlockDrag = null;
+    }
+
+    function handleBlockAutoScroll(event) {
+      const container = elements.timelineScroll;
+      if (!container) {
+        return;
+      }
+
+      const rect = container.getBoundingClientRect();
+      const edgeThreshold = 60;
+      let scrollDelta = 0;
+
+      if (event.clientY < rect.top + edgeThreshold) {
+        scrollDelta = -12;
+      } else if (event.clientY > rect.bottom - edgeThreshold) {
+        scrollDelta = 12;
+      }
+
+      if (!scrollDelta) {
+        return;
+      }
+
+      const prevScrollTop = container.scrollTop;
+      container.scrollTop = Math.max(0, Math.min(container.scrollTop + scrollDelta, container.scrollHeight - container.clientHeight));
+      const appliedDelta = container.scrollTop - prevScrollTop;
+      if (!appliedDelta) {
+        return;
+      }
+
+      activeBlockDrag.startY += appliedDelta;
+      if (activeBlockDrag.cachedRects) {
+        activeBlockDrag.cachedRects.forEach((value, key) => {
+          activeBlockDrag.cachedRects.set(key, {
+            top: value.top - appliedDelta,
+            bottom: value.bottom - appliedDelta,
+            height: value.height
+          });
+        });
+      }
     }
 
     function getBlockDropTargetId(clientX, clientY, dragState) {
