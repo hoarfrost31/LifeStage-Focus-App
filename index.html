@@ -4852,7 +4852,7 @@
 
     function getTasksForFilter(filterId) {
       if (filterId === TASK_VIEW_TODAY) {
-        return sortTasksForScheduleView(state.tasks.filter((task) => isTaskDueToday(task)));
+        return sortTasksForScheduleView(state.tasks.filter((task) => isTaskDueToday(task) || isTaskOverdue(task)));
       }
 
       if (filterId === TASK_VIEW_NEXT_7_DAYS) {
@@ -8452,6 +8452,14 @@
     function isTaskDueToday(task) {
       const parsed = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
       return Boolean(parsed && parsed.dateKey === getLocalDateKey());
+    }
+
+    function isTaskOverdue(task) {
+      const parsed = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
+      if (!parsed) {
+        return false;
+      }
+      return isTaskOccurrenceOverdue(parsed, new Date());
     }
 
     function isTaskDueWithinNextDays(task, dayCount) {
