@@ -2631,6 +2631,13 @@
       margin: 0;
     }
 
+    .phase-detail-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
     .phase-detail-actions {
       display: inline-flex;
       align-items: center;
@@ -3585,12 +3592,11 @@
       </div>
       <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
       <div class="phase-detail panel-hidden" id="phase-detail">
-        <div class="phase-detail-header">
-          <div class="phase-detail-actions">
-            <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
-          </div>
+        <div class="phase-detail-header"></div>
+        <div class="phase-detail-title-row">
+          <h3 class="phase-detail-title" id="phase-detail-title"></h3>
+          <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
         </div>
-        <h3 class="phase-detail-title" id="phase-detail-title"></h3>
         <div class="phase-detail-body" id="phase-detail-body"></div>
       </div>
     </section>
@@ -4906,8 +4912,17 @@
               <div class="milestone-task ${task.isDone ? "done" : ""}">
                 <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}"></button>
                 <div class="milestone-task-title">${escapeHtml(task.title)}</div>
-                <button class="ghost-button micro-button" type="button" data-edit-milestone-task="${task.id}">Edit</button>
-                <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}">Delete</button>
+                <button class="ghost-button micro-button" type="button" data-edit-milestone-task="${task.id}" aria-label="Edit task">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 11.6v1.4h1.4l6.7-6.7-1.4-1.4L3 11.6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9.7 4.3l1.4 1.4 1.2-1.2a1 1 0 0 0 0-1.4l-.1-.1a1 1 0 0 0-1.4 0l-1.1 1.3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}" aria-label="Delete task">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.5 5.3v6.2M8 5.3v6.2M11.5 5.3v6.2M3.6 3.9h8.8M6.2 3.9V2.8h3.6v1.1M4 3.9h8l-.5 8.4a1.2 1.2 0 0 1-1.2 1.1H5.7a1.2 1.2 0 0 1-1.2-1.1L4 3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
             `).join("")
             : `<div class="milestone-empty">No tasks yet.</div>`);
