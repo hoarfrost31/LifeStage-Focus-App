@@ -1909,6 +1909,23 @@
       color: rgba(255, 255, 255, 0.85);
     }
 
+    .today-task-add-inline {
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      padding: 10px 12px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.82rem;
+      background: transparent;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .today-task-add-inline:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
     .today-task-composer {
       display: none;
       gap: 8px;
@@ -5464,7 +5481,7 @@
           completedBlocks += 1;
         }
         const taskMarkup = tasks.length
-          ? tasks.map((task) => `
+          ? `${tasks.map((task) => `
             <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}">
               <button class="today-task-toggle" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
                 <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -5473,10 +5490,11 @@
               </button>
               <div class="today-task-title">${escapeHtml(task.title)}</div>
             </div>
-          `).join("")
+          `).join("")}
+          <button class="today-task-add-inline" type="button" data-add-task-inline="${block.id}">+ Add task</button>`
           : `<div class="today-task-empty" data-add-task-inline="${block.id}">+ Add task</div>`;
         return `
-          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""} ${isComplete ? "is-complete" : ""}" data-block-id="${block.id}" data-open-task-inline="${block.id}">
+          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""} ${isComplete ? "is-complete" : ""}" data-block-id="${block.id}" data-edit-block="${block.id}">
             <div class="today-block-time">
               <span class="today-block-indicator" aria-hidden="true"></span>
               ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}
@@ -5525,12 +5543,6 @@
         return;
       }
 
-      const openInline = event.target.closest("[data-open-task-inline]");
-      if (openInline && !event.target.closest("[data-toggle-task]") && !event.target.closest("[data-edit-task]")) {
-        openInlineTaskComposer(openInline.dataset.openTaskInline);
-        return;
-      }
-
       const toggleButton = event.target.closest("[data-toggle-task]");
       if (toggleButton) {
         toggleButton.classList.add("is-pressed");
@@ -5548,6 +5560,16 @@
       if (addConfirm) {
         const blockId = addConfirm.dataset.addTaskConfirm;
         commitInlineTask(blockId);
+        return;
+      }
+
+      const blockCard = event.target.closest("[data-edit-block]");
+      if (blockCard && !event.target.closest(".today-task-composer") && !event.target.closest("[data-task-input]")) {
+        const blockId = blockCard.dataset.editBlock;
+        if (blockId) {
+          openBlockModal(blockId);
+        }
+        return;
       }
     }
 
@@ -5604,14 +5626,11 @@
     }
 
     function shouldCollapseTodayBlock(blockId, isActive) {
-      if (isActive) {
-        return false;
-      }
       const stored = state.ui.todayCollapsedByBlock?.[blockId];
       if (typeof stored === "boolean") {
         return stored;
       }
-      return true;
+      return !isActive;
     }
 
     function isTimeWithinBlock(now, block) {
