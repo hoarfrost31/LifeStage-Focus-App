@@ -1382,6 +1382,39 @@
       line-height: 1.3;
     }
 
+    .phase-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .phase-progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.56);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .phase-progress-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .phase-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(122, 216, 165, 0.85), rgba(255, 255, 255, 0.7));
+      box-shadow: 0 0 10px rgba(122, 216, 165, 0.35);
+      transition: width 0.25s ease;
+    }
+
     .phase-chip:not(.active) .phase-name {
       flex: 1 1 auto;
       min-width: 0;
@@ -4397,6 +4430,8 @@
 
       phasesInTab.forEach((phase, index) => {
         const isActive = Boolean(phase.isActive);
+        const milestones = getMilestonesForPhase(phase.id);
+        const phaseProgress = computePhaseProgress(milestones);
         const button = document.createElement("button");
         button.type = "button";
         button.className = `phase-chip ${isActive ? "active" : ""}`;
@@ -4407,6 +4442,15 @@
             <span class="phase-badge">Phase</span>
           </div>
           ${phase.details?.trim() ? `<div class="phase-description">${escapeHtml(phase.details.trim())}</div>` : ""}
+          <div class="phase-progress">
+            <div class="phase-progress-meta">
+              <span>${escapeHtml(phaseProgress.label)}</span>
+              <span>${escapeHtml(phaseProgress.countLabel)}</span>
+            </div>
+            <div class="phase-progress-bar">
+              <div class="phase-progress-fill" style="width:${Math.round(phaseProgress.ratio * 100)}%"></div>
+            </div>
+          </div>
           <div class="phase-meta">
             <span class="phase-meta-count">${countBlocksForPhase(phase.id)} blocks</span>
             <div class="header-actions">
@@ -4516,6 +4560,35 @@
           </div>
         `;
       }).join("");
+    }
+
+    function computePhaseProgress(milestones) {
+      const entries = Array.isArray(milestones) ? milestones : [];
+      if (!entries.length) {
+        return { ratio: 0, label: "No milestones", countLabel: "0/0" };
+      }
+      let done = 0;
+      let total = 0;
+      entries.forEach((milestone) => {
+        const goalTarget = Math.max(0, Math.floor(Number(milestone.goalTarget || 0)));
+        const goalProgress = Math.max(0, Math.floor(Number(milestone.goalProgress || 0)));
+        if (goalTarget > 0) {
+          total += goalTarget;
+          done += Math.min(goalProgress, goalTarget);
+          return;
+        }
+        const tasks = getMilestoneTasks(milestone.id);
+        total += tasks.length;
+        done += tasks.filter((task) => task.isDone).length;
+      });
+      if (!total) {
+        return { ratio: 0, label: "No tasks yet", countLabel: "0/0" };
+      }
+      return {
+        ratio: Math.max(0, Math.min(1, done / total)),
+        label: "Milestones",
+        countLabel: `${done}/${total}`
+      };
     }
 
     function renderBlockPhaseOptions() {
