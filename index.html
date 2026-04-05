@@ -175,7 +175,7 @@
 
     .bottom-nav {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
       gap: 6px;
       width: 100%;
       align-items: center;
@@ -2697,6 +2697,130 @@
       color: var(--danger);
     }
 
+    .themes-card {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 12px;
+    }
+
+    .themes-wrap {
+      padding: 10px 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .themes-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .themes-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .theme-option {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(16, 16, 16, 0.86);
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .theme-option:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .theme-option.active {
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 16px 26px rgba(0, 0, 0, 0.24);
+    }
+
+    .theme-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: var(--theme-swatch, #2a2a2a);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      flex-shrink: 0;
+    }
+
+    .theme-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .theme-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .theme-description {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .theme-status {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    body[data-theme="sage"] {
+      --bg-top: #0b1210;
+      --bg-bottom: #0f1714;
+      --panel: rgba(20, 26, 24, 0.84);
+      --panel-soft: rgba(24, 32, 28, 0.9);
+      --text: #f1f6f2;
+      --muted: #8f9a94;
+      --accent: #cde6d7;
+      --success: #7ad8a5;
+      --danger: #ff9aa5;
+    }
+
+    body[data-theme="ember"] {
+      --bg-top: #120c0c;
+      --bg-bottom: #1a1211;
+      --panel: rgba(26, 18, 18, 0.86);
+      --panel-soft: rgba(32, 20, 20, 0.92);
+      --text: #fff6f3;
+      --muted: #b49c96;
+      --accent: #f0c1b5;
+      --success: #ffcf85;
+      --danger: #ff8c98;
+    }
+
+    body[data-theme="midnight"] {
+      --bg-top: #080a12;
+      --bg-bottom: #0e121c;
+      --panel: rgba(16, 20, 28, 0.86);
+      --panel-soft: rgba(20, 24, 34, 0.92);
+      --text: #f4f6ff;
+      --muted: #9aa0b3;
+      --accent: #c9d5ff;
+      --success: #8bd1ff;
+      --danger: #ff98a5;
+    }
+
     .milestone-progress {
       display: flex;
       flex-direction: column;
@@ -3404,6 +3528,18 @@
       </div>
     </section>
 
+    <section class="card themes-card panel-hidden" id="themes-card">
+      <div class="section-header compact-header">
+        <div class="header-actions">
+          <span class="phase-badge">Themes</span>
+        </div>
+      </div>
+      <div class="themes-wrap">
+        <div class="themes-title">Choose a mood</div>
+        <div class="themes-list" id="themes-list"></div>
+      </div>
+    </section>
+
     <section class="card timeline-card">
       <div class="section-header compact-header">
         <div class="header-actions">
@@ -3485,6 +3621,17 @@
               <rect x="2.5" y="3" width="11" height="2.4" rx="1.2" fill="currentColor"/>
               <rect x="2.5" y="6.8" width="11" height="2.4" rx="1.2" fill="currentColor" opacity="0.82"/>
               <rect x="2.5" y="10.6" width="11" height="2.4" rx="1.2" fill="currentColor" opacity="0.66"/>
+            </svg>
+          </span>
+        </button>
+        <button class="tab-button" id="tab-themes" type="button" data-tab="themes" aria-label="Themes">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="8" r="5.4" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M8 2.6a5.4 5.4 0 0 1 5.4 5.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="6.1" cy="6.6" r="0.9" fill="currentColor"/>
+              <circle cx="10.2" cy="6.6" r="0.9" fill="currentColor"/>
+              <circle cx="8" cy="10.4" r="0.9" fill="currentColor"/>
             </svg>
           </span>
         </button>
@@ -3957,6 +4104,12 @@
     const INBOX_LIST_ID = "inbox";
     const TASK_VIEW_TODAY = "today";
     const TASK_VIEW_NEXT_7_DAYS = "next-7-days";
+    const THEMES = [
+      { id: "default", name: "Default", description: "Balanced, calm focus", swatch: "linear-gradient(135deg, #1b1b1b, #0d0d0d)" },
+      { id: "sage", name: "Sage", description: "Natural, grounded energy", swatch: "linear-gradient(135deg, #1d2b25, #111a16)" },
+      { id: "ember", name: "Ember", description: "Warm, intentional drive", swatch: "linear-gradient(135deg, #2a1a17, #140e0d)" },
+      { id: "midnight", name: "Midnight", description: "Deep, high-contrast focus", swatch: "linear-gradient(135deg, #141a2a, #0b0f1a)" }
+    ];
 
     const state = {
       phaseTabs: [
@@ -4002,6 +4155,7 @@
         phaseDetailId: null,
         phaseDetailOpen: false,
         isCompactTimeline: false,
+        activeTheme: "default",
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
@@ -4048,8 +4202,10 @@
       tabTasks: document.getElementById("tab-tasks"),
       tabPhases: document.getElementById("tab-phases"),
       tabTimeline: document.getElementById("tab-timeline"),
+      tabThemes: document.getElementById("tab-themes"),
       tasksCard: document.querySelector(".tasks-card"),
       phasesCard: document.querySelector(".phases-card"),
+      themesCard: document.getElementById("themes-card"),
       timelineCard: document.querySelector(".timeline-card"),
       phaseTabDropdown: document.getElementById("phase-tab-dropdown"),
       phaseTabDropdownTrigger: document.getElementById("phase-tab-dropdown-trigger"),
@@ -4063,6 +4219,7 @@
       phaseDetailBack: document.getElementById("phase-detail-back"),
       phaseDetailEdit: document.getElementById("phase-detail-edit"),
       phaseDetailAddMilestone: document.getElementById("phase-detail-add-milestone"),
+      themesList: document.getElementById("themes-list"),
       timelineDropdown: document.getElementById("timeline-dropdown"),
       timelineDropdownTrigger: document.getElementById("timeline-dropdown-trigger"),
       timelineDropdownLabel: document.getElementById("timeline-dropdown-label"),
@@ -4302,6 +4459,7 @@
       elements.tabTasks.addEventListener("click", () => setActiveTab("tasks"));
       elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
       elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
+      elements.tabThemes.addEventListener("click", () => setActiveTab("themes"));
       elements.addTaskButton.addEventListener("click", () => openTaskModal(null, null, null, getDefaultTaskListForCompose()));
       elements.addLinkedTaskButton.addEventListener("click", handleAddLinkedTask);
       elements.tasksList.addEventListener("click", handleTaskListClick);
@@ -4309,6 +4467,7 @@
       elements.tasksList.addEventListener("pointermove", handleTaskDragMove);
       elements.tasksList.addEventListener("pointerup", handleTaskDragEnd);
       elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
+      elements.themesList.addEventListener("click", handleThemesListClick);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
       elements.linkedTasksList.addEventListener("pointerdown", handleLinkedTaskDragStart);
       elements.linkedTasksList.addEventListener("pointermove", handleLinkedTaskDragMove);
@@ -4468,11 +4627,14 @@
       elements.tabTasks.classList.toggle("active", state.ui.activeTab === "tasks");
       elements.tabPhases.classList.toggle("active", state.ui.activeTab === "phases");
       elements.tabTimeline.classList.toggle("active", state.ui.activeTab === "timeline");
+      elements.tabThemes.classList.toggle("active", state.ui.activeTab === "themes");
       elements.tasksCard.classList.toggle("panel-hidden", state.ui.activeTab !== "tasks");
       elements.phasesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "phases");
       elements.timelineCard.classList.toggle("panel-hidden", state.ui.activeTab !== "timeline");
+      elements.themesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "themes");
       elements.addTaskButton.style.display = state.ui.activeTab === "tasks" ? "block" : "none";
       elements.addPhaseButton.style.display = state.ui.activeTab === "phases" ? "block" : "none";
+      document.body.dataset.theme = state.ui.activeTheme || "default";
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
@@ -4489,6 +4651,7 @@
       renderPhaseTabControls();
       renderPhaseRail();
       renderPhaseDetail();
+      renderThemes();
       renderBlockPhaseOptions();
       renderTaskBlockOptions();
       renderTaskListOptions();
@@ -4633,6 +4796,7 @@
               <div class="milestone-task ${task.isDone ? "done" : ""}">
                 <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}"></button>
                 <div class="milestone-task-title">${escapeHtml(task.title)}</div>
+                <button class="ghost-button micro-button" type="button" data-edit-milestone-task="${task.id}">Edit</button>
                 <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}">Delete</button>
               </div>
             `).join("")
@@ -4662,6 +4826,7 @@
                     ? `<button type="button" data-clear-milestone-goal="${milestone.id}">Switch to Tasks</button>`
                     : `<button type="button" data-set-milestone-goal="${milestone.id}">Switch to Goal</button>`
                   }
+                  <button type="button" data-edit-milestone="${milestone.id}">Rename</button>
                   ${isGoal ? `<button type="button" data-set-milestone-goal="${milestone.id}">Edit Goal</button>` : ""}
                   <button class="danger" type="button" data-delete-milestone="${milestone.id}">Delete</button>
                 </div>
@@ -4691,6 +4856,34 @@
           </div>
         `;
       }).join("");
+    }
+
+    function renderThemes() {
+      const activeTheme = state.ui.activeTheme || "default";
+      elements.themesList.innerHTML = THEMES.map((theme) => `
+        <button class="theme-option ${theme.id === activeTheme ? "active" : ""}" type="button" data-theme-id="${theme.id}">
+          <span class="theme-swatch" style="--theme-swatch:${theme.swatch}"></span>
+          <span class="theme-info">
+            <span class="theme-name">${escapeHtml(theme.name)}</span>
+            <span class="theme-description">${escapeHtml(theme.description)}</span>
+          </span>
+          <span class="theme-status">${theme.id === activeTheme ? "Active" : ""}</span>
+        </button>
+      `).join("");
+    }
+
+    function handleThemesListClick(event) {
+      const button = event.target.closest("[data-theme-id]");
+      if (!button) {
+        return;
+      }
+      const themeId = button.dataset.themeId || "default";
+      if (!THEMES.some((theme) => theme.id === themeId)) {
+        return;
+      }
+      state.ui.activeTheme = themeId;
+      persistState({ immediate: true });
+      render();
     }
 
     function computePhaseProgress(milestones) {
@@ -8109,18 +8302,18 @@
         placeholder: "Milestone title",
         confirmLabel: "Add Milestone",
         onConfirm: (title) => {
-          const trimmed = String(title || "").trim();
-          if (!trimmed) {
-            return;
-          }
-          state.milestones.push({
-            id: crypto.randomUUID(),
-            phaseId,
-            title: trimmed,
-            goalTarget: 0,
-            goalProgress: 0,
-            isCollapsed: false
-          });
+            const trimmed = String(title || "").trim();
+            if (!trimmed) {
+              return;
+            }
+            state.milestones.push({
+              id: crypto.randomUUID(),
+              phaseId,
+              title: trimmed,
+              goalTarget: 0,
+              goalProgress: 0,
+              isCollapsed: true
+            });
           persistState({ immediate: true });
           render();
         }
@@ -8182,6 +8375,34 @@
               item.id === milestoneId
                 ? { ...item, goalTarget: target, goalProgress: Math.min(item.goalProgress || 0, target) }
                 : item
+            );
+            persistState({ immediate: true });
+            render();
+          }
+        });
+        return;
+      }
+
+      const editMilestoneButton = event.target.closest("[data-edit-milestone]");
+      if (editMilestoneButton) {
+        const milestoneId = editMilestoneButton.dataset.editMilestone;
+        const milestone = state.milestones.find((item) => item.id === milestoneId);
+        if (!milestone) {
+          return;
+        }
+        openAppDialog({
+          mode: "prompt",
+          title: "Rename Milestone",
+          message: "Update the milestone name.",
+          placeholder: milestone.title,
+          confirmLabel: "Save",
+          onConfirm: (title) => {
+            const trimmed = String(title || "").trim();
+            if (!trimmed) {
+              return;
+            }
+            state.milestones = state.milestones.map((item) =>
+              item.id === milestoneId ? { ...item, title: trimmed } : item
             );
             persistState({ immediate: true });
             render();
@@ -8305,6 +8526,34 @@
         state.milestoneTasks = state.milestoneTasks.filter((task) => task.id !== taskId);
         persistState({ immediate: true });
         render();
+        return;
+      }
+
+      const editTaskButton = event.target.closest("[data-edit-milestone-task]");
+      if (editTaskButton) {
+        const taskId = editTaskButton.dataset.editMilestoneTask;
+        const task = state.milestoneTasks.find((item) => item.id === taskId);
+        if (!task) {
+          return;
+        }
+        openAppDialog({
+          mode: "prompt",
+          title: "Edit Task",
+          message: "Update this milestone task.",
+          placeholder: task.title,
+          confirmLabel: "Save",
+          onConfirm: (title) => {
+            const trimmed = String(title || "").trim();
+            if (!trimmed) {
+              return;
+            }
+            state.milestoneTasks = state.milestoneTasks.map((item) =>
+              item.id === taskId ? { ...item, title: trimmed } : item
+            );
+            persistState({ immediate: true });
+            render();
+          }
+        });
       }
     }
 
@@ -9204,7 +9453,7 @@
               title: typeof milestone?.title === "string" && milestone.title.trim() ? milestone.title.trim() : `Milestone ${index + 1}`,
               goalTarget: Math.max(0, Math.floor(Number(milestone?.goalTarget || 0))),
               goalProgress: Math.max(0, Math.floor(Number(milestone?.goalProgress || 0))),
-              isCollapsed: Boolean(milestone?.isCollapsed)
+              isCollapsed: typeof milestone?.isCollapsed === "boolean" ? milestone.isCollapsed : true
             }))
             .filter((milestone) => milestone.phaseId && milestone.title)
         : [];
@@ -9401,7 +9650,8 @@
           activeTab: state.ui.activeTab,
           activeTaskListFilter: state.ui.activeTaskListFilter,
           activePhaseTabId: state.ui.activePhaseTabId,
-          activeTimelineId: state.ui.activeTimelineId
+          activeTimelineId: state.ui.activeTimelineId,
+          activeTheme: state.ui.activeTheme
         },
         updatedAt: new Date().toISOString()
       };
@@ -9466,7 +9716,7 @@
         .filter(Boolean);
 
       state.ui.isCompactTimeline = Boolean(parsed?.ui?.isCompactTimeline);
-      state.ui.activeTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.activeTab)
+      state.ui.activeTab = ["tasks", "phases", "timeline", "themes"].includes(parsed?.ui?.activeTab)
         ? parsed.ui.activeTab
         : "timeline";
       state.ui.activeTaskListFilter = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(parsed?.ui?.activeTaskListFilter)
@@ -9474,6 +9724,7 @@
         : normalizeTaskListId(parsed?.ui?.activeTaskListFilter);
       state.ui.activePhaseTabId = normalizePhaseTabId(parsed?.ui?.activePhaseTabId, state.phaseTabs);
       state.ui.activeTimelineId = typeof parsed?.ui?.activeTimelineId === "string" ? parsed.ui.activeTimelineId : "";
+      state.ui.activeTheme = typeof parsed?.ui?.activeTheme === "string" ? parsed.ui.activeTheme : "default";
       state.ui.openHeaderDropdown = "";
     }
 
