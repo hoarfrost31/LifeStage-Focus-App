@@ -620,7 +620,7 @@
       justify-content: center;
       color: var(--text);
       flex-shrink: 0;
-      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease;
     }
 
     .task-expand {
@@ -669,6 +669,10 @@
 
     .task-toggle.done svg {
       opacity: 1;
+    }
+
+    .task-toggle.is-pressed {
+      transform: scale(0.96);
     }
 
     .task-main-button {
@@ -970,6 +974,11 @@
       background: rgba(255, 255, 255, 0.15);
       color: #f8fafc;
       border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .linked-task-toggle.is-pressed {
+      transform: scale(0.96);
+      transition: transform 0.18s ease;
     }
 
     .linked-task-toggle:not(.done) svg {
@@ -1810,7 +1819,7 @@
       padding: 0;
       color: var(--text);
       flex-shrink: 0;
-      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease;
     }
 
     .today-task-toggle svg {
@@ -1822,6 +1831,14 @@
 
     .today-task.done .today-task-toggle svg {
       opacity: 1;
+    }
+
+    .today-task.done {
+      opacity: 0.6;
+    }
+
+    .today-task-toggle.is-pressed {
+      transform: scale(0.96);
     }
 
     .today-task-title {
@@ -3288,7 +3305,7 @@
       justify-content: center;
       flex-shrink: 0;
       color: var(--text);
-      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease;
     }
 
     .milestone-task-toggle svg {
@@ -3300,6 +3317,10 @@
 
     .milestone-task.done .milestone-task-toggle svg {
       opacity: 1;
+    }
+
+    .milestone-task-toggle.is-pressed {
+      transform: scale(0.96);
     }
 
     .milestone-task.done {
@@ -5386,6 +5407,7 @@
         return;
       }
 
+      let completedBlocks = 0;
       elements.todayList.innerHTML = blocks.map((block) => {
         const tasks = getTasksForBlock(block.id, { topLevelOnly: true });
         const overnight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
@@ -5393,6 +5415,10 @@
         const isActive = isTimeWithinBlock(now, block);
         const isCollapsed = shouldCollapseTodayBlock(block.id, isActive);
         const tone = getBlockToneClass(block.startTime);
+        const isComplete = tasks.length > 0 && tasks.every((task) => task.isDone);
+        if (isComplete) {
+          completedBlocks += 1;
+        }
         const taskMarkup = tasks.length
           ? tasks.map((task) => `
             <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}">
@@ -5406,7 +5432,7 @@
           `).join("")
           : `<div class="today-task-empty" data-add-task-inline="${block.id}">+ Add task</div>`;
         return `
-          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""}" data-block-id="${block.id}" data-open-task-inline="${block.id}">
+          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""} ${isComplete ? "is-complete" : ""}" data-block-id="${block.id}" data-open-task-inline="${block.id}">
             <div class="today-block-time">
               <span class="today-block-indicator" aria-hidden="true"></span>
               ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}
@@ -5417,6 +5443,7 @@
               </button>
             </div>
             <div class="today-block-title">${escapeHtml(block.title)}</div>
+            ${isComplete ? `<div class="today-block-complete-label">Completed</div>` : ""}
             <div class="today-block-tasks">
               ${taskMarkup}
             </div>
@@ -5427,6 +5454,10 @@
           </div>
         `;
       }).join("");
+
+      if (blocks.length && completedBlocks === blocks.length) {
+        elements.todayList.insertAdjacentHTML("afterbegin", `<div class="today-complete-message">Day complete</div>`);
+      }
     }
 
     function handleTodayListClick(event) {
@@ -5458,6 +5489,8 @@
 
       const toggleButton = event.target.closest("[data-toggle-task]");
       if (toggleButton) {
+        toggleButton.classList.add("is-pressed");
+        setTimeout(() => toggleButton.classList.remove("is-pressed"), 180);
         toggleTask(toggleButton.dataset.toggleTask);
         return;
       }
@@ -7902,6 +7935,8 @@
 
       const toggleButton = event.target.closest("[data-toggle-task]");
       if (toggleButton) {
+        toggleButton.classList.add("is-pressed");
+        setTimeout(() => toggleButton.classList.remove("is-pressed"), 180);
         toggleTask(toggleButton.dataset.toggleTask);
         return;
       }
@@ -7939,6 +7974,8 @@
 
       const toggleButton = event.target.closest("[data-toggle-linked-task]");
       if (toggleButton) {
+        toggleButton.classList.add("is-pressed");
+        setTimeout(() => toggleButton.classList.remove("is-pressed"), 180);
         toggleTask(toggleButton.dataset.toggleLinkedTask);
         return;
       }
@@ -7952,6 +7989,8 @@
     function handleTaskSubtasksListClick(event) {
       const toggleButton = event.target.closest("[data-toggle-task-subtask]");
       if (toggleButton) {
+        toggleButton.classList.add("is-pressed");
+        setTimeout(() => toggleButton.classList.remove("is-pressed"), 180);
         toggleTask(toggleButton.dataset.toggleTaskSubtask);
         return;
       }
@@ -9211,6 +9250,8 @@
 
       const toggleTaskButton = event.target.closest("[data-toggle-milestone-task]");
       if (toggleTaskButton) {
+        toggleTaskButton.classList.add("is-pressed");
+        setTimeout(() => toggleTaskButton.classList.remove("is-pressed"), 180);
         const taskId = toggleTaskButton.dataset.toggleMilestoneTask;
         state.milestoneTasks = state.milestoneTasks.map((task) =>
           task.id === taskId ? { ...task, isDone: !task.isDone } : task
