@@ -1588,6 +1588,94 @@
       position: relative;
     }
 
+    .today-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 10px 12px 16px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .today-header-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .today-block {
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(140deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.98));
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .today-block-time {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.58);
+    }
+
+    .today-block-title {
+      font-size: 0.96rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .today-block-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .today-task {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(12, 12, 12, 0.7);
+    }
+
+    .today-task-toggle {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .today-task-toggle svg {
+      width: 11px;
+      height: 11px;
+      display: block;
+      opacity: 0;
+    }
+
+    .today-task.done .today-task-toggle svg {
+      opacity: 1;
+    }
+
+    .today-task-title {
+      font-size: 0.84rem;
+      color: var(--text);
+    }
+
     .timeline-actions {
       position: absolute;
       right: var(--floating-action-right, 18px);
@@ -3560,6 +3648,10 @@
       right: 0;
     }
 
+    .timeline-header-picker.hidden {
+      display: none;
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -3663,6 +3755,7 @@
     <section class="card timeline-card">
       <div class="section-header compact-header">
         <div class="header-actions">
+          <div class="today-header-label" id="today-header-label">Today</div>
           <div class="timeline-header-picker">
             <div class="phase-tab-controls">
               <div class="custom-dropdown-stack">
@@ -3693,6 +3786,7 @@
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
       </div>
+      <div class="today-list" id="today-list"></div>
     </section>
 
     <div class="floating-actions-layer" id="floating-actions-layer">
@@ -3725,7 +3819,7 @@
             </svg>
           </span>
         </button>
-        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline" aria-label="Timeline">
+        <button class="tab-button active" id="tab-timeline" type="button" data-tab="timeline" aria-label="Today">
           <span class="tab-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 4.2h10M3 8h10M3 11.8h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -4319,6 +4413,8 @@
       linkedTasksPanel: document.getElementById("linked-tasks-panel"),
       timeline: document.getElementById("timeline"),
       timelineScroll: document.getElementById("timeline-scroll"),
+      todayList: document.getElementById("today-list"),
+      todayHeaderLabel: document.getElementById("today-header-label"),
       tabTasks: document.getElementById("tab-tasks"),
       tabPhases: document.getElementById("tab-phases"),
       tabTimeline: document.getElementById("tab-timeline"),
@@ -4586,6 +4682,7 @@
       elements.tasksList.addEventListener("pointerup", handleTaskDragEnd);
       elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
       elements.themesList.addEventListener("click", handleThemesListClick);
+      elements.todayList.addEventListener("click", handleTodayListClick);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
       elements.linkedTasksList.addEventListener("pointerdown", handleLinkedTaskDragStart);
       elements.linkedTasksList.addEventListener("pointermove", handleLinkedTaskDragMove);
@@ -4758,6 +4855,11 @@
       const phaseHeaderHidden = state.ui.activeTab === "phases" && state.ui.phaseDetailOpen;
       document.querySelector(".phase-tabs-header")?.classList.toggle("hidden", phaseHeaderHidden);
       elements.phaseDetail.querySelector(".phase-detail-title-row")?.classList.toggle("tight", phaseHeaderHidden);
+      const showToday = state.ui.activeTab === "timeline";
+      elements.timelineScroll.style.display = showToday ? "none" : "";
+      elements.todayList.style.display = showToday ? "flex" : "none";
+      elements.todayHeaderLabel.style.display = showToday ? "block" : "none";
+      document.querySelector(".timeline-header-picker")?.classList.toggle("hidden", showToday);
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
@@ -4783,7 +4885,7 @@
       renderScheduleModal();
       renderLinkedTasks();
       renderTaskSubtasks();
-      renderTimeline();
+      renderTodayView();
       renderSummary();
       renderSyncStatus();
     }
@@ -5065,6 +5167,52 @@
       state.ui.activeTheme = themeId;
       persistState({ immediate: true });
       render();
+    }
+
+    function renderTodayView() {
+      const blocks = [...state.blocks].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+      if (!blocks.length) {
+        elements.todayList.innerHTML = `<div class="tasks-empty">No routine blocks yet. Use the + button to add one.</div>`;
+        return;
+      }
+
+      elements.todayList.innerHTML = blocks.map((block) => {
+        const tasks = getTasksForBlock(block.id, { topLevelOnly: true });
+        const overnight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
+        const taskMarkup = tasks.length
+          ? tasks.map((task) => `
+            <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}">
+              <button class="today-task-toggle" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="today-task-title">${escapeHtml(task.title)}</div>
+            </div>
+          `).join("")
+          : `<div class="milestone-empty">No tasks yet.</div>`;
+        return `
+          <div class="today-block" data-block-id="${block.id}">
+            <div class="today-block-time">${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</div>
+            <div class="today-block-title">${escapeHtml(block.title)}</div>
+            <div class="today-block-tasks">
+              ${taskMarkup}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function handleTodayListClick(event) {
+      const toggleButton = event.target.closest("[data-toggle-task]");
+      if (toggleButton) {
+        toggleTask(toggleButton.dataset.toggleTask);
+        return;
+      }
+      const taskItem = event.target.closest("[data-edit-task]");
+      if (taskItem) {
+        openTaskModal(taskItem.dataset.editTask);
+      }
     }
 
     function computePhaseProgress(milestones) {
