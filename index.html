@@ -765,6 +765,10 @@
       color: rgba(255, 255, 255, 0.64);
     }
 
+    .task-due-chip.overdue {
+      color: var(--danger);
+    }
+
     .task-list-chip {
       color: rgba(255, 255, 255, 0.54);
     }
@@ -4781,6 +4785,7 @@
       const occurrence = getTaskOccurrenceInfo(task, { referenceDate: new Date(), floorToDay: true });
       const dueMeta = occurrence ? formatTaskDueMeta(occurrence.raw, { includeDate: true, includeTime: true }) : "";
       const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
+      const isOverdue = occurrence ? isTaskOccurrenceOverdue(occurrence, new Date()) : false;
       const showScheduleMeta = depth === 0;
 
       return `
@@ -4802,7 +4807,7 @@
             <div class="task-meta">
               ${showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : ""}
               ${showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
-              ${dueMeta ? `<span class="task-due-chip">${escapeHtml(dueMeta)}</span>` : ""}
+              ${dueMeta ? `<span class="task-due-chip ${isOverdue ? "overdue" : ""}">${escapeHtml(dueMeta)}</span>` : ""}
               ${repeatMeta}
             </div>
           </button>
@@ -4896,6 +4901,7 @@
       const dueMeta = occurrence ? formatTaskDueMeta(occurrence.raw, { includeDate: false, includeTime: true }) || "Any time" : "Any time";
       const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const listName = getTaskListById(task.listId)?.name || "Inbox";
+      const isOverdue = occurrence ? isTaskOccurrenceOverdue(occurrence, new Date()) : false;
       return `
         <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}">
           <span class="task-expand-placeholder" aria-hidden="true"></span>
@@ -4907,7 +4913,7 @@
           <button class="task-main-button" type="button" data-edit-task="${task.id}">
             <div class="task-title">${escapeHtml(task.title)}</div>
             <div class="task-meta">
-              <span class="task-due-chip">${escapeHtml(dueMeta)}</span>
+              <span class="task-due-chip ${isOverdue ? "overdue" : ""}">${escapeHtml(dueMeta)}</span>
               <span class="task-list-chip">${escapeHtml(listName)}</span>
               ${repeatMeta}
               ${block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
@@ -8309,6 +8315,24 @@
         parts.push(formatTimeValue(parsed.timeValue));
       }
       return parts.join(" · ");
+    }
+
+    function isTaskOccurrenceOverdue(occurrence, referenceDate = new Date()) {
+      if (!occurrence?.dateKey) {
+        return false;
+      }
+      const todayKey = getLocalDateKey(referenceDate);
+      if (occurrence.dateKey < todayKey) {
+        return true;
+      }
+      if (occurrence.dateKey > todayKey) {
+        return false;
+      }
+      if (!occurrence.hasTime || !occurrence.timeValue) {
+        return false;
+      }
+      const nowMinutes = (referenceDate.getHours() * 60) + referenceDate.getMinutes();
+      return timeToMinutes(occurrence.timeValue) < nowMinutes;
     }
 
     function formatTimeValue(timeValue) {
