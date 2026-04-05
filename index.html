@@ -1478,6 +1478,64 @@
       color: var(--text);
     }
 
+    .phase-menu-wrap {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .phase-menu-button {
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .phase-menu-button svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .phase-card-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 180px;
+      padding: 8px;
+      border-radius: 16px;
+      background: rgba(24, 24, 24, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 5;
+    }
+
+    .phase-card-menu.open {
+      display: flex;
+    }
+
+    .phase-card-menu button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font: inherit;
+      text-align: left;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .phase-card-menu button.danger {
+      color: var(--danger);
+    }
+
     .phase-chip.active .phase-badge,
     .phase-chip.active .phase-meta-count,
     .phase-chip.active .phase-meta {
@@ -3523,8 +3581,6 @@
         <div class="phase-detail-header">
           <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
           <div class="phase-detail-actions">
-            <button class="ghost-button micro-button" id="phase-detail-edit" type="button">Edit</button>
-            <button class="primary-button micro-button" id="phase-detail-add-milestone" type="button">+ Milestone</button>
           </div>
         </div>
         <h3 class="phase-detail-title" id="phase-detail-title"></h3>
@@ -4221,8 +4277,6 @@
       phaseDetailTitle: document.getElementById("phase-detail-title"),
       phaseDetailBody: document.getElementById("phase-detail-body"),
       phaseDetailBack: document.getElementById("phase-detail-back"),
-      phaseDetailEdit: document.getElementById("phase-detail-edit"),
-      phaseDetailAddMilestone: document.getElementById("phase-detail-add-milestone"),
       themesList: document.getElementById("themes-list"),
       timelineDropdown: document.getElementById("timeline-dropdown"),
       timelineDropdownTrigger: document.getElementById("timeline-dropdown-trigger"),
@@ -4484,10 +4538,8 @@
       elements.phaseTabDropdownList.addEventListener("pointerup", handleHeaderDropdownDragEnd);
       elements.phaseTabDropdownList.addEventListener("pointercancel", handleHeaderDropdownDragEnd);
       elements.addPhaseTabButton.addEventListener("click", handleAddPhaseTab);
-      elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
+      elements.addPhaseButton.addEventListener("click", handlePhaseFloatingAction);
       elements.phaseDetailBack.addEventListener("click", closePhaseDetail);
-      elements.phaseDetailEdit.addEventListener("click", handlePhaseDetailEdit);
-      elements.phaseDetailAddMilestone.addEventListener("click", handleAddMilestone);
       elements.phaseDetailBody.addEventListener("click", handlePhaseDetailBodyClick);
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
       elements.phaseActiveToggleButton.addEventListener("click", handlePhaseActiveToggle);
@@ -4638,6 +4690,10 @@
       elements.themesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "themes");
       elements.addTaskButton.style.display = state.ui.activeTab === "tasks" ? "block" : "none";
       elements.addPhaseButton.style.display = state.ui.activeTab === "phases" ? "block" : "none";
+      elements.addPhaseButton.setAttribute(
+        "aria-label",
+        state.ui.phaseDetailOpen ? "Add milestone" : "Add phase"
+      );
       document.body.dataset.theme = state.ui.activeTheme || "default";
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
@@ -4727,6 +4783,19 @@
               <div class="phase-progress-fill" style="width:${Math.round(phaseProgress.ratio * 100)}%"></div>
             </div>
           </div>
+          <div class="phase-menu-wrap">
+            <button class="ghost-button phase-menu-button" type="button" data-toggle-phase-menu="${phase.id}" aria-label="Phase options" aria-expanded="false">
+              <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="3.2" r="1.2"/>
+                <circle cx="8" cy="8" r="1.2"/>
+                <circle cx="8" cy="12.8" r="1.2"/>
+              </svg>
+            </button>
+            <div class="phase-card-menu" data-phase-menu="${phase.id}" aria-hidden="true">
+              <button type="button" data-edit-phase="${phase.id}">Edit</button>
+              <button class="danger" type="button" data-delete-phase="${phase.id}">Delete</button>
+            </div>
+          </div>
           <div class="phase-meta">
             <span class="phase-meta-count">${countBlocksForPhase(phase.id)} blocks</span>
             <div class="header-actions">
@@ -4736,7 +4805,36 @@
           </div>
         `;
 
-        button.addEventListener("click", () => openPhaseDetail(phase.id));
+        button.addEventListener("click", (event) => {
+          const menuToggle = event.target.closest("[data-toggle-phase-menu]");
+          if (menuToggle) {
+            const menu = elements.phaseRail.querySelector(`[data-phase-menu="${phase.id}"]`);
+            if (!menu) {
+              return;
+            }
+            const shouldOpen = !menu.classList.contains("open");
+            elements.phaseRail.querySelectorAll("[data-phase-menu]").forEach((item) => {
+              item.classList.toggle("open", item === menu && shouldOpen);
+              item.setAttribute("aria-hidden", String(!(item === menu && shouldOpen)));
+            });
+            elements.phaseRail.querySelectorAll("[data-toggle-phase-menu]").forEach((buttonItem) => {
+              buttonItem.setAttribute(
+                "aria-expanded",
+                String(buttonItem === menuToggle && shouldOpen)
+              );
+            });
+            return;
+          }
+          if (event.target.closest("[data-edit-phase]")) {
+            openPhaseModal(phase.id);
+            return;
+          }
+          if (event.target.closest("[data-delete-phase]")) {
+            deletePhase(phase.id);
+            return;
+          }
+          openPhaseDetail(phase.id);
+        });
 
         elements.phaseRail.appendChild(button);
 
@@ -6401,6 +6499,16 @@
 
       if (!event.target.closest(".task-row-menu-wrap")) {
         closeTaskRowMenus();
+      }
+
+      if (!event.target.closest(".phase-menu-wrap")) {
+        elements.phaseRail.querySelectorAll("[data-phase-menu]").forEach((menu) => {
+          menu.classList.remove("open");
+          menu.setAttribute("aria-hidden", "true");
+        });
+        elements.phaseRail.querySelectorAll("[data-toggle-phase-menu]").forEach((button) => {
+          button.setAttribute("aria-expanded", "false");
+        });
       }
 
       if (!event.target.closest(".milestone-menu-wrap")) {
@@ -8291,6 +8399,17 @@
         return;
       }
       openPhaseModal(phaseId);
+    }
+
+    function handlePhaseFloatingAction() {
+      if (state.ui.activeTab !== "phases") {
+        return;
+      }
+      if (state.ui.phaseDetailOpen) {
+        handleAddMilestone();
+        return;
+      }
+      openPhaseModal();
     }
 
     function handleAddMilestone() {
