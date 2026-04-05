@@ -2639,6 +2639,64 @@
       text-overflow: ellipsis;
     }
 
+    .milestone-menu-wrap {
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .milestone-menu-button {
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .milestone-menu-button svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .milestone-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 180px;
+      padding: 8px;
+      border-radius: 16px;
+      background: rgba(24, 24, 24, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 5;
+    }
+
+    .milestone-menu.open {
+      display: flex;
+    }
+
+    .milestone-menu button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font: inherit;
+      text-align: left;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .milestone-menu button.danger {
+      color: var(--danger);
+    }
+
     .milestone-progress {
       display: flex;
       flex-direction: column;
@@ -4591,23 +4649,34 @@
                 </span>
                 <span class="milestone-title">${escapeHtml(milestone.title)}</span>
               </button>
-              <div class="phase-detail-actions">
-                ${isGoal ? "" : `<button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>`}
-                <button class="ghost-button micro-button" type="button" data-set-milestone-goal="${milestone.id}">${isGoal ? "Edit Goal" : "Set Goal"}</button>
-                ${isGoal ? `<button class="ghost-button micro-button" type="button" data-clear-milestone-goal="${milestone.id}">Clear</button>` : ""}
-                <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone="${milestone.id}">Delete</button>
+              <div class="milestone-menu-wrap">
+                <button class="ghost-button milestone-menu-button" type="button" data-toggle-milestone-menu="${milestone.id}" aria-label="Milestone options" aria-expanded="false">
+                  <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8" cy="3.2" r="1.2"/>
+                    <circle cx="8" cy="8" r="1.2"/>
+                    <circle cx="8" cy="12.8" r="1.2"/>
+                  </svg>
+                </button>
+                <div class="milestone-menu" data-milestone-menu="${milestone.id}" aria-hidden="true">
+                  ${isGoal
+                    ? `<button type="button" data-clear-milestone-goal="${milestone.id}">Switch to Tasks</button>`
+                    : `<button type="button" data-set-milestone-goal="${milestone.id}">Switch to Goal</button>`
+                  }
+                  ${isGoal ? `<button type="button" data-set-milestone-goal="${milestone.id}">Edit Goal</button>` : ""}
+                  <button class="danger" type="button" data-delete-milestone="${milestone.id}">Delete</button>
+                </div>
+              </div>
+            </div>
+            <div class="milestone-progress">
+              <div class="milestone-progress-meta">
+                <span>${escapeHtml(progressLabel)}</span>
+                ${progressChip}
+              </div>
+              <div class="milestone-progress-bar">
+                <div class="milestone-progress-fill" style="width:${Math.round(progressValue * 100)}%"></div>
               </div>
             </div>
             <div class="milestone-body">
-              <div class="milestone-progress">
-                <div class="milestone-progress-meta">
-                  <span>${escapeHtml(progressLabel)}</span>
-                  ${progressChip}
-                </div>
-                <div class="milestone-progress-bar">
-                  <div class="milestone-progress-fill" style="width:${Math.round(progressValue * 100)}%"></div>
-                </div>
-              </div>
               ${isGoal ? `
                 <div class="milestone-goal-controls">
                   <button class="ghost-button micro-button" type="button" data-log-milestone-goal="${milestone.id}">+1</button>
@@ -4616,6 +4685,7 @@
               ` : ""}
               <div class="milestone-tasks">
                 ${tasksMarkup}
+                ${isGoal ? "" : `<button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>`}
               </div>
             </div>
           </div>
@@ -6134,6 +6204,16 @@
 
       if (!event.target.closest(".task-row-menu-wrap")) {
         closeTaskRowMenus();
+      }
+
+      if (!event.target.closest(".milestone-menu-wrap")) {
+        elements.phaseDetailBody.querySelectorAll("[data-milestone-menu]").forEach((menu) => {
+          menu.classList.remove("open");
+          menu.setAttribute("aria-hidden", "true");
+        });
+        elements.phaseDetailBody.querySelectorAll("[data-toggle-milestone-menu]").forEach((button) => {
+          button.setAttribute("aria-expanded", "false");
+        });
       }
 
       if (elements.phaseContextMenu && !elements.phaseContextMenu.contains(event.target) && !elements.phaseMenuButton.contains(event.target)) {
@@ -8048,6 +8128,27 @@
     }
 
     function handlePhaseDetailBodyClick(event) {
+      const menuToggleButton = event.target.closest("[data-toggle-milestone-menu]");
+      if (menuToggleButton) {
+        const milestoneId = menuToggleButton.dataset.toggleMilestoneMenu;
+        const menu = elements.phaseDetailBody.querySelector(`[data-milestone-menu="${milestoneId}"]`);
+        if (!menu) {
+          return;
+        }
+        const shouldOpen = !menu.classList.contains("open");
+        elements.phaseDetailBody.querySelectorAll("[data-milestone-menu]").forEach((item) => {
+          item.classList.toggle("open", item === menu && shouldOpen);
+          item.setAttribute("aria-hidden", String(!(item === menu && shouldOpen)));
+        });
+        elements.phaseDetailBody.querySelectorAll("[data-toggle-milestone-menu]").forEach((button) => {
+          button.setAttribute(
+            "aria-expanded",
+            String(button === menuToggleButton && shouldOpen)
+          );
+        });
+        return;
+      }
+
       const toggleMilestoneButton = event.target.closest("[data-toggle-milestone-collapse]");
       if (toggleMilestoneButton) {
         const milestoneId = toggleMilestoneButton.dataset.toggleMilestoneCollapse;
