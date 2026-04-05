@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-05-3";
+    window.APP_ASSET_VERSION = "2026-04-05-4";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-3">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-3">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-3">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-4">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-4">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-4">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -1648,6 +1648,13 @@
         0 0 0 1px rgba(255, 255, 255, 0.08) inset;
       z-index: 6;
       pointer-events: none;
+    }
+
+    .timeline-block.drag-ready {
+      box-shadow:
+        0 14px 28px rgba(0, 0, 0, 0.28),
+        0 0 0 2px rgba(255, 255, 255, 0.12) inset;
+      transform: scale(1.01);
     }
 
     .timeline-gap {
@@ -6139,6 +6146,7 @@
         activationTimer: window.setTimeout(() => {
           if (activeBlockDrag && activeBlockDrag.pointerId === event.pointerId) {
             activeBlockDrag.activated = true;
+            activeBlockDrag.blockElement.classList.add("drag-ready");
           }
         }, DRAG_HOLD_DELAY_MS)
       };
@@ -6159,6 +6167,7 @@
         const deltaX = event.clientX - activeBlockDrag.startX;
         if (Math.abs(deltaX) > 8 || Math.abs(activeBlockDrag.deltaY) > 8) {
           window.clearTimeout(activeBlockDrag.activationTimer);
+          activeBlockDrag.blockElement.classList.remove("drag-ready");
           activeBlockDrag.blockElement.releasePointerCapture(event.pointerId);
           activeBlockDrag.blockElement.removeEventListener("pointermove", handleBlockDragMove);
           activeBlockDrag.blockElement.removeEventListener("pointerup", handleBlockDragEnd);
@@ -6173,6 +6182,7 @@
       }
 
       activeBlockDrag.moved = true;
+      activeBlockDrag.blockElement.classList.remove("drag-ready");
       activeBlockDrag.blockElement.classList.add("dragging");
       activeBlockDrag.blockElement.style.transform = `translateY(${activeBlockDrag.deltaY}px)`;
       const hoverBlockId = getBlockSwapTargetId(activeBlockDrag);
@@ -6189,6 +6199,7 @@
       window.clearTimeout(activeBlockDrag.activationTimer);
       const { blockElement, moved, blockId } = activeBlockDrag;
       blockElement.style.transform = "";
+      blockElement.classList.remove("drag-ready");
       blockElement.classList.remove("dragging");
       clearBlockDragPreview();
       activeBlockDrag.lastPreviewId = null;
