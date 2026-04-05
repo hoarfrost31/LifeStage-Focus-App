@@ -127,12 +127,12 @@
     }
 
     .card {
-      background:
-        linear-gradient(180deg, rgba(26, 26, 26, 0.94), rgba(15, 15, 15, 0.98));
-      border: 1px solid var(--border);
-      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
       box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
+      backdrop-filter: blur(16px);
+      padding: 16px;
     }
 
     .section-header {
@@ -508,10 +508,10 @@
     }
 
     .tasks-wrap {
-      padding: 10px 12px 0;
+      padding: 10px 4px 0;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       flex: 1;
       min-height: 0;
       position: relative;
@@ -563,7 +563,7 @@
     .tasks-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
       overflow-y: auto;
       min-height: 0;
       padding-right: 2px;
@@ -574,13 +574,26 @@
     .task-item {
       display: grid;
       grid-template-columns: auto auto 1fr auto;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
-      padding: 12px 12px 12px 10px;
-      border-radius: 18px;
-      background: rgba(20, 20, 20, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
       padding-left: calc(10px + (var(--task-depth, 0) * 16px));
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .task-item:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 14px 26px rgba(0, 0, 0, 0.22);
+      transform: scale(1.01);
+    }
+
+    .task-item:active {
+      transform: scale(1.01);
     }
 
     .task-item.dragging {
@@ -592,16 +605,16 @@
     }
 
     .task-toggle {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       padding: 0;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      color: #111;
+      color: var(--text);
       flex-shrink: 0;
     }
 
@@ -637,8 +650,9 @@
     }
 
     .task-toggle.done {
-      background: linear-gradient(135deg, #f2f2f3, #c9cbd1);
+      background: linear-gradient(135deg, #22c55e, #4ade80);
       border-color: transparent;
+      color: #0b1220;
     }
 
     .task-toggle svg {
@@ -662,16 +676,20 @@
 
     .task-title {
       min-width: 0;
-      font-size: 0.92rem;
+      font-size: 0.94rem;
       line-height: 1.35;
       color: var(--text);
       word-break: break-word;
     }
 
     .task-item.done .task-title {
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(248, 250, 252, 0.5);
       text-decoration: line-through;
       text-decoration-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .task-item.done {
+      opacity: 0.65;
     }
 
     .task-meta {
@@ -690,11 +708,11 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 7px;
+      padding: 4px 8px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #ececef;
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
       text-transform: none;
       letter-spacing: 0;
       font-size: 0.72rem;
@@ -763,7 +781,7 @@
     }
 
     .task-due-chip {
-      color: rgba(255, 255, 255, 0.64);
+      color: #94a3b8;
     }
 
     .task-due-chip.overdue {
@@ -771,7 +789,13 @@
     }
 
     .task-list-chip {
-      color: rgba(255, 255, 255, 0.54);
+      color: #94a3b8;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     .task-group {
@@ -1271,10 +1295,10 @@
     }
 
     .phase-empty {
-      padding: 18px 14px;
-      border-radius: 18px;
-      border: 1px dashed rgba(255, 255, 255, 0.08);
-      background: rgba(16, 16, 16, 0.6);
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--muted);
       font-size: 0.88rem;
       line-height: 1.45;
@@ -1637,12 +1661,13 @@
       background:
         radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
         linear-gradient(140deg, rgba(20, 20, 20, 0.96), rgba(12, 12, 12, 0.98));
-      padding: 12px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
       transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       cursor: pointer;
+      backdrop-filter: blur(16px);
     }
 
     .today-block.is-collapsed .today-block-tasks,
@@ -2912,14 +2937,13 @@
     .milestone-card {
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
-        linear-gradient(140deg, rgba(22, 22, 22, 0.95), rgba(12, 12, 12, 0.98));
-      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
       box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(16px);
     }
 
     .milestone-header {
