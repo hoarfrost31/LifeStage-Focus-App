@@ -1618,6 +1618,11 @@
       cursor: pointer;
     }
 
+    .today-block.is-collapsed .today-block-tasks,
+    .today-block.is-collapsed .today-task-composer {
+      display: none;
+    }
+
     .today-block:hover {
       border-color: rgba(255, 255, 255, 0.14);
       box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
@@ -1674,6 +1679,32 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .today-block-toggle {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .today-block-toggle svg {
+      width: 10px;
+      height: 10px;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+
+    .today-block.is-collapsed .today-block-toggle svg {
+      transform: rotate(-90deg);
     }
 
     .today-block-indicator {
@@ -4477,6 +4508,7 @@
         phaseDetailOpen: false,
         isCompactTimeline: false,
         activeTheme: "default",
+        todayCollapsedByBlock: {},
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
@@ -5289,6 +5321,7 @@
         const overnight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
         const now = state.ui.now || new Date();
         const isActive = isTimeWithinBlock(now, block);
+        const isCollapsed = shouldCollapseTodayBlock(block.id, isActive);
         const tone = getBlockToneClass(block.startTime);
         const taskMarkup = tasks.length
           ? tasks.map((task) => `
@@ -5303,10 +5336,15 @@
           `).join("")
           : `<div class="today-task-empty" data-add-task-inline="${block.id}">+ Add task</div>`;
         return `
-          <div class="today-block ${tone} ${isActive ? "is-active" : ""}" data-block-id="${block.id}" data-open-task-inline="${block.id}">
+          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""}" data-block-id="${block.id}" data-open-task-inline="${block.id}">
             <div class="today-block-time">
               <span class="today-block-indicator" aria-hidden="true"></span>
               ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}
+              <button class="today-block-toggle" type="button" data-toggle-today-block="${block.id}" aria-label="${isCollapsed ? "Expand block" : "Collapse block"}">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="m6 3.5 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </div>
             <div class="today-block-title">${escapeHtml(block.title)}</div>
             <div class="today-block-tasks">
@@ -5322,6 +5360,19 @@
     }
 
     function handleTodayListClick(event) {
+      const toggleBlockButton = event.target.closest("[data-toggle-today-block]");
+      if (toggleBlockButton) {
+        const blockId = toggleBlockButton.dataset.toggleTodayBlock;
+        const current = state.ui.todayCollapsedByBlock?.[blockId];
+        state.ui.todayCollapsedByBlock = {
+          ...state.ui.todayCollapsedByBlock,
+          [blockId]: !current
+        };
+        persistState({ immediate: true });
+        render();
+        return;
+      }
+
       const addInlineTrigger = event.target.closest("[data-add-task-inline]");
       if (addInlineTrigger) {
         const blockId = addInlineTrigger.dataset.addTaskInline;
@@ -5370,6 +5421,10 @@
       if (!blockElement) {
         return;
       }
+      state.ui.todayCollapsedByBlock = {
+        ...state.ui.todayCollapsedByBlock,
+        [blockId]: false
+      };
       blockElement.classList.add("composer-open");
       const input = blockElement.querySelector(`[data-task-input="${blockId}"]`);
       input?.focus();
@@ -5399,6 +5454,17 @@
       });
       persistState({ immediate: true });
       render();
+    }
+
+    function shouldCollapseTodayBlock(blockId, isActive) {
+      if (isActive) {
+        return false;
+      }
+      const stored = state.ui.todayCollapsedByBlock?.[blockId];
+      if (typeof stored === "boolean") {
+        return stored;
+      }
+      return true;
     }
 
     function isTimeWithinBlock(now, block) {
@@ -10215,7 +10281,8 @@
           activeTaskListFilter: state.ui.activeTaskListFilter,
           activePhaseTabId: state.ui.activePhaseTabId,
           activeTimelineId: state.ui.activeTimelineId,
-          activeTheme: state.ui.activeTheme
+          activeTheme: state.ui.activeTheme,
+          todayCollapsedByBlock: state.ui.todayCollapsedByBlock
         },
         updatedAt: new Date().toISOString()
       };
@@ -10289,6 +10356,9 @@
       state.ui.activePhaseTabId = normalizePhaseTabId(parsed?.ui?.activePhaseTabId, state.phaseTabs);
       state.ui.activeTimelineId = typeof parsed?.ui?.activeTimelineId === "string" ? parsed.ui.activeTimelineId : "";
       state.ui.activeTheme = typeof parsed?.ui?.activeTheme === "string" ? parsed.ui.activeTheme : "default";
+      state.ui.todayCollapsedByBlock = parsed?.ui?.todayCollapsedByBlock && typeof parsed.ui.todayCollapsedByBlock === "object"
+        ? parsed.ui.todayCollapsedByBlock
+        : {};
       state.ui.openHeaderDropdown = "";
     }
 
