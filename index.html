@@ -1348,6 +1348,7 @@
       align-items: center;
       gap: 8px;
       margin-bottom: 10px;
+      padding-right: 34px;
     }
 
     .phase-dot {
@@ -1481,6 +1482,12 @@
     .phase-menu-wrap {
       position: relative;
       flex: 0 0 auto;
+    }
+
+    .phase-chip .phase-menu-wrap {
+      position: absolute;
+      top: 10px;
+      right: 10px;
     }
 
     .phase-menu-button {
@@ -2614,7 +2621,7 @@
     .phase-detail-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 10px;
     }
 
@@ -3579,8 +3586,8 @@
       <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
       <div class="phase-detail panel-hidden" id="phase-detail">
         <div class="phase-detail-header">
-          <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
           <div class="phase-detail-actions">
+            <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
           </div>
         </div>
         <h3 class="phase-detail-title" id="phase-detail-title"></h3>
@@ -4764,9 +4771,10 @@
         const isActive = Boolean(phase.isActive);
         const milestones = getMilestonesForPhase(phase.id);
         const phaseProgress = computePhaseProgress(milestones);
-        const button = document.createElement("button");
-        button.type = "button";
+        const button = document.createElement("div");
         button.className = `phase-chip ${isActive ? "active" : ""}`;
+        button.setAttribute("role", "button");
+        button.setAttribute("tabindex", "0");
         button.innerHTML = `
           <div class="phase-topline">
             <span class="phase-dot" aria-hidden="true"></span>
@@ -4794,13 +4802,6 @@
             <div class="phase-card-menu" data-phase-menu="${phase.id}" aria-hidden="true">
               <button type="button" data-edit-phase="${phase.id}">Edit</button>
               <button class="danger" type="button" data-delete-phase="${phase.id}">Delete</button>
-            </div>
-          </div>
-          <div class="phase-meta">
-            <span class="phase-meta-count">${countBlocksForPhase(phase.id)} blocks</span>
-            <div class="header-actions">
-              <button class="phase-toggle ${isActive ? "active" : ""}" type="button">Toggle</button>
-              <span class="phase-edit">Edit</span>
             </div>
           </div>
         `;
@@ -4834,6 +4835,13 @@
             return;
           }
           openPhaseDetail(phase.id);
+        });
+
+        button.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openPhaseDetail(phase.id);
+          }
         });
 
         elements.phaseRail.appendChild(button);
