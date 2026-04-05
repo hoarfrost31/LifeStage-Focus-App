@@ -1070,6 +1070,18 @@
       padding-top: 10px;
     }
 
+    .phase-tabs-header.hidden {
+      display: none;
+    }
+
+    .phase-detail-title-row {
+      margin-top: 6px;
+    }
+
+    .phase-detail-title-row.tight {
+      margin-top: 0;
+    }
+
     .custom-dropdown-label {
       padding-left: 2px;
       color: rgba(255, 255, 255, 0.5);
@@ -4743,6 +4755,9 @@
         state.ui.phaseDetailOpen ? "Add milestone" : "Add phase"
       );
       document.body.dataset.theme = state.ui.activeTheme || "default";
+      const phaseHeaderHidden = state.ui.activeTab === "phases" && state.ui.phaseDetailOpen;
+      document.querySelector(".phase-tabs-header")?.classList.toggle("hidden", phaseHeaderHidden);
+      elements.phaseDetail.querySelector(".phase-detail-title-row")?.classList.toggle("tight", phaseHeaderHidden);
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
