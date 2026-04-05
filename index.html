@@ -2592,10 +2592,47 @@
       gap: 8px;
     }
 
+    .milestone-header-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .milestone-toggle {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.72);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.18s ease;
+    }
+
+    .milestone-toggle svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+      transition: transform 0.18s ease;
+    }
+
+    .milestone-card.is-collapsed .milestone-toggle svg {
+      transform: rotate(-90deg);
+    }
+
     .milestone-title {
       font-size: 0.92rem;
       font-weight: 600;
       color: var(--text);
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .milestone-progress {
@@ -2647,6 +2684,16 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .milestone-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .milestone-card.is-collapsed .milestone-body {
+      display: none;
     }
 
     .milestone-tasks {
@@ -4516,6 +4563,7 @@
           ? `${safeGoalProgress}/${goalTarget} logged`
           : (totalCount ? `${completedCount}/${totalCount} done` : "No tasks yet");
         const progressChip = isGoal ? `<span class="milestone-progress-chip">Goal ${goalTarget}</span>` : "";
+        const isCollapsed = Boolean(milestone.isCollapsed);
         const tasksMarkup = isGoal
           ? `<div class="milestone-empty">Goal mode · log progress below.</div>`
           : (tasks.length
@@ -4529,9 +4577,16 @@
             : `<div class="milestone-empty">No tasks yet.</div>`);
 
         return `
-          <div class="milestone-card" data-milestone-id="${milestone.id}">
+          <div class="milestone-card ${isCollapsed ? "is-collapsed" : ""}" data-milestone-id="${milestone.id}">
             <div class="milestone-header">
-              <div class="milestone-title">${escapeHtml(milestone.title)}</div>
+              <button class="milestone-header-main" type="button" data-toggle-milestone-collapse="${milestone.id}" aria-label="${isCollapsed ? "Expand milestone" : "Collapse milestone"}">
+                <span class="milestone-toggle" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m6 3.5 4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="milestone-title">${escapeHtml(milestone.title)}</span>
+              </button>
               <div class="phase-detail-actions">
                 ${isGoal ? "" : `<button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>`}
                 <button class="ghost-button micro-button" type="button" data-set-milestone-goal="${milestone.id}">${isGoal ? "Edit Goal" : "Set Goal"}</button>
@@ -4539,23 +4594,25 @@
                 <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone="${milestone.id}">Delete</button>
               </div>
             </div>
-            <div class="milestone-progress">
-              <div class="milestone-progress-meta">
-                <span>${escapeHtml(progressLabel)}</span>
-                ${progressChip}
+            <div class="milestone-body">
+              <div class="milestone-progress">
+                <div class="milestone-progress-meta">
+                  <span>${escapeHtml(progressLabel)}</span>
+                  ${progressChip}
+                </div>
+                <div class="milestone-progress-bar">
+                  <div class="milestone-progress-fill" style="width:${Math.round(progressValue * 100)}%"></div>
+                </div>
               </div>
-              <div class="milestone-progress-bar">
-                <div class="milestone-progress-fill" style="width:${Math.round(progressValue * 100)}%"></div>
+              ${isGoal ? `
+                <div class="milestone-goal-controls">
+                  <button class="ghost-button micro-button" type="button" data-log-milestone-goal="${milestone.id}">+1</button>
+                  <button class="ghost-button micro-button" type="button" data-undo-milestone-goal="${milestone.id}">-1</button>
+                </div>
+              ` : ""}
+              <div class="milestone-tasks">
+                ${tasksMarkup}
               </div>
-            </div>
-            ${isGoal ? `
-              <div class="milestone-goal-controls">
-                <button class="ghost-button micro-button" type="button" data-log-milestone-goal="${milestone.id}">+1</button>
-                <button class="ghost-button micro-button" type="button" data-undo-milestone-goal="${milestone.id}">-1</button>
-              </div>
-            ` : ""}
-            <div class="milestone-tasks">
-              ${tasksMarkup}
             </div>
           </div>
         `;
@@ -7977,7 +8034,8 @@
             phaseId,
             title: trimmed,
             goalTarget: 0,
-            goalProgress: 0
+            goalProgress: 0,
+            isCollapsed: false
           });
           persistState({ immediate: true });
           render();
@@ -7986,6 +8044,17 @@
     }
 
     function handlePhaseDetailBodyClick(event) {
+      const toggleMilestoneButton = event.target.closest("[data-toggle-milestone-collapse]");
+      if (toggleMilestoneButton) {
+        const milestoneId = toggleMilestoneButton.dataset.toggleMilestoneCollapse;
+        state.milestones = state.milestones.map((item) =>
+          item.id === milestoneId ? { ...item, isCollapsed: !item.isCollapsed } : item
+        );
+        persistState({ immediate: true });
+        render();
+        return;
+      }
+
       const setGoalButton = event.target.closest("[data-set-milestone-goal]");
       if (setGoalButton) {
         const milestoneId = setGoalButton.dataset.setMilestoneGoal;
@@ -9029,7 +9098,8 @@
               phaseId: typeof milestone?.phaseId === "string" && validPhaseIds.has(milestone.phaseId) ? milestone.phaseId : "",
               title: typeof milestone?.title === "string" && milestone.title.trim() ? milestone.title.trim() : `Milestone ${index + 1}`,
               goalTarget: Math.max(0, Math.floor(Number(milestone?.goalTarget || 0))),
-              goalProgress: Math.max(0, Math.floor(Number(milestone?.goalProgress || 0)))
+              goalProgress: Math.max(0, Math.floor(Number(milestone?.goalProgress || 0))),
+              isCollapsed: Boolean(milestone?.isCollapsed)
             }))
             .filter((milestone) => milestone.phaseId && milestone.title)
         : [];
