@@ -579,16 +579,16 @@
 
     .task-item {
       display: grid;
-      grid-template-columns: auto auto 1fr auto;
-      gap: 12px;
+      grid-template-columns: auto auto 1fr;
+      gap: 10px;
       align-items: center;
-      padding: 12px 14px;
+      padding: 10px 12px 10px 8px;
       border-radius: 20px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(16px);
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
-      padding-left: calc(10px + (var(--task-depth, 0) * 16px));
+      padding-left: calc(8px + (var(--task-depth, 0) * 16px));
       transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
@@ -611,8 +611,8 @@
     }
 
     .task-toggle {
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
       padding: 0;
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -663,8 +663,8 @@
     }
 
     .task-toggle svg {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       display: block;
       opacity: 0;
     }
@@ -679,10 +679,29 @@
 
     .task-main-button {
       all: unset;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       min-width: 0;
       cursor: pointer;
       touch-action: pan-y;
+    }
+
+    .task-main-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .task-time {
+      margin-left: auto;
+      font-size: 0.68rem;
+      color: #94a3b8;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .task-title {
@@ -691,6 +710,7 @@
       line-height: 1.35;
       color: var(--text);
       word-break: break-word;
+      flex: 1 1 auto;
     }
 
     .task-item.done .task-title {
@@ -704,10 +724,9 @@
     }
 
     .task-meta {
-      margin-top: 3px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
       color: var(--muted);
       font-size: 0.68rem;
@@ -6063,6 +6082,11 @@
       const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const isOverdue = occurrence ? isTaskOccurrenceOverdue(occurrence, new Date()) : false;
       const showScheduleMeta = depth === 0;
+      const metaItems = [
+        showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : "",
+        showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : "",
+        repeatMeta
+      ].filter(Boolean).join("");
 
       return `
         <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}" style="--task-depth:${depth};">
@@ -6079,41 +6103,12 @@
             </svg>
           </button>
           <button class="task-main-button" type="button" data-edit-task="${task.id}" data-drag-task-handle="${task.id}">
-            <div class="task-title">${escapeHtml(task.title)}</div>
-            <div class="task-meta">
-              ${showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : ""}
-              ${showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
-              ${dueMeta ? `<span class="task-due-chip ${isOverdue ? "overdue" : ""}">${escapeHtml(dueMeta)}</span>` : ""}
-              ${repeatMeta}
+            <div class="task-main-row">
+              <div class="task-title">${escapeHtml(task.title)}</div>
+              ${dueMeta ? `<div class="task-time ${isOverdue ? "task-due-chip overdue" : ""}">${escapeHtml(dueMeta)}</div>` : ""}
             </div>
+            ${metaItems ? `<div class="task-meta">${metaItems}</div>` : ""}
           </button>
-          <div class="task-row-menu-wrap">
-            <button class="ghost-button task-row-menu-button" type="button" data-toggle-task-row-menu="${task.id}" aria-label="Task options" aria-expanded="false">
-              <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="8" cy="3.2" r="1.2"/>
-                <circle cx="8" cy="8" r="1.2"/>
-                <circle cx="8" cy="12.8" r="1.2"/>
-              </svg>
-            </button>
-            <div class="task-context-menu task-row-menu" data-task-row-menu="${task.id}" aria-hidden="true">
-              <div class="task-row-submenu-wrap">
-                <button class="task-row-submenu-trigger" type="button" data-toggle-task-list-submenu="${task.id}" aria-expanded="false">
-                  <span>Move to</span>
-                  <svg class="task-row-submenu-chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m6.2 3.6 4.2 4.2-4.2 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <div class="task-context-menu task-row-submenu" data-task-row-submenu="${task.id}" aria-hidden="true">
-                  ${state.taskLists.map((list) => `
-                    <button type="button" data-move-task-list="${task.id}" data-list-id="${list.id}">
-                      ${escapeHtml(list.name)}
-                    </button>
-                  `).join("")}
-                </div>
-              </div>
-              <button class="danger" type="button" data-delete-task="${task.id}">Delete task</button>
-            </div>
-          </div>
         </div>
         ${isExpanded ? subtasks.map((childTask) => renderTaskItem(childTask, depth + 1)).join("") : ""}
       `;
@@ -6178,6 +6173,11 @@
       const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const listName = getTaskListById(task.listId)?.name || "Inbox";
       const isOverdue = occurrence ? isTaskOccurrenceOverdue(occurrence, new Date()) : false;
+      const metaItems = [
+        `<span class="task-list-chip">${escapeHtml(listName)}</span>`,
+        repeatMeta,
+        block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""
+      ].filter(Boolean).join("");
       return `
         <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}">
           <span class="task-expand-placeholder" aria-hidden="true"></span>
@@ -6187,41 +6187,12 @@
             </svg>
           </button>
           <button class="task-main-button" type="button" data-edit-task="${task.id}">
-            <div class="task-title">${escapeHtml(task.title)}</div>
-            <div class="task-meta">
-              <span class="task-due-chip ${isOverdue ? "overdue" : ""}">${escapeHtml(dueMeta)}</span>
-              <span class="task-list-chip">${escapeHtml(listName)}</span>
-              ${repeatMeta}
-              ${block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : ""}
+            <div class="task-main-row">
+              <div class="task-title">${escapeHtml(task.title)}</div>
+              <div class="task-time ${isOverdue ? "task-due-chip overdue" : ""}">${escapeHtml(dueMeta)}</div>
             </div>
+            ${metaItems ? `<div class="task-meta">${metaItems}</div>` : ""}
           </button>
-          <div class="task-row-menu-wrap">
-            <button class="ghost-button task-row-menu-button" type="button" data-toggle-task-row-menu="${task.id}" aria-label="Task options" aria-expanded="false">
-              <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="8" cy="3.2" r="1.2"/>
-                <circle cx="8" cy="8" r="1.2"/>
-                <circle cx="8" cy="12.8" r="1.2"/>
-              </svg>
-            </button>
-            <div class="task-context-menu task-row-menu" data-task-row-menu="${task.id}" aria-hidden="true">
-              <div class="task-row-submenu-wrap">
-                <button class="task-row-submenu-trigger" type="button" data-toggle-task-list-submenu="${task.id}" aria-expanded="false">
-                  <span>Move to</span>
-                  <svg class="task-row-submenu-chevron" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m6.2 3.6 4.2 4.2-4.2 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-                <div class="task-context-menu task-row-submenu" data-task-row-submenu="${task.id}" aria-hidden="true">
-                  ${state.taskLists.map((list) => `
-                    <button type="button" data-move-task-list="${task.id}" data-list-id="${list.id}">
-                      ${escapeHtml(list.name)}
-                    </button>
-                  `).join("")}
-                </div>
-              </div>
-              <button class="danger" type="button" data-delete-task="${task.id}">Delete task</button>
-            </div>
-          </div>
         </div>
       `;
     }
@@ -7978,18 +7949,6 @@
         return;
       }
 
-      const rowMenuButton = event.target.closest("[data-toggle-task-row-menu]");
-      if (rowMenuButton) {
-        toggleTaskRowMenu(rowMenuButton.dataset.toggleTaskRowMenu);
-        return;
-      }
-
-      const rowSubmenuButton = event.target.closest("[data-toggle-task-list-submenu]");
-      if (rowSubmenuButton) {
-        toggleTaskRowSubmenu(rowSubmenuButton.dataset.toggleTaskListSubmenu);
-        return;
-      }
-
       const collapseButton = event.target.closest("[data-toggle-task-collapse]");
       if (collapseButton) {
         toggleTaskCollapse(collapseButton.dataset.toggleTaskCollapse);
@@ -8007,20 +7966,6 @@
       const editButton = event.target.closest("[data-edit-task]");
       if (editButton) {
         openTaskModal(editButton.dataset.editTask);
-        return;
-      }
-
-      const moveButton = event.target.closest("[data-move-task-list]");
-      if (moveButton) {
-        closeTaskRowMenus();
-        moveTaskToList(moveButton.dataset.moveTaskList, moveButton.dataset.listId);
-        return;
-      }
-
-      const deleteButton = event.target.closest("[data-delete-task]");
-      if (deleteButton) {
-        closeTaskRowMenus();
-        deleteTask(deleteButton.dataset.deleteTask);
         return;
       }
 
