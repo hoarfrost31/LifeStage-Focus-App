@@ -1137,7 +1137,8 @@
       padding: 0 12px;
       border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(18, 18, 18, 0.96);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(14px);
       color: var(--text);
       font: inherit;
       display: flex;
@@ -1179,10 +1180,10 @@
       gap: 10px;
       padding: 10px;
       border-radius: 18px;
-      background: rgba(20, 20, 20, 0.98);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.34);
-      backdrop-filter: blur(18px);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px);
     }
 
     .custom-dropdown.open .custom-dropdown-panel {
@@ -1230,14 +1231,14 @@
       align-items: center;
       padding: 10px 10px 10px 9px;
       border-radius: 14px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       transition: transform 0.14s ease;
     }
 
     .custom-dropdown-item.active {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.14);
     }
 
     .custom-dropdown-item.dragging {
@@ -1254,7 +1255,7 @@
       height: 28px;
       border: 0;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.08);
       color: rgba(255, 255, 255, 0.52);
       display: inline-flex;
       align-items: center;
@@ -1295,7 +1296,7 @@
     .custom-dropdown-item-action {
       width: 30px;
       padding: 0;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.08);
       color: rgba(255, 255, 255, 0.72);
       font-size: 0.9rem;
       line-height: 1;
@@ -5219,10 +5220,6 @@
           </div>
           ${phase.details?.trim() ? `<div class="phase-description">${escapeHtml(phase.details.trim())}</div>` : ""}
           <div class="phase-progress">
-            <div class="phase-progress-meta">
-              <span>${escapeHtml(phaseProgress.label)}</span>
-              <span>${escapeHtml(phaseProgress.countLabel)}</span>
-            </div>
             <div class="phase-progress-bar">
               <div class="phase-progress-fill" style="width:${Math.round(phaseProgress.ratio * 100)}%"></div>
             </div>
