@@ -9,12 +9,12 @@
   <meta name="apple-mobile-web-app-title" content="LifeStage Focus">
   <meta name="mobile-web-app-capable" content="yes">
   <script>
-    window.APP_ASSET_VERSION = "2026-04-05-10";
+    window.APP_ASSET_VERSION = "2026-04-05-11";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-10">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-10">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-10">
+  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-11">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-11">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-11">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -1301,11 +1301,7 @@
     }
 
     .phase-chip::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 6px;
-      background: var(--phase-color, #b6c0d0);
+      display: none;
     }
 
     .phase-chip:not(.active) {
@@ -1336,11 +1332,11 @@
       width: 12px;
       height: 12px;
       border-radius: 999px;
-      background: var(--phase-color, #b6c0d0);
+      background: rgba(255, 255, 255, 0.2);
     }
 
     .phase-chip:not(.active) .phase-dot {
-      background: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.16);
     }
 
     .phase-chip:not(.active) .phase-topline {
@@ -1437,6 +1433,10 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    .phase-settings-panel .color-select-row {
+      display: none;
     }
 
     .color-preview-dot {
@@ -2459,11 +2459,7 @@
     }
 
     .phase-read-card::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 6px;
-      background: var(--phase-color, #b6c0d0);
+      display: none;
     }
 
     .phase-read-title {
@@ -2486,6 +2482,114 @@
       font-size: 0.92rem;
       line-height: 1.55;
       white-space: pre-wrap;
+    }
+
+    .phase-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px 14px 18px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .phase-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .phase-detail-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .phase-detail-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .milestone-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(16, 16, 16, 0.82);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .milestone-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .milestone-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .milestone-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .milestone-task {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 9px;
+      border-radius: 14px;
+      background: rgba(12, 12, 12, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .milestone-task.done .milestone-task-title {
+      text-decoration: line-through;
+      color: rgba(255, 255, 255, 0.46);
+    }
+
+    .milestone-task-toggle {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .milestone-task-title {
+      font-size: 0.84rem;
+      color: var(--text);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .milestone-empty {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      background: rgba(18, 18, 18, 0.42);
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .danger-text {
+      color: var(--danger);
     }
 
     .form-row {
@@ -3065,6 +3169,17 @@
         </div>
       </div>
       <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
+      <div class="phase-detail panel-hidden" id="phase-detail">
+        <div class="phase-detail-header">
+          <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
+          <div class="phase-detail-actions">
+            <button class="ghost-button micro-button" id="phase-detail-edit" type="button">Edit</button>
+            <button class="primary-button micro-button" id="phase-detail-add-milestone" type="button">+ Milestone</button>
+          </div>
+        </div>
+        <h3 class="phase-detail-title" id="phase-detail-title"></h3>
+        <div class="phase-detail-body" id="phase-detail-body"></div>
+      </div>
     </section>
 
     <section class="card timeline-card">
@@ -3637,6 +3752,8 @@
       ],
       sections: [],
       tasks: [],
+      milestones: [],
+      milestoneTasks: [],
       savedTimelines: [],
       ui: {
         activeTab: "timeline",
@@ -3660,6 +3777,8 @@
         taskFormattingTrayOpen: false,
         now: new Date(),
         phaseToReveal: null,
+        phaseDetailId: null,
+        phaseDetailOpen: false,
         isCompactTimeline: false,
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
@@ -3716,6 +3835,12 @@
       phaseTabDropdownPanel: document.getElementById("phase-tab-dropdown-panel"),
       phaseTabDropdownList: document.getElementById("phase-tab-dropdown-list"),
       addPhaseTabButton: document.getElementById("add-phase-tab-button"),
+      phaseDetail: document.getElementById("phase-detail"),
+      phaseDetailTitle: document.getElementById("phase-detail-title"),
+      phaseDetailBody: document.getElementById("phase-detail-body"),
+      phaseDetailBack: document.getElementById("phase-detail-back"),
+      phaseDetailEdit: document.getElementById("phase-detail-edit"),
+      phaseDetailAddMilestone: document.getElementById("phase-detail-add-milestone"),
       timelineDropdown: document.getElementById("timeline-dropdown"),
       timelineDropdownTrigger: document.getElementById("timeline-dropdown-trigger"),
       timelineDropdownLabel: document.getElementById("timeline-dropdown-label"),
@@ -3975,6 +4100,10 @@
       elements.phaseTabDropdownList.addEventListener("pointercancel", handleHeaderDropdownDragEnd);
       elements.addPhaseTabButton.addEventListener("click", handleAddPhaseTab);
       elements.addPhaseButton.addEventListener("click", () => openPhaseModal());
+      elements.phaseDetailBack.addEventListener("click", closePhaseDetail);
+      elements.phaseDetailEdit.addEventListener("click", handlePhaseDetailEdit);
+      elements.phaseDetailAddMilestone.addEventListener("click", handleAddMilestone);
+      elements.phaseDetailBody.addEventListener("click", handlePhaseDetailBodyClick);
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
       elements.phaseActiveToggleButton.addEventListener("click", handlePhaseActiveToggle);
       elements.phaseSettingsButton.addEventListener("click", handlePhaseSettingsToggle);
@@ -4123,6 +4252,8 @@
       elements.addTaskButton.style.display = state.ui.activeTab === "tasks" ? "block" : "none";
       elements.addPhaseButton.style.display = state.ui.activeTab === "phases" ? "block" : "none";
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
+      elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
+      elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
       const isModalOpen =
         elements.phaseModalBackdrop.classList.contains("open")
         || elements.blockModalBackdrop.classList.contains("open")
@@ -4135,6 +4266,7 @@
       renderTasks();
       renderPhaseTabControls();
       renderPhaseRail();
+      renderPhaseDetail();
       renderBlockPhaseOptions();
       renderTaskBlockOptions();
       renderTaskListOptions();
@@ -4188,7 +4320,6 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = `phase-chip ${isActive ? "active" : ""}`;
-        button.style.setProperty("--phase-color", phase.color);
         button.innerHTML = `
           <div class="phase-topline">
             <span class="phase-dot" aria-hidden="true"></span>
@@ -4205,7 +4336,7 @@
           </div>
         `;
 
-        button.addEventListener("click", () => openPhaseModal(phase.id));
+        button.addEventListener("click", () => openPhaseDetail(phase.id));
 
         elements.phaseRail.appendChild(button);
 
@@ -4225,6 +4356,54 @@
         revealTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
         state.ui.phaseToReveal = null;
       }
+    }
+
+    function renderPhaseDetail() {
+      if (!state.ui.phaseDetailOpen || !state.ui.phaseDetailId) {
+        return;
+      }
+
+      const phase = getPhaseById(state.ui.phaseDetailId);
+      if (!phase) {
+        elements.phaseDetailTitle.textContent = "";
+        elements.phaseDetailBody.innerHTML = `<div class="milestone-empty">Phase not found.</div>`;
+        return;
+      }
+
+      elements.phaseDetailTitle.textContent = phase.name;
+      const milestones = getMilestonesForPhase(phase.id);
+      if (!milestones.length) {
+        elements.phaseDetailBody.innerHTML = `<div class="milestone-empty">No milestones yet. Add one to start tracking progress.</div>`;
+        return;
+      }
+
+      elements.phaseDetailBody.innerHTML = milestones.map((milestone) => {
+        const tasks = getMilestoneTasks(milestone.id);
+        const tasksMarkup = tasks.length
+          ? tasks.map((task) => `
+            <div class="milestone-task ${task.isDone ? "done" : ""}">
+              <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}"></button>
+              <div class="milestone-task-title">${escapeHtml(task.title)}</div>
+              <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}">Delete</button>
+            </div>
+          `).join("")
+          : `<div class="milestone-empty">No tasks yet.</div>`;
+
+        return `
+          <div class="milestone-card" data-milestone-id="${milestone.id}">
+            <div class="milestone-header">
+              <div class="milestone-title">${escapeHtml(milestone.title)}</div>
+              <div class="phase-detail-actions">
+                <button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>
+                <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone="${milestone.id}">Delete</button>
+              </div>
+            </div>
+            <div class="milestone-tasks">
+              ${tasksMarkup}
+            </div>
+          </div>
+        `;
+      }).join("");
     }
 
     function renderBlockPhaseOptions() {
@@ -4931,6 +5110,10 @@
     function setActiveTab(tab) {
       state.ui.activeTab = tab;
       state.ui.isTaskDrawerOpen = false;
+      if (tab !== "phases") {
+        state.ui.phaseDetailOpen = false;
+        state.ui.phaseDetailId = null;
+      }
       if (tab === "timeline" && !state.ui.isCompactTimeline) {
         state.ui.focusTimelineNowOnRender = true;
       }
@@ -6931,6 +7114,10 @@
       const remainingPhases = state.phases.filter((phase) => phase.id !== targetId);
       const removedBlockIds = new Set(state.blocks.filter((block) => block.phaseId === targetId).map((block) => block.id));
       state.phases = remainingPhases;
+      state.milestones = state.milestones.filter((milestone) => milestone.phaseId !== targetId);
+      state.milestoneTasks = state.milestoneTasks.filter((task) =>
+        state.milestones.some((milestone) => milestone.id === task.milestoneId)
+      );
 
       state.blocks = state.blocks.filter((block) => block.phaseId !== targetId);
       state.tasks = state.tasks.map((task) =>
@@ -7080,6 +7267,9 @@
         confirmLabel: "Delete",
         onConfirm: () => {
           state.phases = state.phases.filter((phase) => !removedPhaseIds.has(phase.id));
+          state.milestones = state.milestones.filter((milestone) => !removedPhaseIds.has(milestone.phaseId));
+          const remainingMilestoneIds = new Set(state.milestones.map((milestone) => milestone.id));
+          state.milestoneTasks = state.milestoneTasks.filter((task) => remainingMilestoneIds.has(task.milestoneId));
           state.blocks = state.blocks.filter((block) => !removedPhaseIds.has(block.phaseId));
           state.tasks = state.tasks.map((task) =>
             task.blockId && removedBlockIds.has(task.blockId) ? { ...task, blockId: null } : task
@@ -7553,6 +7743,129 @@
       openModal("phase");
     }
 
+    function openPhaseDetail(phaseId) {
+      const phase = getPhaseById(phaseId);
+      if (!phase) {
+        return;
+      }
+      state.ui.phaseDetailId = phaseId;
+      state.ui.phaseDetailOpen = true;
+      state.ui.activeTab = "phases";
+      render();
+    }
+
+    function closePhaseDetail() {
+      state.ui.phaseDetailOpen = false;
+      state.ui.phaseDetailId = null;
+      render();
+    }
+
+    function handlePhaseDetailEdit() {
+      const phaseId = state.ui.phaseDetailId;
+      if (!phaseId) {
+        return;
+      }
+      openPhaseModal(phaseId);
+    }
+
+    function handleAddMilestone() {
+      const phaseId = state.ui.phaseDetailId;
+      if (!phaseId) {
+        return;
+      }
+
+      openAppDialog({
+        mode: "prompt",
+        title: "New Milestone",
+        message: "Add a milestone for this phase.",
+        placeholder: "Milestone title",
+        confirmLabel: "Add Milestone",
+        onConfirm: (title) => {
+          const trimmed = String(title || "").trim();
+          if (!trimmed) {
+            return;
+          }
+          state.milestones.push({
+            id: crypto.randomUUID(),
+            phaseId,
+            title: trimmed
+          });
+          persistState({ immediate: true });
+          render();
+        }
+      });
+    }
+
+    function handlePhaseDetailBodyClick(event) {
+      const addTaskButton = event.target.closest("[data-add-milestone-task]");
+      if (addTaskButton) {
+        const milestoneId = addTaskButton.dataset.addMilestoneTask;
+        openAppDialog({
+          mode: "prompt",
+          title: "New Task",
+          message: "Add a task under this milestone.",
+          placeholder: "Task",
+          confirmLabel: "Add Task",
+          onConfirm: (title) => {
+            const trimmed = String(title || "").trim();
+            if (!trimmed) {
+              return;
+            }
+            state.milestoneTasks.push({
+              id: crypto.randomUUID(),
+              milestoneId,
+              title: trimmed,
+              isDone: false
+            });
+            persistState({ immediate: true });
+            render();
+          }
+        });
+        return;
+      }
+
+      const deleteMilestoneButton = event.target.closest("[data-delete-milestone]");
+      if (deleteMilestoneButton) {
+        const milestoneId = deleteMilestoneButton.dataset.deleteMilestone;
+        const milestone = state.milestones.find((item) => item.id === milestoneId);
+        if (!milestone) {
+          return;
+        }
+        openAppDialog({
+          mode: "confirm",
+          title: "Delete Milestone",
+          message: `Delete "${milestone.title}" and its tasks?`,
+          confirmLabel: "Delete",
+          onConfirm: () => {
+            state.milestones = state.milestones.filter((item) => item.id !== milestoneId);
+            state.milestoneTasks = state.milestoneTasks.filter((task) => task.milestoneId !== milestoneId);
+            persistState({ immediate: true });
+            render();
+          }
+        });
+        return;
+      }
+
+      const toggleTaskButton = event.target.closest("[data-toggle-milestone-task]");
+      if (toggleTaskButton) {
+        const taskId = toggleTaskButton.dataset.toggleMilestoneTask;
+        state.milestoneTasks = state.milestoneTasks.map((task) =>
+          task.id === taskId ? { ...task, isDone: !task.isDone } : task
+        );
+        persistState({ immediate: true });
+        render();
+        return;
+      }
+
+      const deleteTaskButton = event.target.closest("[data-delete-milestone-task]");
+      if (deleteTaskButton) {
+        const taskId = deleteTaskButton.dataset.deleteMilestoneTask;
+        state.milestoneTasks = state.milestoneTasks.filter((task) => task.id !== taskId);
+        persistState({ immediate: true });
+        render();
+      }
+    }
+
     function openPhaseReadModal(phaseId) {
       const phase = getPhaseById(phaseId);
       if (!phase) {
@@ -7812,6 +8125,14 @@
     function getPhasesForTab(tabId) {
       const normalizedTabId = normalizePhaseTabId(tabId);
       return state.phases.filter((phase) => normalizePhaseTabId(phase.tabId) === normalizedTabId);
+    }
+
+    function getMilestonesForPhase(phaseId) {
+      return state.milestones.filter((milestone) => milestone.phaseId === phaseId);
+    }
+
+    function getMilestoneTasks(milestoneId) {
+      return state.milestoneTasks.filter((task) => task.milestoneId === milestoneId);
     }
 
     function normalizePhaseTabId(tabId, phaseTabs = state.phaseTabs) {
@@ -8405,6 +8726,33 @@
         : [];
     }
 
+    function normalizeSavedMilestones(milestones, phases = state.phases) {
+      const validPhaseIds = new Set(phases.map((phase) => phase.id));
+      return Array.isArray(milestones)
+        ? milestones
+            .map((milestone, index) => ({
+              id: typeof milestone?.id === "string" && milestone.id ? milestone.id : crypto.randomUUID(),
+              phaseId: typeof milestone?.phaseId === "string" && validPhaseIds.has(milestone.phaseId) ? milestone.phaseId : "",
+              title: typeof milestone?.title === "string" && milestone.title.trim() ? milestone.title.trim() : `Milestone ${index + 1}`
+            }))
+            .filter((milestone) => milestone.phaseId && milestone.title)
+        : [];
+    }
+
+    function normalizeSavedMilestoneTasks(tasks, milestones = state.milestones) {
+      const validMilestoneIds = new Set(milestones.map((milestone) => milestone.id));
+      return Array.isArray(tasks)
+        ? tasks
+            .map((task, index) => ({
+              id: typeof task?.id === "string" && task.id ? task.id : crypto.randomUUID(),
+              milestoneId: typeof task?.milestoneId === "string" && validMilestoneIds.has(task.milestoneId) ? task.milestoneId : "",
+              title: typeof task?.title === "string" && task.title.trim() ? task.title.trim() : `Task ${index + 1}`,
+              isDone: Boolean(task?.isDone)
+            }))
+            .filter((task) => task.milestoneId && task.title)
+        : [];
+    }
+
     function buildDefaultTimelineName() {
       return `Timeline ${new Date().toLocaleDateString([], { month: "short", day: "numeric" })}`;
     }
@@ -8574,6 +8922,8 @@
         taskLists: state.taskLists,
         sections: state.sections,
         tasks: state.tasks,
+        milestones: state.milestones,
+        milestoneTasks: state.milestoneTasks,
         savedTimelines: state.savedTimelines,
         ui: {
           isCompactTimeline: state.ui.isCompactTimeline,
@@ -8596,6 +8946,8 @@
       const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists);
       const savedSections = normalizeSavedSections(parsed?.sections, savedTaskLists);
       const savedTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
+      const savedMilestones = normalizeSavedMilestones(parsed?.milestones, savedPhases);
+      const savedMilestoneTasks = normalizeSavedMilestoneTasks(parsed?.milestoneTasks, savedMilestones);
       const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
 
       state.phaseTabs = savedPhaseTabs;
@@ -8605,6 +8957,8 @@
       }));
       state.taskLists = savedTaskLists;
       state.sections = savedSections;
+      state.milestones = savedMilestones;
+      state.milestoneTasks = savedMilestoneTasks;
 
       const fallbackPhaseId = getActivePhases()[0]?.id || state.phases[0]?.id || "";
 
