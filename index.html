@@ -1291,13 +1291,16 @@
       width: 100%;
       padding: 15px;
       border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      background: var(--panel-soft);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 55%),
+        linear-gradient(145deg, rgba(26, 26, 26, 0.96), rgba(14, 14, 14, 0.98));
       color: var(--text);
       text-align: left;
       scroll-snap-align: start;
       position: relative;
       overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
     .panel-hidden {
@@ -1305,24 +1308,39 @@
     }
 
     .phase-chip::before {
-      display: none;
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.08), transparent 52%);
+      opacity: 0.7;
+      pointer-events: none;
     }
 
     .phase-chip:not(.active) {
-      background: rgba(20, 20, 20, 0.86);
-      border-color: rgba(255, 255, 255, 0.04);
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 55%),
+        rgba(18, 18, 18, 0.86);
+      border-color: rgba(255, 255, 255, 0.05);
       padding: 12px 15px;
     }
 
     .phase-chip:not(.active)::before {
-      background: rgba(255, 255, 255, 0.14);
+      opacity: 0.35;
     }
 
     .phase-chip.active {
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 16px 28px rgba(0, 0, 0, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .phase-chip:hover {
       border-color: rgba(255, 255, 255, 0.14);
       box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.03),
-        0 12px 24px rgba(0, 0, 0, 0.18);
+        0 16px 26px rgba(0, 0, 0, 0.2);
     }
 
     .phase-topline {
@@ -2523,12 +2541,15 @@
 
     .milestone-card {
       border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      background: rgba(16, 16, 16, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(140deg, rgba(22, 22, 22, 0.95), rgba(12, 12, 12, 0.98));
       padding: 12px;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
     }
 
     .milestone-header {
@@ -2542,6 +2563,57 @@
       font-size: 0.92rem;
       font-weight: 600;
       color: var(--text);
+    }
+
+    .milestone-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .milestone-progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.58);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .milestone-progress-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .milestone-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(255, 214, 143, 0.9), rgba(255, 255, 255, 0.72));
+      box-shadow: 0 0 10px rgba(255, 214, 143, 0.35);
+      transition: width 0.25s ease;
+    }
+
+    .milestone-progress-chip {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.68rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .milestone-goal-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .milestone-tasks {
@@ -4387,25 +4459,57 @@
 
       elements.phaseDetailBody.innerHTML = milestones.map((milestone) => {
         const tasks = getMilestoneTasks(milestone.id);
-        const tasksMarkup = tasks.length
-          ? tasks.map((task) => `
-            <div class="milestone-task ${task.isDone ? "done" : ""}">
-              <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}"></button>
-              <div class="milestone-task-title">${escapeHtml(task.title)}</div>
-              <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}">Delete</button>
-            </div>
-          `).join("")
-          : `<div class="milestone-empty">No tasks yet.</div>`;
+        const goalTarget = Math.max(0, Math.floor(Number(milestone.goalTarget || 0)));
+        const goalProgress = Math.max(0, Math.floor(Number(milestone.goalProgress || 0)));
+        const safeGoalProgress = goalTarget ? Math.min(goalProgress, goalTarget) : 0;
+        const isGoal = goalTarget > 0;
+        const completedCount = tasks.filter((task) => task.isDone).length;
+        const totalCount = tasks.length;
+        const progressValue = isGoal
+          ? (goalTarget ? safeGoalProgress / goalTarget : 0)
+          : (totalCount ? completedCount / totalCount : 0);
+        const progressLabel = isGoal
+          ? `${safeGoalProgress}/${goalTarget} logged`
+          : (totalCount ? `${completedCount}/${totalCount} done` : "No tasks yet");
+        const progressChip = isGoal ? `<span class="milestone-progress-chip">Goal ${goalTarget}</span>` : "";
+        const tasksMarkup = isGoal
+          ? `<div class="milestone-empty">Goal mode · log progress below.</div>`
+          : (tasks.length
+            ? tasks.map((task) => `
+              <div class="milestone-task ${task.isDone ? "done" : ""}">
+                <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}"></button>
+                <div class="milestone-task-title">${escapeHtml(task.title)}</div>
+                <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone-task="${task.id}">Delete</button>
+              </div>
+            `).join("")
+            : `<div class="milestone-empty">No tasks yet.</div>`);
 
         return `
           <div class="milestone-card" data-milestone-id="${milestone.id}">
             <div class="milestone-header">
               <div class="milestone-title">${escapeHtml(milestone.title)}</div>
               <div class="phase-detail-actions">
-                <button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>
+                ${isGoal ? "" : `<button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>`}
+                <button class="ghost-button micro-button" type="button" data-set-milestone-goal="${milestone.id}">${isGoal ? "Edit Goal" : "Set Goal"}</button>
+                ${isGoal ? `<button class="ghost-button micro-button" type="button" data-clear-milestone-goal="${milestone.id}">Clear</button>` : ""}
                 <button class="ghost-button micro-button danger-text" type="button" data-delete-milestone="${milestone.id}">Delete</button>
               </div>
             </div>
+            <div class="milestone-progress">
+              <div class="milestone-progress-meta">
+                <span>${escapeHtml(progressLabel)}</span>
+                ${progressChip}
+              </div>
+              <div class="milestone-progress-bar">
+                <div class="milestone-progress-fill" style="width:${Math.round(progressValue * 100)}%"></div>
+              </div>
+            </div>
+            ${isGoal ? `
+              <div class="milestone-goal-controls">
+                <button class="ghost-button micro-button" type="button" data-log-milestone-goal="${milestone.id}">+1</button>
+                <button class="ghost-button micro-button" type="button" data-undo-milestone-goal="${milestone.id}">-1</button>
+              </div>
+            ` : ""}
             <div class="milestone-tasks">
               ${tasksMarkup}
             </div>
@@ -7798,7 +7902,9 @@
           state.milestones.push({
             id: crypto.randomUUID(),
             phaseId,
-            title: trimmed
+            title: trimmed,
+            goalTarget: 0,
+            goalProgress: 0
           });
           persistState({ immediate: true });
           render();
@@ -7807,6 +7913,85 @@
     }
 
     function handlePhaseDetailBodyClick(event) {
+      const setGoalButton = event.target.closest("[data-set-milestone-goal]");
+      if (setGoalButton) {
+        const milestoneId = setGoalButton.dataset.setMilestoneGoal;
+        const milestone = state.milestones.find((item) => item.id === milestoneId);
+        if (!milestone) {
+          return;
+        }
+        openAppDialog({
+          mode: "prompt",
+          title: "Set Goal",
+          message: "How many times should this be completed?",
+          placeholder: "10",
+          confirmLabel: "Save Goal",
+          onConfirm: (value) => {
+            const target = Math.max(0, Math.floor(Number(value)));
+            if (!target) {
+              return;
+            }
+            state.milestones = state.milestones.map((item) =>
+              item.id === milestoneId
+                ? { ...item, goalTarget: target, goalProgress: Math.min(item.goalProgress || 0, target) }
+                : item
+            );
+            persistState({ immediate: true });
+            render();
+          }
+        });
+        return;
+      }
+
+      const clearGoalButton = event.target.closest("[data-clear-milestone-goal]");
+      if (clearGoalButton) {
+        const milestoneId = clearGoalButton.dataset.clearMilestoneGoal;
+        state.milestones = state.milestones.map((item) =>
+          item.id === milestoneId ? { ...item, goalTarget: 0, goalProgress: 0 } : item
+        );
+        persistState({ immediate: true });
+        render();
+        return;
+      }
+
+      const logGoalButton = event.target.closest("[data-log-milestone-goal]");
+      if (logGoalButton) {
+        const milestoneId = logGoalButton.dataset.logMilestoneGoal;
+        state.milestones = state.milestones.map((item) => {
+          if (item.id !== milestoneId) {
+            return item;
+          }
+          const target = Math.max(0, Math.floor(Number(item.goalTarget || 0)));
+          if (!target) {
+            return item;
+          }
+          const nextProgress = Math.min(target, Math.max(0, Math.floor(Number(item.goalProgress || 0))) + 1);
+          return { ...item, goalProgress: nextProgress };
+        });
+        persistState({ immediate: true });
+        render();
+        return;
+      }
+
+      const undoGoalButton = event.target.closest("[data-undo-milestone-goal]");
+      if (undoGoalButton) {
+        const milestoneId = undoGoalButton.dataset.undoMilestoneGoal;
+        state.milestones = state.milestones.map((item) => {
+          if (item.id !== milestoneId) {
+            return item;
+          }
+          const target = Math.max(0, Math.floor(Number(item.goalTarget || 0)));
+          if (!target) {
+            return item;
+          }
+          const nextProgress = Math.max(0, Math.floor(Number(item.goalProgress || 0)) - 1);
+          return { ...item, goalProgress: nextProgress };
+        });
+        persistState({ immediate: true });
+        render();
+        return;
+      }
+
       const addTaskButton = event.target.closest("[data-add-milestone-task]");
       if (addTaskButton) {
         const milestoneId = addTaskButton.dataset.addMilestoneTask;
@@ -8769,7 +8954,9 @@
             .map((milestone, index) => ({
               id: typeof milestone?.id === "string" && milestone.id ? milestone.id : crypto.randomUUID(),
               phaseId: typeof milestone?.phaseId === "string" && validPhaseIds.has(milestone.phaseId) ? milestone.phaseId : "",
-              title: typeof milestone?.title === "string" && milestone.title.trim() ? milestone.title.trim() : `Milestone ${index + 1}`
+              title: typeof milestone?.title === "string" && milestone.title.trim() ? milestone.title.trim() : `Milestone ${index + 1}`,
+              goalTarget: Math.max(0, Math.floor(Number(milestone?.goalTarget || 0))),
+              goalProgress: Math.max(0, Math.floor(Number(milestone?.goalProgress || 0)))
             }))
             .filter((milestone) => milestone.phaseId && milestone.title)
         : [];
