@@ -7765,7 +7765,7 @@
       }
 
       if (elements.taskModalBackdrop.contains(event.target) && !elements.taskEditZone.contains(event.target) && !elements.taskRichToolbar.contains(event.target)) {
-        commitTaskModalChanges();
+        commitTaskModalChangesWithKind();
         setTaskModalEditing(false);
       }
     }
@@ -7899,6 +7899,14 @@
       );
       persistState({ immediate: true });
       render();
+    }
+
+    function commitTaskModalChangesWithKind() {
+      if (state.ui.taskModalKind === "milestone") {
+        commitMilestoneTaskFromTaskModal();
+      } else {
+        commitTaskModalChanges();
+      }
     }
 
     function handleTaskSheetTouchStart(event) {
@@ -8817,11 +8825,7 @@
 
     function handleTaskSubmit(event) {
       event.preventDefault();
-      if (state.ui.taskModalKind === "milestone") {
-        commitMilestoneTaskFromTaskModal();
-      } else {
-        commitTaskModalChanges();
-      }
+      commitTaskModalChangesWithKind();
       setTaskModalEditing(false);
     }
 
@@ -10286,7 +10290,7 @@
         }
         isTaskModalClosing = true;
         if (!options.skipCommit) {
-          commitTaskModalChanges();
+          commitTaskModalChangesWithKind();
         }
         elements.taskModalBackdrop.classList.add("closing");
         elements.taskModalBackdrop.classList.remove("active", "dragging");
@@ -10330,9 +10334,10 @@
         closeInlineSubtaskComposer();
         state.ui.editingTaskId = null;
         state.ui.taskModalParentId = null;
-      state.ui.taskModalIsEditing = false;
-      state.ui.taskModalSheetState = "full";
-      state.ui.taskFormattingTrayOpen = false;
+        state.ui.taskModalIsEditing = false;
+        state.ui.taskModalSheetState = "full";
+        state.ui.taskFormattingTrayOpen = false;
+        state.ui.taskModalKind = "task";
       state.ui.taskModalKind = "task";
       } else {
         elements.blockForm.reset();
