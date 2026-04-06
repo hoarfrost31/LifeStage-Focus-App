@@ -3024,6 +3024,12 @@
       gap: 10px;
     }
 
+    .phase-detail-body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
     .phase-detail-title {
       font-size: 1.05rem;
       font-weight: 600;
@@ -3053,6 +3059,14 @@
       gap: 10px;
       box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
       backdrop-filter: blur(16px);
+    }
+
+    .milestone-card.dragging {
+      opacity: 0.92;
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 4;
+      pointer-events: none;
     }
 
     .milestone-header {
@@ -3112,6 +3126,29 @@
     .milestone-menu-wrap {
       position: relative;
       flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .milestone-drag-handle {
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+      cursor: grab;
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .milestone-drag-handle svg {
+      width: 14px;
+      height: 14px;
+      display: block;
     }
 
     .milestone-menu-button {
@@ -3363,13 +3400,14 @@
 
     .milestone-task {
       display: grid;
-      grid-template-columns: auto 1fr auto;
+      grid-template-columns: auto 1fr;
       gap: 8px;
       align-items: center;
       padding: 8px 9px;
       border-radius: 14px;
-      background: rgba(12, 12, 12, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      cursor: pointer;
     }
 
     .milestone-task.done .milestone-task-title {
@@ -3407,6 +3445,11 @@
       transform: scale(0.96);
     }
 
+    .milestone-task.done .milestone-task-toggle {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
     .milestone-task.done {
       opacity: 0.6;
     }
@@ -3419,26 +3462,11 @@
     }
 
     .milestone-task-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: none;
     }
 
     .milestone-task-icon {
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      border-radius: 10px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .milestone-task-icon svg {
-      width: 14px;
-      height: 14px;
-      display: block;
+      display: none;
     }
 
     .milestone-empty {
@@ -3453,6 +3481,51 @@
 
     .danger-text {
       color: var(--danger);
+    }
+
+    .milestone-task-add-inline {
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      padding: 10px 12px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.82rem;
+      background: transparent;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .milestone-task-add-inline:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .milestone-task-composer {
+      display: none;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .milestone-card.composer-open .milestone-task-composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+    }
+
+    .milestone-task-input {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font: inherit;
+      outline: none;
+    }
+
+    .milestone-task-add {
+      min-width: 70px;
+      height: 38px;
+      border-radius: 14px;
+      padding: 0 12px;
     }
 
     .form-row {
@@ -4259,6 +4332,38 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="milestone-task-modal-backdrop" aria-hidden="true">
+    <section class="modal" aria-labelledby="milestone-task-modal-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="milestone-task-modal-title">Milestone Task</h3>
+        </div>
+        <div class="task-menu-wrap">
+          <button class="task-menu-button" id="milestone-task-menu-button" type="button" aria-label="Milestone task menu" aria-expanded="false">
+            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="3.2" r="1.2"/>
+              <circle cx="8" cy="8" r="1.2"/>
+              <circle cx="8" cy="12.8" r="1.2"/>
+            </svg>
+          </button>
+          <div class="task-context-menu" id="milestone-task-context-menu" aria-hidden="true">
+            <button type="button" id="milestone-task-menu-close-button">Close</button>
+            <button class="danger" type="button" id="milestone-task-menu-delete-button">Delete task</button>
+          </div>
+        </div>
+      </div>
+      <form id="milestone-task-form">
+        <div class="form-grid">
+          <input id="milestone-task-title-input" type="text" maxlength="120" placeholder="Task">
+        </div>
+        <div class="modal-actions">
+          <button class="ghost-button" id="milestone-task-close-button" type="button">Close</button>
+          <button class="primary-button" id="milestone-task-save-button" type="submit">Save</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="block-modal-backdrop" aria-hidden="true">
     <section class="modal" aria-labelledby="block-modal-title">
       <div class="modal-header">
@@ -4677,6 +4782,8 @@
         isCompactTimeline: false,
         activeTheme: "default",
         todayCollapsedByBlock: {},
+        milestoneComposerOpenId: "",
+        editingMilestoneTaskId: null,
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
@@ -4691,9 +4798,11 @@
     let activeTaskDrag = null;
     let activeLinkedTaskDrag = null;
     let activeBlockDrag = null;
+    let activeMilestoneDrag = null;
     let activeDrawerGesture = null;
     let suppressClickUntil = 0;
     let taskModalCloseTimer = null;
+    let milestoneTaskModalCloseTimer = null;
     let blockModalCloseTimer = null;
     let phaseModalCloseTimer = null;
     let activeTaskSheetDrag = null;
@@ -4792,6 +4901,15 @@
       appDialogCloseButton: document.getElementById("app-dialog-close-button"),
       appDialogCancelButton: document.getElementById("app-dialog-cancel-button"),
       appDialogConfirmButton: document.getElementById("app-dialog-confirm-button"),
+      milestoneTaskModalBackdrop: document.getElementById("milestone-task-modal-backdrop"),
+      milestoneTaskForm: document.getElementById("milestone-task-form"),
+      milestoneTaskTitleInput: document.getElementById("milestone-task-title-input"),
+      milestoneTaskMenuButton: document.getElementById("milestone-task-menu-button"),
+      milestoneTaskContextMenu: document.getElementById("milestone-task-context-menu"),
+      milestoneTaskMenuCloseButton: document.getElementById("milestone-task-menu-close-button"),
+      milestoneTaskMenuDeleteButton: document.getElementById("milestone-task-menu-delete-button"),
+      milestoneTaskCloseButton: document.getElementById("milestone-task-close-button"),
+      milestoneTaskSaveButton: document.getElementById("milestone-task-save-button"),
       blockForm: document.getElementById("block-form"),
       blockId: document.getElementById("block-id"),
       blockTitle: document.getElementById("block-title"),
@@ -5018,6 +5136,17 @@
       elements.appDialogConfirmButton.addEventListener("click", confirmAppDialog);
       elements.appDialogBackdrop.addEventListener("click", handleAppDialogBackdropClick);
       elements.appDialogInput.addEventListener("keydown", handleAppDialogInputKeydown);
+      elements.milestoneTaskMenuButton.addEventListener("click", handleMilestoneTaskMenuToggle);
+      elements.milestoneTaskMenuCloseButton.addEventListener("click", () => setMilestoneTaskMenuOpen(false));
+      elements.milestoneTaskMenuDeleteButton.addEventListener("click", handleMilestoneTaskDelete);
+      elements.milestoneTaskCloseButton.addEventListener("click", () => closeModal("milestone-task"));
+      elements.milestoneTaskForm.addEventListener("submit", handleMilestoneTaskFormSubmit);
+      elements.milestoneTaskModalBackdrop.addEventListener("click", handleMilestoneTaskModalBackdropClick);
+      elements.phaseDetailBody.addEventListener("keydown", handleMilestoneTaskInputKeydown);
+      elements.phaseDetailBody.addEventListener("pointerdown", handleMilestoneDragStart);
+      elements.phaseDetailBody.addEventListener("pointermove", handleMilestoneDragMove);
+      elements.phaseDetailBody.addEventListener("pointerup", handleMilestoneDragEnd);
+      elements.phaseDetailBody.addEventListener("pointercancel", handleMilestoneDragEnd);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.blockNotesEditor.addEventListener("input", handleBlockNotesEditorInput);
       elements.blockRichToolbar.addEventListener("click", handleBlockToolbarClick);
@@ -5371,33 +5500,22 @@
         const tasksMarkup = isGoal
           ? `<div class="milestone-empty">Goal mode · log progress below.</div>`
           : (tasks.length
-            ? tasks.map((task) => `
-              <div class="milestone-task ${task.isDone ? "done" : ""}">
+            ? `${tasks.map((task) => `
+              <div class="milestone-task ${task.isDone ? "done" : ""}" data-open-milestone-task="${task.id}">
                 <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
                   <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
                 <div class="milestone-task-title">${escapeHtml(task.title)}</div>
-                <div class="milestone-task-actions">
-                  <button class="ghost-button milestone-task-icon" type="button" data-edit-milestone-task="${task.id}" aria-label="Edit task">
-                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M3 11.6v1.4h1.4l6.7-6.7-1.4-1.4L3 11.6z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M9.7 4.3l1.4 1.4 1.2-1.2a1 1 0 0 0 0-1.4l-.1-.1a1 1 0 0 0-1.4 0l-1.1 1.3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                  <button class="ghost-button milestone-task-icon danger-text" type="button" data-delete-milestone-task="${task.id}" aria-label="Delete task">
-                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4.5 5.3v6.2M8 5.3v6.2M11.5 5.3v6.2M3.6 3.9h8.8M6.2 3.9V2.8h3.6v1.1M4 3.9h8l-.5 8.4a1.2 1.2 0 0 1-1.2 1.1H5.7a1.2 1.2 0 0 1-1.2-1.1L4 3.9Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
               </div>
-            `).join("")
-            : `<div class="milestone-empty">No tasks yet.</div>`);
+            `).join("")}
+            <button class="milestone-task-add-inline" type="button" data-add-milestone-task-inline="${milestone.id}">+ Add task</button>`
+            : `<div class="milestone-empty" data-add-milestone-task-inline="${milestone.id}">+ Add task</div>`);
+        const safeTasksMarkup = tasksMarkup.replace(/\u00C2\u00B7/g, "-");
 
         return `
-          <div class="milestone-card ${isCollapsed ? "is-collapsed" : ""}" data-milestone-id="${milestone.id}">
+          <div class="milestone-card ${isCollapsed ? "is-collapsed" : ""} ${state.ui.milestoneComposerOpenId === milestone.id ? "composer-open" : ""}" data-milestone-id="${milestone.id}">
             <div class="milestone-header">
               <button class="milestone-header-main" type="button" data-toggle-milestone-collapse="${milestone.id}" aria-label="${isCollapsed ? "Expand milestone" : "Collapse milestone"}">
                 <span class="milestone-toggle" aria-hidden="true">
@@ -5408,6 +5526,11 @@
                 <span class="milestone-title">${escapeHtml(milestone.title)}</span>
               </button>
               <div class="milestone-menu-wrap">
+                <button class="ghost-button milestone-drag-handle" type="button" data-drag-milestone-handle="${milestone.id}" aria-label="Reorder milestone">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 5h8M4 8h8M4 11h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </button>
                 <button class="ghost-button milestone-menu-button" type="button" data-toggle-milestone-menu="${milestone.id}" aria-label="Milestone options" aria-expanded="false">
                   <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="8" cy="3.2" r="1.2"/>
@@ -5443,8 +5566,13 @@
                 </div>
               ` : ""}
               <div class="milestone-tasks">
-                ${tasksMarkup}
-                ${isGoal ? "" : `<button class="ghost-button micro-button" type="button" data-add-milestone-task="${milestone.id}">+ Task</button>`}
+                ${safeTasksMarkup}
+                ${isGoal ? "" : `
+                  <div class="milestone-task-composer">
+                    <input class="milestone-task-input" type="text" maxlength="120" placeholder="Add task..." data-milestone-task-input="${milestone.id}">
+                    <button class="primary-button milestone-task-add" type="button" data-add-milestone-task-confirm="${milestone.id}">Add</button>
+                  </div>
+                `}
               </div>
             </div>
           </div>
@@ -9100,6 +9228,20 @@
         return;
       }
 
+      const addInlineTrigger = event.target.closest("[data-add-milestone-task-inline]");
+      if (addInlineTrigger) {
+        const milestoneId = addInlineTrigger.dataset.addMilestoneTaskInline;
+        openInlineMilestoneTaskComposer(milestoneId);
+        return;
+      }
+
+      const addConfirm = event.target.closest("[data-add-milestone-task-confirm]");
+      if (addConfirm) {
+        const milestoneId = addConfirm.dataset.addMilestoneTaskConfirm;
+        commitInlineMilestoneTask(milestoneId);
+        return;
+      }
+
       const setGoalButton = event.target.closest("[data-set-milestone-goal]");
       if (setGoalButton) {
         const milestoneId = setGoalButton.dataset.setMilestoneGoal;
@@ -9210,27 +9352,7 @@
       const addTaskButton = event.target.closest("[data-add-milestone-task]");
       if (addTaskButton) {
         const milestoneId = addTaskButton.dataset.addMilestoneTask;
-        openAppDialog({
-          mode: "prompt",
-          title: "New Task",
-          message: "Add a task under this milestone.",
-          placeholder: "Task",
-          confirmLabel: "Add Task",
-          onConfirm: (title) => {
-            const trimmed = String(title || "").trim();
-            if (!trimmed) {
-              return;
-            }
-            state.milestoneTasks.push({
-              id: crypto.randomUUID(),
-              milestoneId,
-              title: trimmed,
-              isDone: false
-            });
-            persistState({ immediate: true });
-            render();
-          }
-        });
+        openInlineMilestoneTaskComposer(milestoneId);
         return;
       }
 
@@ -9269,41 +9391,214 @@
         return;
       }
 
-      const deleteTaskButton = event.target.closest("[data-delete-milestone-task]");
-      if (deleteTaskButton) {
-        const taskId = deleteTaskButton.dataset.deleteMilestoneTask;
-        state.milestoneTasks = state.milestoneTasks.filter((task) => task.id !== taskId);
-        persistState({ immediate: true });
-        render();
+      const milestoneTask = event.target.closest("[data-open-milestone-task]");
+      if (milestoneTask && !event.target.closest("[data-toggle-milestone-task]")) {
+        const taskId = milestoneTask.dataset.openMilestoneTask;
+        openMilestoneTaskModal(taskId);
+      }
+    }
+
+    function handleMilestoneTaskInputKeydown(event) {
+      const input = event.target.closest("[data-milestone-task-input]");
+      if (!input) {
         return;
       }
-
-      const editTaskButton = event.target.closest("[data-edit-milestone-task]");
-      if (editTaskButton) {
-        const taskId = editTaskButton.dataset.editMilestoneTask;
-        const task = state.milestoneTasks.find((item) => item.id === taskId);
-        if (!task) {
-          return;
-        }
-        openAppDialog({
-          mode: "prompt",
-          title: "Edit Task",
-          message: "Update this milestone task.",
-          placeholder: task.title,
-          confirmLabel: "Save",
-          onConfirm: (title) => {
-            const trimmed = String(title || "").trim();
-            if (!trimmed) {
-              return;
-            }
-            state.milestoneTasks = state.milestoneTasks.map((item) =>
-              item.id === taskId ? { ...item, title: trimmed } : item
-            );
-            persistState({ immediate: true });
-            render();
-          }
-        });
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const milestoneId = input.dataset.milestoneTaskInput;
+        commitInlineMilestoneTask(milestoneId);
       }
+    }
+
+    function openInlineMilestoneTaskComposer(milestoneId) {
+      if (!milestoneId) {
+        return;
+      }
+      state.ui.milestoneComposerOpenId = milestoneId;
+      const card = elements.phaseDetailBody.querySelector(`[data-milestone-id="${milestoneId}"]`);
+      if (card) {
+        card.classList.add("composer-open");
+        const input = card.querySelector(`[data-milestone-task-input="${milestoneId}"]`);
+        input?.focus();
+      }
+    }
+
+    function commitInlineMilestoneTask(milestoneId) {
+      const card = elements.phaseDetailBody.querySelector(`[data-milestone-id="${milestoneId}"]`);
+      if (!card) {
+        return;
+      }
+      const input = card.querySelector(`[data-milestone-task-input="${milestoneId}"]`);
+      const value = input?.value?.trim() || "";
+      if (!value) {
+        return;
+      }
+      state.milestoneTasks.push({
+        id: crypto.randomUUID(),
+        milestoneId,
+        title: value,
+        isDone: false
+      });
+      state.ui.milestoneComposerOpenId = "";
+      persistState({ immediate: true });
+      render();
+    }
+
+    function openMilestoneTaskModal(taskId) {
+      const task = state.milestoneTasks.find((item) => item.id === taskId);
+      if (!task) {
+        return;
+      }
+      state.ui.editingMilestoneTaskId = taskId;
+      elements.milestoneTaskTitleInput.value = task.title;
+      setMilestoneTaskMenuOpen(false);
+      openModal("milestone-task");
+    }
+
+    function commitMilestoneTaskModalChanges() {
+      const taskId = state.ui.editingMilestoneTaskId;
+      if (!taskId) {
+        return;
+      }
+      const title = elements.milestoneTaskTitleInput.value.trim();
+      if (!title) {
+        return;
+      }
+      state.milestoneTasks = state.milestoneTasks.map((item) =>
+        item.id === taskId ? { ...item, title } : item
+      );
+      persistState({ immediate: true });
+      render();
+    }
+
+    function setMilestoneTaskMenuOpen(isOpen) {
+      elements.milestoneTaskContextMenu.classList.toggle("open", isOpen);
+      elements.milestoneTaskContextMenu.setAttribute("aria-hidden", String(!isOpen));
+      elements.milestoneTaskMenuButton.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function handleMilestoneTaskMenuToggle(event) {
+      event.stopPropagation();
+      setMilestoneTaskMenuOpen(!elements.milestoneTaskContextMenu.classList.contains("open"));
+    }
+
+    function handleMilestoneTaskDelete() {
+      const taskId = state.ui.editingMilestoneTaskId;
+      const task = state.milestoneTasks.find((item) => item.id === taskId);
+      if (!task) {
+        return;
+      }
+      openAppDialog({
+        mode: "confirm",
+        title: "Delete Task",
+        message: `Delete "${task.title}"?`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          state.milestoneTasks = state.milestoneTasks.filter((item) => item.id !== taskId);
+          persistState({ immediate: true });
+          render();
+          closeModal("milestone-task", { skipCommit: true });
+        }
+      });
+    }
+
+    function handleMilestoneTaskFormSubmit(event) {
+      event.preventDefault();
+      commitMilestoneTaskModalChanges();
+      closeModal("milestone-task", { skipCommit: true });
+    }
+
+    function handleMilestoneTaskModalBackdropClick(event) {
+      if (event.target === elements.milestoneTaskModalBackdrop) {
+        closeModal("milestone-task");
+      }
+    }
+
+    function handleMilestoneDragStart(event) {
+      const handle = event.target.closest("[data-drag-milestone-handle]");
+      if (!handle) {
+        return;
+      }
+      const card = handle.closest(".milestone-card");
+      if (!card) {
+        return;
+      }
+      activeMilestoneDrag = {
+        milestoneId: handle.dataset.dragMilestoneHandle,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        card
+      };
+      card.setPointerCapture(event.pointerId);
+    }
+
+    function handleMilestoneDragMove(event) {
+      if (!activeMilestoneDrag || activeMilestoneDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      activeMilestoneDrag.deltaY = event.clientY - activeMilestoneDrag.startY;
+      if (!activeMilestoneDrag.moved && Math.abs(activeMilestoneDrag.deltaY) < 8) {
+        return;
+      }
+      activeMilestoneDrag.moved = true;
+      activeMilestoneDrag.card.classList.add("dragging");
+      activeMilestoneDrag.card.style.transform = `translateY(${activeMilestoneDrag.deltaY}px)`;
+      event.preventDefault();
+    }
+
+    function handleMilestoneDragEnd(event) {
+      if (!activeMilestoneDrag || activeMilestoneDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      const { milestoneId, card, moved } = activeMilestoneDrag;
+      card.style.transform = "";
+      card.classList.remove("dragging");
+      card.releasePointerCapture(event.pointerId);
+      if (moved) {
+        const targetIndex = getMilestoneDropIndex(event.clientY, milestoneId);
+        reorderMilestoneInPhase(milestoneId, targetIndex);
+      }
+      activeMilestoneDrag = null;
+    }
+
+    function getMilestoneDropIndex(clientY, sourceMilestoneId) {
+      const cards = [...elements.phaseDetailBody.querySelectorAll(".milestone-card")]
+        .filter((item) => item.dataset.milestoneId !== sourceMilestoneId);
+      if (!cards.length) {
+        return 0;
+      }
+      for (let index = 0; index < cards.length; index += 1) {
+        const rect = cards[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
+        }
+      }
+      return cards.length;
+    }
+
+    function reorderMilestoneInPhase(milestoneId, targetIndex) {
+      const milestone = state.milestones.find((item) => item.id === milestoneId);
+      if (!milestone) {
+        return;
+      }
+      const phaseId = milestone.phaseId;
+      const phaseMilestones = state.milestones.filter((item) => item.phaseId === phaseId);
+      const sourceIndex = phaseMilestones.findIndex((item) => item.id === milestoneId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const nextPhaseMilestones = [...phaseMilestones];
+      const [moved] = nextPhaseMilestones.splice(sourceIndex, 1);
+      const safeIndex = Math.max(0, Math.min(targetIndex, nextPhaseMilestones.length));
+      nextPhaseMilestones.splice(safeIndex, 0, moved);
+      const iterator = nextPhaseMilestones[Symbol.iterator]();
+      state.milestones = state.milestones.map((item) =>
+        item.phaseId === phaseId ? iterator.next().value : item
+      );
+      persistState({ immediate: true });
+      render();
     }
 
     function openPhaseReadModal(phaseId) {
@@ -9424,7 +9719,9 @@
           ? elements.phaseReadModalBackdrop
           : type === "task"
             ? elements.taskModalBackdrop
-            : elements.blockModalBackdrop;
+            : type === "milestone-task"
+              ? elements.milestoneTaskModalBackdrop
+              : elements.blockModalBackdrop;
       backdrop.classList.add("open");
       backdrop.setAttribute("aria-hidden", "false");
       if (type === "phase") {
@@ -9446,6 +9743,12 @@
         requestAnimationFrame(() => {
           elements.taskModalBackdrop.classList.add("active");
         });
+      } else if (type === "milestone-task") {
+        window.clearTimeout(milestoneTaskModalCloseTimer);
+        elements.milestoneTaskModalBackdrop.classList.remove("closing");
+        requestAnimationFrame(() => {
+          elements.milestoneTaskModalBackdrop.classList.add("active");
+        });
       }
     }
 
@@ -9456,7 +9759,9 @@
           ? elements.phaseReadModalBackdrop
           : type === "task"
             ? elements.taskModalBackdrop
-            : elements.blockModalBackdrop;
+            : type === "milestone-task"
+              ? elements.milestoneTaskModalBackdrop
+              : elements.blockModalBackdrop;
       if (type === "phase") {
         if (!options.skipCommit) {
           commitPhaseModalChanges();
@@ -9499,6 +9804,19 @@
           backdrop.setAttribute("aria-hidden", "true");
           isTaskModalClosing = false;
         }, 300);
+      } else if (type === "milestone-task") {
+        if (!options.skipCommit) {
+          commitMilestoneTaskModalChanges();
+        }
+        elements.milestoneTaskModalBackdrop.classList.add("closing");
+        elements.milestoneTaskModalBackdrop.classList.remove("active");
+        milestoneTaskModalCloseTimer = window.setTimeout(() => {
+          backdrop.classList.remove("open", "closing");
+          backdrop.setAttribute("aria-hidden", "true");
+          setMilestoneTaskMenuOpen(false);
+          elements.milestoneTaskForm.reset();
+          state.ui.editingMilestoneTaskId = null;
+        }, 300);
       } else {
         backdrop.classList.remove("open");
         backdrop.setAttribute("aria-hidden", "true");
@@ -9540,6 +9858,7 @@
       if (backdropId === "phase-read-modal-backdrop") return "phase-read";
       if (backdropId === "block-modal-backdrop") return "block";
       if (backdropId === "task-modal-backdrop") return "task";
+      if (backdropId === "milestone-task-modal-backdrop") return "milestone-task";
       return null;
     }
 
@@ -10479,6 +10798,8 @@
         ? parsed.ui.todayCollapsedByBlock
         : {};
       state.ui.openHeaderDropdown = "";
+      state.ui.milestoneComposerOpenId = "";
+      state.ui.editingMilestoneTaskId = null;
     }
 
     function initializeFirebase() {
