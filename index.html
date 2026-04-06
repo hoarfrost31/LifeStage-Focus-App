@@ -6936,10 +6936,6 @@
     function setActiveTab(tab) {
       state.ui.activeTab = tab;
       state.ui.isTaskDrawerOpen = false;
-      if (tab !== "phases") {
-        state.ui.phaseDetailOpen = false;
-        state.ui.phaseDetailId = null;
-      }
       if (tab === "timeline" && !state.ui.isCompactTimeline) {
         state.ui.focusTimelineNowOnRender = true;
       }
