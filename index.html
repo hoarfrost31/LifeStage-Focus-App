@@ -4758,7 +4758,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
@@ -11048,7 +11048,6 @@
           if (data?.payload) {
             const localPayload = readLocalPayloadForMigration();
             if (!shouldPreferCloudPayload(localPayload, data.payload) && comparePayloadRecency(localPayload, data.payload) > 0) {
-              await maybeBackupCloudBeforeOverwrite(data.payload, localPayload);
               await savePayloadToShared(localPayload);
               state.ui.lastSyncedAt = localPayload.updatedAt || null;
             } else {
@@ -11146,7 +11145,7 @@
 
           const localPayload = readLocalPayloadForMigration();
           if (!shouldPreferCloudPayload(localPayload, data.payload) && comparePayloadRecency(localPayload, data.payload) > 0) {
-            void maybeBackupCloudBeforeOverwrite(data.payload, localPayload).then(() => savePayloadToShared(localPayload));
+            void savePayloadToShared(localPayload);
             state.ui.lastSyncedAt = localPayload.updatedAt || null;
             state.ui.syncStatus = "Synced";
             renderSyncStatus();
@@ -11242,76 +11241,11 @@
       return getPayloadUpdatedAt(leftPayload) - getPayloadUpdatedAt(rightPayload);
     }
 
-    function getPayloadCounts(payload) {
-      return {
-        phases: Array.isArray(payload?.phases) ? payload.phases.length : 0,
-        blocks: Array.isArray(payload?.blocks) ? payload.blocks.length : 0,
-        tasks: Array.isArray(payload?.tasks) ? payload.tasks.length : 0,
-        taskLists: Array.isArray(payload?.taskLists) ? payload.taskLists.length : 0,
-        milestones: Array.isArray(payload?.milestones) ? payload.milestones.length : 0,
-        milestoneTasks: Array.isArray(payload?.milestoneTasks) ? payload.milestoneTasks.length : 0,
-        savedTimelines: Array.isArray(payload?.savedTimelines) ? payload.savedTimelines.length : 0
-      };
-    }
-
-    function getPayloadWeight(payload) {
-      const counts = getPayloadCounts(payload);
-      return Object.values(counts).reduce((sum, value) => sum + (Number(value) || 0), 0);
-    }
-
     function shouldPreferCloudPayload(localPayload, cloudPayload) {
       if (!hasMeaningfulState(localPayload) && hasMeaningfulState(cloudPayload)) {
         return true;
       }
       return false;
-    }
-
-    async function createCloudBackup(payload) {
-      if (!firestoreDb || !payload) {
-        return;
-      }
-      const backupId = `backup-${Date.now()}`;
-      await setDoc(
-        doc(firestoreDb, FIREBASE_COLLECTION, backupId),
-        {
-          scope: "backup",
-          payload,
-          updatedAt: payload.updatedAt || new Date().toISOString()
-        },
-        { merge: true }
-      );
-      await rotateCloudBackups();
-    }
-
-    async function rotateCloudBackups() {
-      if (!firestoreDb) {
-        return;
-      }
-      const backupsQuery = query(
-        collection(firestoreDb, FIREBASE_COLLECTION),
-        where("scope", "==", "backup"),
-        orderBy("updatedAt", "desc"),
-        limit(10)
-      );
-      const snapshot = await getDocs(backupsQuery);
-      const docs = snapshot.docs;
-      const keep = 5;
-      if (docs.length <= keep) {
-        return;
-      }
-      const deletions = docs.slice(keep).map((docSnap) => deleteDoc(docSnap.ref));
-      await Promise.allSettled(deletions);
-    }
-
-    async function maybeBackupCloudBeforeOverwrite(cloudPayload, localPayload) {
-      if (!cloudPayload || !localPayload) {
-        return;
-      }
-      const cloudWeight = getPayloadWeight(cloudPayload);
-      const localWeight = getPayloadWeight(localPayload);
-      if (cloudWeight > localWeight) {
-        await createCloudBackup(cloudPayload);
-      }
     }
 
     async function savePayloadToShared(payload) {
