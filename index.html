@@ -2646,6 +2646,17 @@
       flex: 0 0 auto;
     }
 
+    .milestone-task-mode #task-menu-add-subtask-button,
+    .milestone-task-mode #task-list-select,
+    .milestone-task-mode #task-block-select {
+      display: none;
+    }
+
+    .milestone-task-mode .task-schedule-button,
+    .milestone-task-mode #task-subtasks-panel {
+      display: none;
+    }
+
     .task-menu-button {
       width: 24px;
       height: 24px;
@@ -4908,6 +4919,7 @@
         cloudInspectorSnapshot: null,
         cloudInspectorBackups: [],
         cloudInspectorStatus: "Idle",
+        taskModalKind: "task",
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
@@ -5436,6 +5448,7 @@
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
+      elements.taskModalBackdrop.classList.toggle("milestone-task-mode", state.ui.taskModalKind === "milestone");
       const isModalOpen =
         elements.phaseModalBackdrop.classList.contains("open")
         || elements.blockModalBackdrop.classList.contains("open")
@@ -6595,6 +6608,12 @@
     }
 
     function renderTaskSubtasks() {
+      if (state.ui.taskModalKind === "milestone") {
+        elements.taskSubtasksPanel.style.display = "none";
+        elements.taskSubtaskInlineForm.classList.remove("open");
+        elements.taskSubtaskInlineInput.value = "";
+        return;
+      }
       const isComposerOpen = elements.taskSubtaskInlineForm.classList.contains("open");
       if (state.ui.taskModalMode !== "edit") {
         elements.taskSubtasksPanel.style.display = "none";
@@ -7869,6 +7888,23 @@
       render();
     }
 
+    function commitMilestoneTaskFromTaskModal() {
+      const taskId = state.ui.editingMilestoneTaskId;
+      if (!taskId) {
+        return;
+      }
+      const title = elements.taskTitleInput.value.trim();
+      const notes = normalizeTaskEditorHtml(elements.taskNotesEditor.innerHTML);
+      if (!title && !notes) {
+        return;
+      }
+      state.milestoneTasks = state.milestoneTasks.map((task) =>
+        task.id === taskId ? { ...task, title: title || "Untitled task", notes } : task
+      );
+      persistState({ immediate: true });
+      render();
+    }
+
     function handleTaskSheetTouchStart(event) {
       if (!isTaskModalOpen() || !event.touches.length || activeTaskSheetDrag) {
         return;
@@ -8785,11 +8821,28 @@
 
     function handleTaskSubmit(event) {
       event.preventDefault();
-      commitTaskModalChanges();
+      if (state.ui.taskModalKind === "milestone") {
+        commitMilestoneTaskFromTaskModal();
+      } else {
+        commitTaskModalChanges();
+      }
       setTaskModalEditing(false);
     }
 
     function handleTaskDelete() {
+      if (state.ui.taskModalKind === "milestone") {
+        const taskId = state.ui.editingMilestoneTaskId;
+        if (!taskId) {
+          return;
+        }
+        setTaskMenuOpen(false);
+        state.milestoneTasks = state.milestoneTasks.filter((task) => task.id !== taskId);
+        persistState({ immediate: true });
+        closeModal("task", { skipCommit: true });
+        render();
+        return;
+      }
+
       if (state.ui.taskModalMode !== "edit") {
         return;
       }
@@ -9859,6 +9912,7 @@
         id: crypto.randomUUID(),
         milestoneId,
         title: value,
+        notes: "",
         isDone: false
       });
       state.ui.milestoneComposerOpenId = "";
@@ -9871,10 +9925,28 @@
       if (!task) {
         return;
       }
+      state.ui.taskModalKind = "milestone";
+      state.ui.taskModalMode = "edit";
       state.ui.editingMilestoneTaskId = taskId;
-      elements.milestoneTaskTitleInput.value = task.title;
-      setMilestoneTaskMenuOpen(false);
-      openModal("milestone-task");
+      state.ui.editingTaskId = null;
+      state.ui.taskModalParentId = null;
+      elements.taskTitleInput.value = task.title || "";
+      elements.taskNotes.value = task.notes || "";
+      syncTaskNotesFieldToEditor();
+      renderTaskBlockOptions();
+      renderTaskListOptions();
+      renderTaskSectionOptions(INBOX_LIST_ID, "");
+      elements.taskListSelect.value = INBOX_LIST_ID;
+      elements.taskBlockSelect.value = "";
+      elements.taskMenuAddSubtaskButton.style.display = "none";
+      elements.taskMenuDeleteButton.style.display = "";
+      setTaskFormattingTrayOpen(false);
+      setTaskMenuOpen(false);
+      closeInlineSubtaskComposer();
+      renderTaskSubtasks();
+      setTaskModalSheetState("full");
+      setTaskModalEditing(true, { focusTarget: "notes", keepSheetFull: true });
+      openModal("task");
     }
 
     function commitMilestoneTaskModalChanges() {
@@ -10104,6 +10176,7 @@
       const resolvedParentTaskId = task ? (task.parentTaskId || null) : parentTaskId;
       const parentTask = resolvedParentTaskId ? getTaskById(resolvedParentTaskId) : null;
 
+      state.ui.taskModalKind = "task";
       state.ui.taskModalMode = task ? "edit" : "create";
       state.ui.editingTaskId = task ? task.id : null;
       state.ui.taskModalParentId = resolvedParentTaskId;
@@ -10261,9 +10334,10 @@
         closeInlineSubtaskComposer();
         state.ui.editingTaskId = null;
         state.ui.taskModalParentId = null;
-        state.ui.taskModalIsEditing = false;
-        state.ui.taskModalSheetState = "full";
-        state.ui.taskFormattingTrayOpen = false;
+      state.ui.taskModalIsEditing = false;
+      state.ui.taskModalSheetState = "full";
+      state.ui.taskFormattingTrayOpen = false;
+      state.ui.taskModalKind = "task";
       } else {
         elements.blockForm.reset();
         elements.blockNotes.value = "";
@@ -10957,6 +11031,7 @@
               id: typeof task?.id === "string" && task.id ? task.id : crypto.randomUUID(),
               milestoneId: typeof task?.milestoneId === "string" && validMilestoneIds.has(task.milestoneId) ? task.milestoneId : "",
               title: typeof task?.title === "string" && task.title.trim() ? task.title.trim() : `Task ${index + 1}`,
+              notes: typeof task?.notes === "string" ? task.notes : "",
               isDone: Boolean(task?.isDone)
             }))
             .filter((task) => task.milestoneId && task.title)
