@@ -5791,7 +5791,7 @@
               </button>
             </div>
             <div class="today-block-title">${escapeHtml(block.title)}</div>
-            ${tasks.length ? `<div class="today-block-meta">${completedCount}/${tasks.length} tasks completed</div>` : ""}
+            ${tasks.length && !isComplete ? `<div class="today-block-meta">${completedCount}/${tasks.length} tasks completed</div>` : ""}
             ${isComplete ? `<div class="today-block-complete-label">Completed</div>` : ""}
             <div class="today-block-tasks">
               ${taskMarkup}
