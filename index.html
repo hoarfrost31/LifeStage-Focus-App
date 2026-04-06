@@ -3237,6 +3237,51 @@
       gap: 10px;
     }
 
+    .cloud-inspector-card {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(16, 16, 16, 0.86);
+      display: grid;
+      gap: 10px;
+    }
+
+    .cloud-inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .cloud-inspector-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .cloud-inspector-counts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 12px;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .cloud-inspector-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cloud-inspector-actions button {
+      flex: 1 1 120px;
+    }
+
     .theme-option {
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -4128,6 +4173,19 @@
       <div class="themes-wrap">
         <div class="themes-title">Choose a mood</div>
         <div class="themes-list" id="themes-list"></div>
+        <div class="cloud-inspector-card" id="cloud-inspector-card">
+          <div class="cloud-inspector-header">
+            <span>Cloud Inspector</span>
+            <span id="cloud-inspector-status">Idle</span>
+          </div>
+          <div class="cloud-inspector-meta" id="cloud-inspector-meta">No snapshot loaded yet.</div>
+          <div class="cloud-inspector-counts" id="cloud-inspector-counts"></div>
+          <div class="cloud-inspector-actions">
+            <button class="ghost-button" id="cloud-inspector-refresh" type="button">Refresh</button>
+            <button class="ghost-button" id="cloud-inspector-backup" type="button">Backup Now</button>
+            <button class="primary-button" id="cloud-inspector-restore" type="button">Restore From Cloud</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -4784,6 +4842,8 @@
         todayCollapsedByBlock: {},
         milestoneComposerOpenId: "",
         editingMilestoneTaskId: null,
+        cloudInspectorSnapshot: null,
+        cloudInspectorStatus: "Idle",
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
@@ -4850,6 +4910,13 @@
       phaseDetailBody: document.getElementById("phase-detail-body"),
       phaseDetailBack: document.getElementById("phase-detail-back"),
       themesList: document.getElementById("themes-list"),
+      cloudInspectorCard: document.getElementById("cloud-inspector-card"),
+      cloudInspectorStatus: document.getElementById("cloud-inspector-status"),
+      cloudInspectorMeta: document.getElementById("cloud-inspector-meta"),
+      cloudInspectorCounts: document.getElementById("cloud-inspector-counts"),
+      cloudInspectorRefresh: document.getElementById("cloud-inspector-refresh"),
+      cloudInspectorBackup: document.getElementById("cloud-inspector-backup"),
+      cloudInspectorRestore: document.getElementById("cloud-inspector-restore"),
       timelineDropdown: document.getElementById("timeline-dropdown"),
       timelineDropdownTrigger: document.getElementById("timeline-dropdown-trigger"),
       timelineDropdownLabel: document.getElementById("timeline-dropdown-label"),
@@ -5107,6 +5174,9 @@
       elements.tasksList.addEventListener("pointerup", handleTaskDragEnd);
       elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
       elements.themesList.addEventListener("click", handleThemesListClick);
+      elements.cloudInspectorRefresh.addEventListener("click", handleCloudInspectorRefresh);
+      elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
+      elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
       elements.todayList.addEventListener("click", handleTodayListClick);
       elements.todayList.addEventListener("keydown", handleTodayListKeydown);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
@@ -5314,6 +5384,7 @@
       renderPhaseRail();
       renderPhaseDetail();
       renderThemes();
+      renderCloudInspector();
       renderBlockPhaseOptions();
       renderTaskBlockOptions();
       renderTaskListOptions();
@@ -6490,6 +6561,153 @@
       elements.syncStatusLabel.textContent = state.ui.syncStatus;
       elements.syncStatusLabel.classList.toggle("synced", false);
       elements.syncStatusLabel.classList.toggle("error", state.ui.syncStatus === "Cloud error");
+    }
+
+    function summarizePayloadCounts(payload) {
+      const phases = Array.isArray(payload?.phases) ? payload.phases.length : 0;
+      const blocks = Array.isArray(payload?.blocks) ? payload.blocks.length : 0;
+      const tasks = Array.isArray(payload?.tasks) ? payload.tasks.length : 0;
+      const taskLists = Array.isArray(payload?.taskLists) ? payload.taskLists.length : 0;
+      const milestones = Array.isArray(payload?.milestones) ? payload.milestones.length : 0;
+      const milestoneTasks = Array.isArray(payload?.milestoneTasks) ? payload.milestoneTasks.length : 0;
+      const savedTimelines = Array.isArray(payload?.savedTimelines) ? payload.savedTimelines.length : 0;
+      return {
+        phases,
+        blocks,
+        tasks,
+        taskLists,
+        milestones,
+        milestoneTasks,
+        savedTimelines
+      };
+    }
+
+    function renderCloudInspector() {
+      if (!elements.cloudInspectorCard) {
+        return;
+      }
+      elements.cloudInspectorStatus.textContent = state.ui.cloudInspectorStatus || "Idle";
+      const snapshot = state.ui.cloudInspectorSnapshot;
+      if (!snapshot) {
+        elements.cloudInspectorMeta.textContent = "No snapshot loaded yet.";
+        elements.cloudInspectorCounts.innerHTML = "";
+        return;
+      }
+      const updatedAt = snapshot.updatedAt
+        ? new Date(snapshot.updatedAt).toLocaleString()
+        : "Unknown";
+      elements.cloudInspectorMeta.textContent = `Updated: ${updatedAt}`;
+      const counts = snapshot.counts || {};
+      elements.cloudInspectorCounts.innerHTML = `
+        <div>Phases: ${counts.phases ?? 0}</div>
+        <div>Blocks: ${counts.blocks ?? 0}</div>
+        <div>Tasks: ${counts.tasks ?? 0}</div>
+        <div>Task lists: ${counts.taskLists ?? 0}</div>
+        <div>Milestones: ${counts.milestones ?? 0}</div>
+        <div>Milestone tasks: ${counts.milestoneTasks ?? 0}</div>
+        <div>Saved timelines: ${counts.savedTimelines ?? 0}</div>
+      `;
+    }
+
+    function setCloudInspectorStatus(status) {
+      state.ui.cloudInspectorStatus = status;
+      renderCloudInspector();
+    }
+
+    async function fetchSharedCloudSnapshot() {
+      if (!firestoreDb) {
+        setCloudInspectorStatus(isFirebaseConfigured() ? "Firebase not ready" : "Firebase not set");
+        return null;
+      }
+
+      setCloudInspectorStatus("Loading...");
+      try {
+        const snapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, SHARED_DOCUMENT_ID));
+        if (!snapshot.exists()) {
+          state.ui.cloudInspectorSnapshot = null;
+          setCloudInspectorStatus("No cloud data");
+          return null;
+        }
+
+        const data = snapshot.data();
+        const payload = data?.payload || null;
+        if (!payload) {
+          state.ui.cloudInspectorSnapshot = null;
+          setCloudInspectorStatus("Empty payload");
+          return null;
+        }
+
+        state.ui.cloudInspectorSnapshot = {
+          updatedAt: data.updatedAt || payload.updatedAt || null,
+          counts: summarizePayloadCounts(payload)
+        };
+        setCloudInspectorStatus("Ready");
+        return payload;
+      } catch (error) {
+        console.error("Cloud inspector fetch failed", error);
+        state.ui.cloudInspectorSnapshot = null;
+        setCloudInspectorStatus("Error");
+        return null;
+      }
+    }
+
+    function handleCloudInspectorRefresh() {
+      void fetchSharedCloudSnapshot();
+    }
+
+    function handleCloudInspectorBackup() {
+      if (!firestoreDb) {
+        setCloudInspectorStatus(isFirebaseConfigured() ? "Firebase not ready" : "Firebase not set");
+        return;
+      }
+      openAppDialog({
+        mode: "confirm",
+        title: "Backup Cloud State",
+        message: "Save a backup of your current local data to the cloud?",
+        confirmLabel: "Backup",
+        onConfirm: async () => {
+          const payload = buildPersistedState();
+          const backupId = `backup-${Date.now()}`;
+          try {
+            await setDoc(
+              doc(firestoreDb, FIREBASE_COLLECTION, backupId),
+              {
+                scope: "backup",
+                payload,
+                updatedAt: payload.updatedAt || new Date().toISOString()
+              },
+              { merge: true }
+            );
+            setCloudInspectorStatus("Backup saved");
+          } catch (error) {
+            console.error("Cloud backup failed", error);
+            setCloudInspectorStatus("Backup failed");
+          }
+        }
+      });
+    }
+
+    function handleCloudInspectorRestore() {
+      if (!firestoreDb) {
+        setCloudInspectorStatus(isFirebaseConfigured() ? "Firebase not ready" : "Firebase not set");
+        return;
+      }
+      openAppDialog({
+        mode: "confirm",
+        title: "Restore From Cloud",
+        message: "Replace your local data with the latest cloud snapshot?",
+        confirmLabel: "Restore",
+        onConfirm: async () => {
+          const payload = await fetchSharedCloudSnapshot();
+          if (!payload) {
+            return;
+          }
+          applyPersistedState(payload);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+          state.ui.lastSyncedAt = payload.updatedAt || new Date().toISOString();
+          render();
+        }
+      });
     }
 
     function setActiveTab(tab) {
