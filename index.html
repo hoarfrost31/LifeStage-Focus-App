@@ -2014,150 +2014,6 @@
       justify-content: center;
     }
 
-    .focus-mode-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(5, 5, 8, 0.88);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.28s ease;
-      z-index: 40;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
-    }
-
-    .focus-mode-backdrop.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .focus-mode-sheet {
-      width: min(96vw, 420px);
-      min-height: calc(100vh - 32px);
-      background: rgba(16, 16, 20, 0.94);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(18px);
-      padding: 18px 16px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      transform-origin: center;
-      transition: transform 0.28s ease;
-    }
-
-    .focus-mode-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .focus-mode-title {
-      font-size: 1.12rem;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0;
-    }
-
-    .focus-mode-time {
-      font-size: 0.72rem;
-      color: rgba(148, 163, 184, 0.9);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .focus-mode-back {
-      width: 32px;
-      height: 32px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-
-    .focus-task-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 2px;
-    }
-
-    .focus-task {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 10px;
-      align-items: center;
-      padding: 12px 12px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-      transition: transform 0.15s ease;
-    }
-
-    .focus-task:active {
-      transform: scale(0.98);
-    }
-
-    .focus-task-toggle {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: transparent;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      color: var(--text);
-      flex-shrink: 0;
-    }
-
-    .focus-task-toggle svg {
-      width: 11px;
-      height: 11px;
-      display: block;
-      opacity: 0;
-    }
-
-    .focus-task.done .focus-task-toggle svg {
-      opacity: 1;
-    }
-
-    .focus-task.done {
-      opacity: 0.6;
-    }
-
-    .focus-task-title {
-      font-size: 0.92rem;
-      color: var(--text);
-    }
-
-    .focus-task.next {
-      border-color: rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .focus-task-add {
-      border-radius: 16px;
-      border: 1px dashed rgba(255, 255, 255, 0.16);
-      padding: 12px;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.76);
-      font-size: 0.86rem;
-      cursor: pointer;
-    }
-
-    body.focus-mode-open .bottom-nav-card {
-      display: none;
-    }
-
     .phases-actions {
       position: absolute;
       right: var(--floating-action-right, 18px);
@@ -4450,23 +4306,6 @@
       </div>
     </div>
 
-    <div class="focus-mode-backdrop" id="focus-mode-backdrop" aria-hidden="true">
-      <section class="focus-mode-sheet" id="focus-mode-sheet" aria-label="Deep focus mode">
-        <div class="focus-mode-header">
-          <div>
-            <div class="focus-mode-time" id="focus-mode-time"></div>
-            <h3 class="focus-mode-title" id="focus-mode-title"></h3>
-          </div>
-          <button class="ghost-button focus-mode-back" id="focus-mode-back" type="button" aria-label="Exit focus mode">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="m9.8 3.6-4.2 4.2 4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-        <div class="focus-task-list" id="focus-mode-task-list"></div>
-      </section>
-    </div>
-
     <section class="card bottom-nav-card">
       <div class="bottom-nav">
         <button class="tab-button" id="tab-tasks" type="button" data-tab="tasks" aria-label="Tasks">
@@ -5069,10 +4908,6 @@
         cloudInspectorSnapshot: null,
         cloudInspectorBackups: [],
         cloudInspectorStatus: "Idle",
-        focusModeOpen: false,
-        focusModeActive: false,
-        focusModeBlockId: null,
-        focusModeOrigin: null,
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
         syncError: "",
@@ -5098,8 +4933,6 @@
     let appDialogState = null;
     let isTaskModalClosing = false;
     let activeHeaderDropdownDrag = null;
-    let focusModeCloseTimer = null;
-    let focusModeTouch = null;
 
     const elements = {
       phaseRail: document.getElementById("phase-rail"),
@@ -5149,12 +4982,6 @@
       cloudInspectorRefresh: document.getElementById("cloud-inspector-refresh"),
       cloudInspectorBackup: document.getElementById("cloud-inspector-backup"),
       cloudInspectorRestore: document.getElementById("cloud-inspector-restore"),
-      focusModeBackdrop: document.getElementById("focus-mode-backdrop"),
-      focusModeSheet: document.getElementById("focus-mode-sheet"),
-      focusModeTitle: document.getElementById("focus-mode-title"),
-      focusModeTime: document.getElementById("focus-mode-time"),
-      focusModeTaskList: document.getElementById("focus-mode-task-list"),
-      focusModeBack: document.getElementById("focus-mode-back"),
       timelineDropdown: document.getElementById("timeline-dropdown"),
       timelineDropdownTrigger: document.getElementById("timeline-dropdown-trigger"),
       timelineDropdownLabel: document.getElementById("timeline-dropdown-label"),
@@ -5416,13 +5243,6 @@
       elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
       elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
       elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
-      elements.focusModeBack.addEventListener("click", closeFocusMode);
-      elements.focusModeBackdrop.addEventListener("click", handleFocusModeBackdropClick);
-      elements.focusModeTaskList.addEventListener("click", handleFocusModeTaskListClick);
-      elements.focusModeSheet.addEventListener("touchstart", handleFocusModeTouchStart, { passive: true });
-      elements.focusModeSheet.addEventListener("touchmove", handleFocusModeTouchMove, { passive: false });
-      elements.focusModeSheet.addEventListener("touchend", handleFocusModeTouchEnd);
-      elements.focusModeSheet.addEventListener("touchcancel", handleFocusModeTouchEnd);
       elements.todayList.addEventListener("click", handleTodayListClick);
       elements.todayList.addEventListener("keydown", handleTodayListKeydown);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
@@ -5616,15 +5436,13 @@
       elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
-      document.body.classList.toggle("focus-mode-open", state.ui.focusModeOpen);
       const isModalOpen =
         elements.phaseModalBackdrop.classList.contains("open")
         || elements.blockModalBackdrop.classList.contains("open")
         || elements.taskModalBackdrop.classList.contains("open")
         || elements.scheduleModalBackdrop.classList.contains("open")
         || elements.phaseReadModalBackdrop.classList.contains("open")
-        || elements.appDialogBackdrop.classList.contains("open")
-        || state.ui.focusModeOpen;
+        || elements.appDialogBackdrop.classList.contains("open");
       elements.floatingActionsLayer.style.display = isModalOpen ? "none" : "block";
       renderTaskDrawer();
       renderTasks();
@@ -5642,7 +5460,6 @@
       renderLinkedTasks();
       renderTaskSubtasks();
       renderTodayView();
-      renderFocusMode();
       renderSummary();
       renderSyncStatus();
     }
@@ -5992,179 +5809,6 @@
       }
     }
 
-    function renderFocusMode() {
-      if (!state.ui.focusModeOpen || !state.ui.focusModeBlockId) {
-        elements.focusModeBackdrop.classList.remove("open");
-        elements.focusModeBackdrop.setAttribute("aria-hidden", "true");
-        return;
-      }
-
-      const block = getBlockById(state.ui.focusModeBlockId);
-      if (!block) {
-        return;
-      }
-
-      elements.focusModeBackdrop.classList.add("open");
-      elements.focusModeBackdrop.setAttribute("aria-hidden", "false");
-
-      const overnight = timeToMinutes(block.endTime) <= timeToMinutes(block.startTime);
-      elements.focusModeTitle.textContent = block.title;
-      elements.focusModeTime.textContent = formatBlockTimeRange(block.startTime, block.endTime, overnight);
-
-      const tasks = getTasksForBlock(block.id, { topLevelOnly: true });
-      const nextTask = tasks.find((task) => !task.isDone);
-      if (!tasks.length) {
-        elements.focusModeTaskList.innerHTML = `
-          <div class="focus-task-add" data-focus-add-task="${block.id}">+ Add task</div>
-        `;
-      } else {
-        elements.focusModeTaskList.innerHTML = `
-          ${tasks.map((task) => `
-            <div class="focus-task ${task.isDone ? "done" : ""} ${nextTask?.id === task.id ? "next" : ""}" data-focus-task-id="${task.id}">
-              <button class="focus-task-toggle" type="button" data-focus-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
-                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <div class="focus-task-title">${escapeHtml(task.title)}</div>
-            </div>
-          `).join("")}
-          <div class="focus-task-add" data-focus-add-task="${block.id}">+ Add task</div>
-        `;
-      }
-
-      const origin = state.ui.focusModeOrigin;
-      if (origin && !state.ui.focusModeActive) {
-        elements.focusModeSheet.style.transform = `translate(${origin.x}px, ${origin.y}px) scale(${origin.scaleX}, ${origin.scaleY})`;
-      } else {
-        elements.focusModeSheet.style.transform = "translate(0, 0) scale(1)";
-      }
-    }
-
-    function openFocusMode(blockId, sourceElement) {
-      const source = sourceElement || elements.todayList.querySelector(`[data-block-id="${blockId}"]`);
-      if (!source) {
-        return;
-      }
-      const rect = source.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const scaleX = rect.width / viewportWidth;
-      const scaleY = rect.height / viewportHeight;
-      const x = rect.left + rect.width / 2 - viewportWidth / 2;
-      const y = rect.top + rect.height / 2 - viewportHeight / 2;
-      state.ui.focusModeOrigin = { x, y, scaleX, scaleY };
-      state.ui.focusModeOpen = true;
-      state.ui.focusModeActive = false;
-      state.ui.focusModeBlockId = blockId;
-      render();
-      requestAnimationFrame(() => {
-        state.ui.focusModeActive = true;
-        render();
-      });
-    }
-
-    function closeFocusMode() {
-      if (!state.ui.focusModeOpen) {
-        return;
-      }
-      state.ui.focusModeActive = false;
-      render();
-      window.clearTimeout(focusModeCloseTimer);
-      focusModeCloseTimer = window.setTimeout(() => {
-        state.ui.focusModeOpen = false;
-        state.ui.focusModeBlockId = null;
-        state.ui.focusModeOrigin = null;
-        render();
-      }, 280);
-    }
-
-    function handleFocusModeBackdropClick(event) {
-      if (event.target === elements.focusModeBackdrop) {
-        closeFocusMode();
-      }
-    }
-
-    function handleFocusModeTaskListClick(event) {
-      const addButton = event.target.closest("[data-focus-add-task]");
-      if (addButton) {
-        const blockId = addButton.dataset.focusAddTask;
-        openAppDialog({
-          mode: "prompt",
-          title: "Add Task",
-          message: "Add a task to this block.",
-          placeholder: "Task",
-          confirmLabel: "Add",
-          onConfirm: (title) => {
-            const trimmed = String(title || "").trim();
-            if (!trimmed) {
-              return;
-            }
-            state.tasks.push({
-              id: crypto.randomUUID(),
-              title: trimmed,
-              notes: "",
-              blockId,
-              parentTaskId: null,
-              listId: normalizeTaskListId(INBOX_LIST_ID),
-              dueDateTime: "",
-              repeatRule: null,
-              isDone: false,
-              isCollapsed: false
-            });
-            persistState({ immediate: true });
-            render();
-          }
-        });
-        return;
-      }
-
-      const toggleButton = event.target.closest("[data-focus-toggle-task]");
-      if (toggleButton) {
-        toggleTask(toggleButton.dataset.focusToggleTask);
-        return;
-      }
-
-      const taskRow = event.target.closest("[data-focus-task-id]");
-      if (taskRow) {
-        toggleTask(taskRow.dataset.focusTaskId);
-      }
-    }
-
-    function handleFocusModeTouchStart(event) {
-      if (!state.ui.focusModeOpen || !event.touches.length) {
-        return;
-      }
-      focusModeTouch = {
-        startY: event.touches[0].clientY,
-        deltaY: 0
-      };
-    }
-
-    function handleFocusModeTouchMove(event) {
-      if (!focusModeTouch || !event.touches.length) {
-        return;
-      }
-      focusModeTouch.deltaY = event.touches[0].clientY - focusModeTouch.startY;
-      if (focusModeTouch.deltaY > 0) {
-        elements.focusModeSheet.style.transform = `translate(0, ${focusModeTouch.deltaY}px) scale(1)`;
-        event.preventDefault();
-      }
-    }
-
-    function handleFocusModeTouchEnd() {
-      if (!focusModeTouch) {
-        return;
-      }
-      const delta = focusModeTouch.deltaY;
-      focusModeTouch = null;
-      if (delta > 80) {
-        closeFocusMode();
-      } else {
-        elements.focusModeSheet.style.transform = "translate(0, 0) scale(1)";
-      }
-    }
-
     function handleTodayListClick(event) {
       const toggleBlockButton = event.target.closest("[data-toggle-today-block]");
       if (toggleBlockButton) {
@@ -6210,7 +5854,7 @@
       if (blockCard && !event.target.closest(".today-task-composer") && !event.target.closest("[data-task-input]")) {
         const blockId = blockCard.dataset.editBlock;
         if (blockId) {
-          openFocusMode(blockId, blockCard);
+          openBlockModal(blockId);
         }
         return;
       }
