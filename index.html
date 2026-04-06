@@ -3272,6 +3272,48 @@
       color: rgba(255, 255, 255, 0.7);
     }
 
+    .cloud-inspector-backups {
+      display: grid;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .cloud-backup-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.76rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .cloud-backup-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .cloud-backup-title {
+      font-size: 0.78rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cloud-backup-actions {
+      display: inline-flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
     .cloud-inspector-actions {
       display: flex;
       flex-wrap: wrap;
@@ -4180,6 +4222,7 @@
           </div>
           <div class="cloud-inspector-meta" id="cloud-inspector-meta">No snapshot loaded yet.</div>
           <div class="cloud-inspector-counts" id="cloud-inspector-counts"></div>
+          <div class="cloud-inspector-backups" id="cloud-inspector-backups"></div>
           <div class="cloud-inspector-actions">
             <button class="ghost-button" id="cloud-inspector-refresh" type="button">Refresh</button>
             <button class="ghost-button" id="cloud-inspector-backup" type="button">Backup Now</button>
@@ -4843,6 +4886,7 @@
         milestoneComposerOpenId: "",
         editingMilestoneTaskId: null,
         cloudInspectorSnapshot: null,
+        cloudInspectorBackups: [],
         cloudInspectorStatus: "Idle",
         focusTimelineNowOnRender: true,
         syncStatus: "Local only",
@@ -4914,6 +4958,7 @@
       cloudInspectorStatus: document.getElementById("cloud-inspector-status"),
       cloudInspectorMeta: document.getElementById("cloud-inspector-meta"),
       cloudInspectorCounts: document.getElementById("cloud-inspector-counts"),
+      cloudInspectorBackups: document.getElementById("cloud-inspector-backups"),
       cloudInspectorRefresh: document.getElementById("cloud-inspector-refresh"),
       cloudInspectorBackup: document.getElementById("cloud-inspector-backup"),
       cloudInspectorRestore: document.getElementById("cloud-inspector-restore"),
@@ -5177,6 +5222,7 @@
       elements.cloudInspectorRefresh.addEventListener("click", handleCloudInspectorRefresh);
       elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
       elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
+      elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
       elements.todayList.addEventListener("click", handleTodayListClick);
       elements.todayList.addEventListener("keydown", handleTodayListKeydown);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
@@ -6591,6 +6637,7 @@
       if (!snapshot) {
         elements.cloudInspectorMeta.textContent = "No snapshot loaded yet.";
         elements.cloudInspectorCounts.innerHTML = "";
+        elements.cloudInspectorBackups.innerHTML = "";
         return;
       }
       const updatedAt = snapshot.updatedAt
@@ -6607,6 +6654,23 @@
         <div>Milestone tasks: ${counts.milestoneTasks ?? 0}</div>
         <div>Saved timelines: ${counts.savedTimelines ?? 0}</div>
       `;
+      const backups = Array.isArray(state.ui.cloudInspectorBackups) ? state.ui.cloudInspectorBackups : [];
+      if (!backups.length) {
+        elements.cloudInspectorBackups.innerHTML = `<div class="cloud-backup-row">No backups yet.</div>`;
+        return;
+      }
+      elements.cloudInspectorBackups.innerHTML = backups.map((backup) => `
+        <div class="cloud-backup-row">
+          <div class="cloud-backup-meta">
+            <span class="cloud-backup-title">${escapeHtml(backup.label)}</span>
+            <span>${escapeHtml(backup.updatedAtLabel)}</span>
+          </div>
+          <div class="cloud-backup-actions">
+            <button class="ghost-button micro-button" type="button" data-restore-backup-id="${backup.id}">Restore</button>
+            <button class="ghost-button micro-button danger-text" type="button" data-delete-backup-id="${backup.id}">Delete</button>
+          </div>
+        </div>
+      `).join("");
     }
 
     function setCloudInspectorStatus(status) {
@@ -6641,14 +6705,71 @@
           updatedAt: data.updatedAt || payload.updatedAt || null,
           counts: summarizePayloadCounts(payload)
         };
+        await fetchCloudBackups();
         setCloudInspectorStatus("Ready");
         return payload;
       } catch (error) {
         console.error("Cloud inspector fetch failed", error);
         state.ui.cloudInspectorSnapshot = null;
+        state.ui.cloudInspectorBackups = [];
         setCloudInspectorStatus("Error");
         return null;
       }
+    }
+
+    async function fetchCloudBackups() {
+      if (!firestoreDb) {
+        state.ui.cloudInspectorBackups = [];
+        return [];
+      }
+      const snapshot = await getDocs(collection(firestoreDb, FIREBASE_COLLECTION));
+      const backups = snapshot.docs
+        .filter((docSnap) => docSnap.data()?.scope === "backup")
+        .map((docSnap) => {
+          const data = docSnap.data() || {};
+          const updatedAt = data.updatedAt || "";
+          return {
+            id: docSnap.id,
+            updatedAt,
+            updatedAtLabel: updatedAt ? new Date(updatedAt).toLocaleString() : "Unknown time",
+            label: data?.payload?.updatedAt ? `Backup ${docSnap.id.replace("backup-", "")}` : docSnap.id
+          };
+        })
+        .sort((a, b) => {
+          const aTime = Date.parse(a.updatedAt || "") || 0;
+          const bTime = Date.parse(b.updatedAt || "") || 0;
+          return bTime - aTime;
+        })
+        .slice(0, 5);
+      state.ui.cloudInspectorBackups = backups;
+      renderCloudInspector();
+      return backups;
+    }
+
+    async function restoreFromBackup(backupId) {
+      if (!firestoreDb || !backupId) {
+        return;
+      }
+      const snapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, backupId));
+      if (!snapshot.exists()) {
+        return;
+      }
+      const data = snapshot.data();
+      if (!data?.payload) {
+        return;
+      }
+      applyPersistedState(data.payload);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.payload));
+      state.ui.lastSyncedAt = data.updatedAt || data.payload.updatedAt || new Date().toISOString();
+      render();
+    }
+
+    async function deleteBackup(backupId) {
+      if (!firestoreDb || !backupId) {
+        return;
+      }
+      await deleteDoc(doc(firestoreDb, FIREBASE_COLLECTION, backupId));
+      await fetchCloudBackups();
     }
 
     function handleCloudInspectorRefresh() {
@@ -6670,6 +6791,7 @@
           const backupId = `backup-${Date.now()}`;
           try {
             await createCloudBackup(payload);
+            await fetchCloudBackups();
             setCloudInspectorStatus("Backup saved");
           } catch (error) {
             console.error("Cloud backup failed", error);
@@ -6700,6 +6822,33 @@
           render();
         }
       });
+    }
+
+    function handleCloudInspectorBackupsClick(event) {
+      const restoreButton = event.target.closest("[data-restore-backup-id]");
+      if (restoreButton) {
+        const backupId = restoreButton.dataset.restoreBackupId;
+        openAppDialog({
+          mode: "confirm",
+          title: "Restore Backup",
+          message: "Replace your local data with this backup?",
+          confirmLabel: "Restore",
+          onConfirm: () => restoreFromBackup(backupId)
+        });
+        return;
+      }
+
+      const deleteButton = event.target.closest("[data-delete-backup-id]");
+      if (deleteButton) {
+        const backupId = deleteButton.dataset.deleteBackupId;
+        openAppDialog({
+          mode: "confirm",
+          title: "Delete Backup",
+          message: "Delete this backup from the cloud?",
+          confirmLabel: "Delete",
+          onConfirm: () => deleteBackup(backupId)
+        });
+      }
     }
 
     function setActiveTab(tab) {
