@@ -4758,7 +4758,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
@@ -6669,15 +6669,7 @@
           const payload = buildPersistedState();
           const backupId = `backup-${Date.now()}`;
           try {
-            await setDoc(
-              doc(firestoreDb, FIREBASE_COLLECTION, backupId),
-              {
-                scope: "backup",
-                payload,
-                updatedAt: payload.updatedAt || new Date().toISOString()
-              },
-              { merge: true }
-            );
+            await createCloudBackup(payload);
             setCloudInspectorStatus("Backup saved");
           } catch (error) {
             console.error("Cloud backup failed", error);
@@ -11246,6 +11238,43 @@
         return true;
       }
       return false;
+    }
+
+    async function createCloudBackup(payload) {
+      if (!firestoreDb || !payload) {
+        return;
+      }
+      const backupId = `backup-${Date.now()}`;
+      await setDoc(
+        doc(firestoreDb, FIREBASE_COLLECTION, backupId),
+        {
+          scope: "backup",
+          payload,
+          updatedAt: payload.updatedAt || new Date().toISOString()
+        },
+        { merge: true }
+      );
+      await rotateCloudBackups();
+    }
+
+    async function rotateCloudBackups() {
+      if (!firestoreDb) {
+        return;
+      }
+      const backupsQuery = query(
+        collection(firestoreDb, FIREBASE_COLLECTION),
+        where("scope", "==", "backup"),
+        orderBy("updatedAt", "desc"),
+        limit(10)
+      );
+      const snapshot = await getDocs(backupsQuery);
+      const docs = snapshot.docs;
+      const keep = 5;
+      if (docs.length <= keep) {
+        return;
+      }
+      const deletions = docs.slice(keep).map((docSnap) => deleteDoc(docSnap.ref));
+      await Promise.allSettled(deletions);
     }
 
     async function savePayloadToShared(payload) {
