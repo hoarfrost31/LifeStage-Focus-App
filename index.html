@@ -6690,6 +6690,7 @@
           </div>
           <div class="cloud-backup-actions">
             <button class="ghost-button micro-button" type="button" data-restore-backup-id="${backup.id}">Restore</button>
+            <button class="ghost-button micro-button" type="button" data-promote-backup-id="${backup.id}">Promote</button>
             <button class="ghost-button micro-button danger-text" type="button" data-delete-backup-id="${backup.id}">Delete</button>
           </div>
         </div>
@@ -6787,6 +6788,32 @@
       render();
     }
 
+    async function promoteBackupToShared(backupId) {
+      if (!firestoreDb || !backupId) {
+        return;
+      }
+      const snapshot = await getDoc(doc(firestoreDb, FIREBASE_COLLECTION, backupId));
+      if (!snapshot.exists()) {
+        return;
+      }
+      const data = snapshot.data();
+      if (!data?.payload) {
+        return;
+      }
+      await setDoc(
+        doc(firestoreDb, FIREBASE_COLLECTION, SHARED_DOCUMENT_ID),
+        {
+          scope: "shared",
+          payload: data.payload,
+          updatedAt: data.updatedAt || data.payload.updatedAt || new Date().toISOString()
+        },
+        { merge: true }
+      );
+      state.ui.lastSyncedAt = data.updatedAt || data.payload.updatedAt || new Date().toISOString();
+      await fetchSharedCloudSnapshot();
+      render();
+    }
+
     async function deleteBackup(backupId) {
       if (!firestoreDb || !backupId) {
         return;
@@ -6870,6 +6897,19 @@
           message: "Delete this backup from the cloud?",
           confirmLabel: "Delete",
           onConfirm: () => deleteBackup(backupId)
+        });
+        return;
+      }
+
+      const promoteButton = event.target.closest("[data-promote-backup-id]");
+      if (promoteButton) {
+        const backupId = promoteButton.dataset.promoteBackupId;
+        openAppDialog({
+          mode: "confirm",
+          title: "Promote Backup",
+          message: "Replace cloud shared data with this backup?",
+          confirmLabel: "Promote",
+          onConfirm: () => promoteBackupToShared(backupId)
         });
       }
     }
