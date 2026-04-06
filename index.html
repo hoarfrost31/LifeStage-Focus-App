@@ -1732,7 +1732,7 @@
     }
 
     .today-block.is-active {
-      box-shadow: 0 0 15px rgba(34, 197, 94, 0.1);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
       transform: scale(1.01);
       border-color: rgba(255, 255, 255, 0.18);
       background: rgba(255, 255, 255, 0.06);
@@ -1774,6 +1774,16 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .today-block-now {
+      font-size: 0.66rem;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .today-block-toggle {
@@ -1856,6 +1866,11 @@
       color: var(--text);
     }
 
+    .today-block-meta {
+      font-size: 0.78rem;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
     .today-block-tasks {
       display: flex;
       flex-direction: column;
@@ -1871,6 +1886,11 @@
       border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.06);
       background: rgba(255, 255, 255, 0.04);
+      transition: transform 0.15s ease;
+    }
+
+    .today-task:active {
+      transform: scale(0.98);
     }
 
     .today-task-toggle {
@@ -1909,7 +1929,7 @@
 
     .today-task-title {
       font-size: 0.84rem;
-      color: var(--text);
+      color: rgba(248, 250, 252, 0.78);
     }
 
     .today-task-empty {
@@ -5741,6 +5761,7 @@
         const isCollapsed = shouldCollapseTodayBlock(block.id, isActive);
         const tone = getBlockToneClass(block.startTime);
         const isComplete = tasks.length > 0 && tasks.every((task) => task.isDone);
+        const completedCount = tasks.filter((task) => task.isDone).length;
         if (isComplete) {
           completedBlocks += 1;
         }
@@ -5762,6 +5783,7 @@
             <div class="today-block-time">
               <span class="today-block-indicator" aria-hidden="true"></span>
               ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}
+              ${isActive ? `<span class="today-block-now">Now</span>` : ""}
               <button class="today-block-toggle" type="button" data-toggle-today-block="${block.id}" aria-label="${isCollapsed ? "Expand block" : "Collapse block"}">
                 <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="m6 3.5 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -5769,6 +5791,7 @@
               </button>
             </div>
             <div class="today-block-title">${escapeHtml(block.title)}</div>
+            ${tasks.length ? `<div class="today-block-meta">${completedCount}/${tasks.length} tasks completed</div>` : ""}
             ${isComplete ? `<div class="today-block-complete-label">Completed</div>` : ""}
             <div class="today-block-tasks">
               ${taskMarkup}
