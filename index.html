@@ -4758,7 +4758,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, query, where, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
@@ -11250,7 +11250,8 @@
         {
           scope: "backup",
           payload,
-          updatedAt: payload.updatedAt || new Date().toISOString()
+          updatedAt: payload.updatedAt || new Date().toISOString(),
+          backupCreatedAt: Date.now()
         },
         { merge: true }
       );
@@ -11261,14 +11262,14 @@
       if (!firestoreDb) {
         return;
       }
-      const backupsQuery = query(
-        collection(firestoreDb, FIREBASE_COLLECTION),
-        where("scope", "==", "backup"),
-        orderBy("updatedAt", "desc"),
-        limit(10)
-      );
-      const snapshot = await getDocs(backupsQuery);
-      const docs = snapshot.docs;
+      const snapshot = await getDocs(collection(firestoreDb, FIREBASE_COLLECTION));
+      const docs = snapshot.docs
+        .filter((docSnap) => docSnap.data()?.scope === "backup")
+        .sort((a, b) => {
+          const aTime = Number(a.data()?.backupCreatedAt || 0);
+          const bTime = Number(b.data()?.backupCreatedAt || 0);
+          return bTime - aTime;
+        });
       const keep = 5;
       if (docs.length <= keep) {
         return;
