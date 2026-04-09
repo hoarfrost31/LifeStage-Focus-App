@@ -12057,7 +12057,7 @@
           const bTime = Number(b.data()?.backupCreatedAt || 0);
           return bTime - aTime;
         });
-      const keep = 5;
+      const keep = 1;
       if (docs.length <= keep) {
         return;
       }
