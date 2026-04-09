@@ -65,7 +65,7 @@
     body {
       display: flex;
       justify-content: center;
-      padding: 0 12px env(safe-area-inset-bottom, 0px);
+      padding: 0;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -82,7 +82,20 @@
       position: relative;
       padding-top: calc(10px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+      isolation: isolate;
+    }
+
+    .app-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
       background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--elevation-card);
+      backdrop-filter: blur(16px);
+      z-index: 0;
+      pointer-events: none;
     }
 
     .phase-rail,
@@ -138,13 +151,9 @@
       padding: 16px;
     }
 
-    .app-shell > .card:not(.bottom-nav-card) {
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      padding: 0;
+    .app-shell > :not(.bottom-nav-card) {
+      position: relative;
+      z-index: 1;
     }
 
     .section-header {
@@ -5363,6 +5372,12 @@
       { id: "ember", name: "Ember", description: "Warm, intentional drive", swatch: "linear-gradient(135deg, #2a1a17, #140e0d)" },
       { id: "midnight", name: "Midnight", description: "Deep, high-contrast focus", swatch: "linear-gradient(135deg, #141a2a, #0b0f1a)" }
     ];
+    const SYSTEM_BAR_THEME_COLORS = {
+      default: "#0f172a",
+      sage: "#102019",
+      ember: "#211612",
+      midnight: "#0b1220"
+    };
 
     let pendingTaskUndo = null;
     let taskUndoToastTimeout = null;
@@ -6027,6 +6042,7 @@
         state.ui.phaseDetailOpen ? "Add milestone" : "Add phase"
       );
       document.body.dataset.theme = state.ui.activeTheme || "default";
+      updateSystemBarsTheme();
       const phaseHeaderHidden = visibleTab === "phases" && state.ui.phaseDetailOpen;
       document.querySelector(".phase-tabs-header")?.classList.toggle("hidden", phaseHeaderHidden);
       elements.phaseDetail.querySelector(".phase-detail-title-row")?.classList.toggle("tight", phaseHeaderHidden);
@@ -7867,6 +7883,17 @@
     function setCloudInspectorStatus(status) {
       state.ui.cloudInspectorStatus = status;
       renderCloudInspector();
+    }
+
+    function updateSystemBarsTheme() {
+      const activeTheme = state.ui.activeTheme || "default";
+      const systemColor = SYSTEM_BAR_THEME_COLORS[activeTheme] || SYSTEM_BAR_THEME_COLORS.default;
+      const themeMeta = document.querySelector('meta[name="theme-color"]');
+      if (themeMeta) {
+        themeMeta.setAttribute("content", systemColor);
+      }
+      document.documentElement.style.backgroundColor = systemColor;
+      document.body.style.backgroundColor = systemColor;
     }
 
     async function fetchSharedCloudSnapshot() {
