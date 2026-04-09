@@ -8315,7 +8315,12 @@
         activated: false,
         hasPointerCapture: false,
         item,
-        hoverTaskId: null,
+        list: null,
+        itemOrder: [],
+        reducedOrder: [],
+        gapOffset: 0,
+        sourceIndex: 0,
+        targetIndex: 0,
         activationTimer: window.setTimeout(() => {
           if (activeTaskDrag && activeTaskDrag.pointerId === event.pointerId) {
             activeTaskDrag.activated = true;
@@ -8323,6 +8328,7 @@
               activeTaskDrag.item.setPointerCapture(event.pointerId);
               activeTaskDrag.hasPointerCapture = true;
             }
+            initializeTaskDragList(activeTaskDrag);
           }
         }, DRAG_HOLD_DELAY_MS)
       };
@@ -8353,9 +8359,8 @@
       activeTaskDrag.moved = true;
       activeTaskDrag.item.classList.add("dragging");
       activeTaskDrag.item.style.transform = `translateY(${activeTaskDrag.deltaY}px)`;
-      const hoverTaskId = getTaskHoverTargetId(event.clientX, event.clientY, activeTaskDrag);
-      activeTaskDrag.hoverTaskId = hoverTaskId;
-      updateTaskDragPreview(hoverTaskId);
+      activeTaskDrag.targetIndex = getTaskDragTargetIndex(event.clientY, activeTaskDrag);
+      updateTaskDragPreview(activeTaskDrag);
       event.preventDefault();
     }
 
@@ -8365,18 +8370,18 @@
       }
 
       window.clearTimeout(activeTaskDrag.activationTimer);
-      const { taskId, item, moved, hoverTaskId } = activeTaskDrag;
+      const { taskId, item, moved } = activeTaskDrag;
       item.style.transform = "";
       item.classList.remove("dragging");
-      clearTaskDragPreview();
+      clearTaskDragPreview(activeTaskDrag);
       if (activeTaskDrag.hasPointerCapture) {
         item.releasePointerCapture(event.pointerId);
       }
 
       if (moved) {
         suppressClickUntil = Date.now() + 300;
-        const targetIndex = hoverTaskId
-          ? getTaskTargetIndex(taskId, hoverTaskId)
+        const targetIndex = Number.isInteger(activeTaskDrag.targetIndex)
+          ? activeTaskDrag.targetIndex
           : getTaskDropIndex(event.clientY, taskId);
         reorderTask(taskId, targetIndex);
       }
@@ -8384,23 +8389,36 @@
       activeTaskDrag = null;
     }
 
-    function getTaskHoverTargetId(clientX, clientY, dragState) {
-      if (dragState?.hoverTaskId) {
-        const lockedItem = elements.tasksList.querySelector(`.task-item[data-task-id="${dragState.hoverTaskId}"]`);
-        if (lockedItem) {
-          const rect = lockedItem.getBoundingClientRect();
-          if (clientY >= rect.top && clientY <= rect.bottom) {
-            return dragState.hoverTaskId;
-          }
+    function initializeTaskDragList(dragState) {
+      const list = [...elements.tasksList.querySelectorAll(".task-item")];
+      const sourceIndex = list.findIndex((item) => item.dataset.taskId === dragState.taskId);
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => ({
+        id: item.dataset.taskId,
+        midpoint: item.getBoundingClientRect().top + (item.getBoundingClientRect().height / 2)
+      }));
+      dragState.reducedOrder = list
+        .filter((item) => item.dataset.taskId !== dragState.taskId)
+        .map((item) => item.dataset.taskId);
+      dragState.gapOffset = dragState.item.getBoundingClientRect().height + 8;
+      dragState.sourceIndex = sourceIndex >= 0 ? sourceIndex : dragState.reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+    }
+
+    function getTaskDragTargetIndex(clientY, dragState) {
+      if (!dragState.reducedOrder.length) {
+        return dragState.sourceIndex;
+      }
+      let insertionIndex = 0;
+      for (const entry of dragState.itemOrder) {
+        if (entry.id === dragState.taskId) {
+          continue;
+        }
+        if (clientY > entry.midpoint) {
+          insertionIndex += 1;
         }
       }
-
-      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".task-item");
-      if (hoveredItem?.dataset.taskId && hoveredItem.dataset.taskId !== dragState?.taskId) {
-        return hoveredItem.dataset.taskId;
-      }
-
-      return null;
+      return insertionIndex;
     }
 
     function getTaskDropIndex(clientY, sourceTaskId) {
@@ -8419,33 +8437,26 @@
       return items.length;
     }
 
-    function getTaskTargetIndex(taskId, hoverTaskId) {
-      const sourceIndex = state.tasks.findIndex((task) => task.id === taskId);
-      const hoverIndex = state.tasks.findIndex((task) => task.id === hoverTaskId);
-      if (sourceIndex < 0 || hoverIndex < 0) {
-        return sourceIndex < 0 ? 0 : sourceIndex;
-      }
-
-      return hoverIndex;
-    }
-
-    function updateTaskDragPreview(hoverTaskId) {
-      clearTaskDragPreview();
-      if (!activeTaskDrag?.moved || !hoverTaskId) {
+    function updateTaskDragPreview(dragState) {
+      clearTaskDragPreview(dragState);
+      if (!dragState.moved) {
         return;
       }
 
-      const hoverItem = elements.tasksList.querySelector(`.task-item[data-task-id="${hoverTaskId}"]`);
-      if (!hoverItem) {
-        return;
-      }
-
-      const direction = activeTaskDrag.deltaY < 0 ? 1 : -1;
-      hoverItem.style.transform = `translateY(${direction * (activeTaskDrag.item.getBoundingClientRect().height + 8)}px)`;
+      const items = dragState.list.filter((item) => item.dataset.taskId !== dragState.taskId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
     }
 
-    function clearTaskDragPreview() {
-      elements.tasksList.querySelectorAll(".task-item").forEach((item) => {
+    function clearTaskDragPreview(dragState) {
+      const list = dragState?.list || elements.tasksList.querySelectorAll(".task-item");
+      [...list].forEach((item) => {
         if (!item.classList.contains("dragging")) {
           item.style.transform = "";
         }
