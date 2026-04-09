@@ -3528,6 +3528,14 @@
       cursor: pointer;
     }
 
+    .milestone-task.dragging {
+      opacity: 0.92;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+      z-index: 3;
+      position: relative;
+      pointer-events: none;
+    }
+
     .milestone-task.done .milestone-task-title {
       text-decoration: line-through;
       color: rgba(255, 255, 255, 0.46);
@@ -3577,6 +3585,10 @@
       color: var(--text);
       line-height: 1.35;
       word-break: break-word;
+    }
+
+    .milestone-task-title[data-drag-milestone-task-handle] {
+      cursor: grab;
     }
 
     .milestone-task-actions {
@@ -4935,6 +4947,7 @@
     let activeLinkedTaskDrag = null;
     let activeBlockDrag = null;
     let activeMilestoneDrag = null;
+    let activeMilestoneTaskDrag = null;
     let activeDrawerGesture = null;
     let suppressClickUntil = 0;
     let taskModalCloseTimer = null;
@@ -5295,6 +5308,10 @@
       elements.phaseDetailBody.addEventListener("pointermove", handleMilestoneDragMove);
       elements.phaseDetailBody.addEventListener("pointerup", handleMilestoneDragEnd);
       elements.phaseDetailBody.addEventListener("pointercancel", handleMilestoneDragEnd);
+      elements.phaseDetailBody.addEventListener("pointerdown", handleMilestoneTaskDragStart);
+      elements.phaseDetailBody.addEventListener("pointermove", handleMilestoneTaskDragMove);
+      elements.phaseDetailBody.addEventListener("pointerup", handleMilestoneTaskDragEnd);
+      elements.phaseDetailBody.addEventListener("pointercancel", handleMilestoneTaskDragEnd);
       elements.addBlockButton.addEventListener("click", () => openBlockModal());
       elements.blockNotesEditor.addEventListener("input", handleBlockNotesEditorInput);
       elements.blockRichToolbar.addEventListener("click", handleBlockToolbarClick);
@@ -5651,13 +5668,13 @@
           ? `<div class="milestone-empty">Goal mode · log progress below.</div>`
           : (tasks.length
             ? `${tasks.map((task) => `
-              <div class="milestone-task ${task.isDone ? "done" : ""}" data-open-milestone-task="${task.id}">
+              <div class="milestone-task ${task.isDone ? "done" : ""}" data-open-milestone-task="${task.id}" data-milestone-task-id="${task.id}" data-milestone-id="${milestone.id}">
                 <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
                   <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
-                <div class="milestone-task-title">${escapeHtml(task.title)}</div>
+                <div class="milestone-task-title" data-drag-milestone-task-handle="${task.id}">${escapeHtml(task.title)}</div>
               </div>
             `).join("")}
             <button class="milestone-task-add-inline" type="button" data-add-milestone-task-inline="${milestone.id}">+ Add task</button>`
@@ -9671,6 +9688,10 @@
     }
 
     function handlePhaseDetailBodyClick(event) {
+      if (Date.now() < suppressClickUntil) {
+        return;
+      }
+
       const menuToggleButton = event.target.closest("[data-toggle-milestone-menu]");
       if (menuToggleButton) {
         const milestoneId = menuToggleButton.dataset.toggleMilestoneMenu;
@@ -10090,6 +10111,161 @@
       const iterator = nextPhaseMilestones[Symbol.iterator]();
       state.milestones = state.milestones.map((item) =>
         item.phaseId === phaseId ? iterator.next().value : item
+      );
+      persistState({ immediate: true });
+      render();
+    }
+
+    function handleMilestoneTaskDragStart(event) {
+      const handle = event.target.closest("[data-drag-milestone-task-handle]");
+      if (!handle) {
+        return;
+      }
+      const item = handle.closest(".milestone-task");
+      if (!item) {
+        return;
+      }
+      const taskId = handle.dataset.dragMilestoneTaskHandle;
+      const milestoneId = item.dataset.milestoneId;
+      if (!taskId || !milestoneId) {
+        return;
+      }
+      activeMilestoneTaskDrag = {
+        taskId,
+        milestoneId,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        item,
+        hoverTaskId: null
+      };
+      item.setPointerCapture(event.pointerId);
+    }
+
+    function handleMilestoneTaskDragMove(event) {
+      if (!activeMilestoneTaskDrag || activeMilestoneTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      activeMilestoneTaskDrag.deltaY = event.clientY - activeMilestoneTaskDrag.startY;
+      if (!activeMilestoneTaskDrag.moved && Math.abs(activeMilestoneTaskDrag.deltaY) < 8) {
+        return;
+      }
+      activeMilestoneTaskDrag.moved = true;
+      activeMilestoneTaskDrag.item.classList.add("dragging");
+      activeMilestoneTaskDrag.item.style.transform = `translateY(${activeMilestoneTaskDrag.deltaY}px)`;
+      const hoverTaskId = getMilestoneTaskHoverTargetId(event.clientX, event.clientY, activeMilestoneTaskDrag);
+      activeMilestoneTaskDrag.hoverTaskId = hoverTaskId;
+      updateMilestoneTaskDragPreview(hoverTaskId);
+      event.preventDefault();
+    }
+
+    function handleMilestoneTaskDragEnd(event) {
+      if (!activeMilestoneTaskDrag || activeMilestoneTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      const { taskId, milestoneId, item, moved, hoverTaskId } = activeMilestoneTaskDrag;
+      item.style.transform = "";
+      item.classList.remove("dragging");
+      clearMilestoneTaskDragPreview();
+      item.releasePointerCapture(event.pointerId);
+      if (moved) {
+        suppressClickUntil = Date.now() + 300;
+        const targetIndex = hoverTaskId
+          ? getMilestoneTaskTargetIndex(taskId, milestoneId, hoverTaskId)
+          : getMilestoneTaskDropIndex(event.clientY, taskId, milestoneId);
+        reorderMilestoneTaskInMilestone(taskId, milestoneId, targetIndex);
+      }
+      activeMilestoneTaskDrag = null;
+    }
+
+    function getMilestoneTaskHoverTargetId(clientX, clientY, dragState) {
+      if (dragState?.hoverTaskId) {
+        const lockedItem = elements.phaseDetailBody.querySelector(
+          `.milestone-task[data-milestone-task-id="${dragState.hoverTaskId}"]`
+        );
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverTaskId;
+          }
+        }
+      }
+
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".milestone-task");
+      if (!hoveredItem?.dataset.milestoneTaskId) {
+        return null;
+      }
+      if (hoveredItem.dataset.milestoneTaskId === dragState?.taskId) {
+        return null;
+      }
+      if (hoveredItem.dataset.milestoneId !== dragState?.milestoneId) {
+        return null;
+      }
+      return hoveredItem.dataset.milestoneTaskId;
+    }
+
+    function updateMilestoneTaskDragPreview(hoverTaskId) {
+      clearMilestoneTaskDragPreview();
+      if (!activeMilestoneTaskDrag?.moved || !hoverTaskId) {
+        return;
+      }
+      const hoverItem = elements.phaseDetailBody.querySelector(
+        `.milestone-task[data-milestone-task-id="${hoverTaskId}"]`
+      );
+      if (!hoverItem) {
+        return;
+      }
+      const direction = activeMilestoneTaskDrag.deltaY < 0 ? 1 : -1;
+      hoverItem.style.transform = `translateY(${direction * (activeMilestoneTaskDrag.item.getBoundingClientRect().height + 8)}px)`;
+    }
+
+    function clearMilestoneTaskDragPreview() {
+      elements.phaseDetailBody.querySelectorAll(".milestone-task").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+    }
+
+    function getMilestoneTaskDropIndex(clientY, sourceTaskId, milestoneId) {
+      const items = [...elements.phaseDetailBody.querySelectorAll(".milestone-task")]
+        .filter((item) => item.dataset.milestoneId === milestoneId && item.dataset.milestoneTaskId !== sourceTaskId);
+      if (!items.length) {
+        return 0;
+      }
+      for (let index = 0; index < items.length; index += 1) {
+        const rect = items[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
+        }
+      }
+      return items.length;
+    }
+
+    function getMilestoneTaskTargetIndex(taskId, milestoneId, hoverTaskId) {
+      const tasks = getMilestoneTasks(milestoneId);
+      const sourceIndex = tasks.findIndex((task) => task.id === taskId);
+      const hoverIndex = tasks.findIndex((task) => task.id === hoverTaskId);
+      if (sourceIndex < 0 || hoverIndex < 0) {
+        return sourceIndex < 0 ? 0 : sourceIndex;
+      }
+      return hoverIndex;
+    }
+
+    function reorderMilestoneTaskInMilestone(taskId, milestoneId, targetIndex) {
+      const milestoneTasks = getMilestoneTasks(milestoneId);
+      const sourceIndex = milestoneTasks.findIndex((task) => task.id === taskId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const nextMilestoneTasks = [...milestoneTasks];
+      const [moved] = nextMilestoneTasks.splice(sourceIndex, 1);
+      const safeIndex = Math.max(0, Math.min(targetIndex, nextMilestoneTasks.length));
+      nextMilestoneTasks.splice(safeIndex, 0, moved);
+      const iterator = nextMilestoneTasks[Symbol.iterator]();
+      state.milestoneTasks = state.milestoneTasks.map((task) =>
+        task.milestoneId === milestoneId ? iterator.next().value : task
       );
       persistState({ immediate: true });
       render();
