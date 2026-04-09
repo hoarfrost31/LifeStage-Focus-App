@@ -1370,9 +1370,13 @@
       text-align: left;
       scroll-snap-align: start;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
       transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       backdrop-filter: blur(16px);
+    }
+
+    .phase-chip.menu-open {
+      z-index: 40;
     }
 
     .panel-hidden {
@@ -1628,7 +1632,7 @@
       display: none;
       flex-direction: column;
       gap: 4px;
-      z-index: 5;
+      z-index: 30;
     }
 
     .phase-card-menu.open {
@@ -5625,6 +5629,7 @@
           const menuToggle = event.target.closest("[data-toggle-phase-menu]");
           if (menuToggle) {
             const menu = elements.phaseRail.querySelector(`[data-phase-menu="${phase.id}"]`);
+            const card = menuToggle.closest(".phase-chip");
             if (!menu) {
               return;
             }
@@ -5638,6 +5643,9 @@
                 "aria-expanded",
                 String(buttonItem === menuToggle && shouldOpen)
               );
+            });
+            elements.phaseRail.querySelectorAll(".phase-chip").forEach((item) => {
+              item.classList.toggle("menu-open", shouldOpen && item === card);
             });
             return;
           }
@@ -8015,6 +8023,9 @@
         });
         elements.phaseRail.querySelectorAll("[data-toggle-phase-menu]").forEach((button) => {
           button.setAttribute("aria-expanded", "false");
+        });
+        elements.phaseRail.querySelectorAll(".phase-chip").forEach((item) => {
+          item.classList.remove("menu-open");
         });
       }
 
