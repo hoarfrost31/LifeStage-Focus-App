@@ -5243,7 +5243,9 @@
         syncStatus: "Local only",
         syncError: "",
         lastSyncedAt: null,
-        lastNonSettingsTab: "timeline"
+        lastNonSettingsTab: "timeline",
+        lastTabTapped: "",
+        lastTaskListFilter: INBOX_LIST_ID
       }
     };
 
@@ -5567,8 +5569,28 @@
     elements.taskDrawerLists.addEventListener("click", handleTaskDrawerClick);
     elements.addTaskListButton.addEventListener("click", handleAddTaskList);
     elements.addSectionButton.addEventListener("click", handleAddSection);
-    elements.tabTasks.addEventListener("click", () => setActiveTab("tasks"));
-    elements.tabPhases.addEventListener("click", () => setActiveTab("phases"));
+    elements.tabTasks.addEventListener("click", () => {
+      if (state.ui.activeTab === "tasks") {
+        if (state.ui.activeTaskListFilter !== TASK_VIEW_OVERVIEW) {
+          state.ui.activeTaskListFilter = TASK_VIEW_OVERVIEW;
+          render();
+        }
+        return;
+      }
+      if (state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW && state.ui.lastTaskListFilter) {
+        state.ui.activeTaskListFilter = state.ui.lastTaskListFilter;
+      }
+      setActiveTab("tasks");
+    });
+    elements.tabPhases.addEventListener("click", () => {
+      if (state.ui.activeTab === "phases" && state.ui.phaseDetailOpen) {
+        state.ui.phaseDetailOpen = false;
+        state.ui.phaseDetailId = null;
+        render();
+        return;
+      }
+      setActiveTab("phases");
+    });
     elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
     elements.settingsButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -7232,6 +7254,9 @@
       event.preventDefault();
       event.stopPropagation();
       state.ui.activeTaskListFilter = filterButton.dataset.taskFilter;
+      if (state.ui.activeTaskListFilter !== TASK_VIEW_OVERVIEW) {
+        state.ui.lastTaskListFilter = state.ui.activeTaskListFilter;
+      }
       setActiveTab("tasks");
     }
 
@@ -7245,6 +7270,9 @@
       }
       event.preventDefault();
       state.ui.activeTaskListFilter = filterButton.dataset.taskFilter;
+      if (state.ui.activeTaskListFilter !== TASK_VIEW_OVERVIEW) {
+        state.ui.lastTaskListFilter = state.ui.activeTaskListFilter;
+      }
       render();
     }
 
@@ -7264,6 +7292,7 @@
         name: trimmedName
       });
       state.ui.activeTaskListFilter = state.taskLists[state.taskLists.length - 1].id;
+      state.ui.lastTaskListFilter = state.ui.activeTaskListFilter;
       state.ui.activeTab = "tasks";
       state.ui.isTaskDrawerOpen = false;
       persistState({ immediate: true });
@@ -7294,6 +7323,9 @@
 
           if (normalizeTaskListId(state.ui.activeTaskListFilter) === normalizedListId) {
             state.ui.activeTaskListFilter = INBOX_LIST_ID;
+          }
+          if (normalizeTaskListId(state.ui.lastTaskListFilter) === normalizedListId) {
+            state.ui.lastTaskListFilter = INBOX_LIST_ID;
           }
 
           persistState({ immediate: true });
@@ -12313,7 +12345,10 @@
           activePhaseTabId: state.ui.activePhaseTabId,
           activeTimelineId: state.ui.activeTimelineId,
           activeTheme: state.ui.activeTheme,
-          todayCollapsedByBlock: state.ui.todayCollapsedByBlock
+          todayCollapsedByBlock: state.ui.todayCollapsedByBlock,
+          lastNonSettingsTab: state.ui.lastNonSettingsTab,
+          lastTaskListFilter: state.ui.lastTaskListFilter,
+          lastTabTapped: state.ui.lastTabTapped
         },
         updatedAt: new Date().toISOString()
       };
@@ -12384,6 +12419,10 @@
       state.ui.lastNonSettingsTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.lastNonSettingsTab)
         ? parsed.ui.lastNonSettingsTab
         : (state.ui.activeTab === "settings" ? "timeline" : state.ui.activeTab);
+      state.ui.lastTabTapped = ["tasks", "phases", "timeline", "settings"].includes(parsed?.ui?.lastTabTapped)
+        ? parsed.ui.lastTabTapped
+        : "";
+      state.ui.lastTaskListFilter = normalizeTaskListId(parsed?.ui?.lastTaskListFilter) || INBOX_LIST_ID;
       state.ui.activeTaskListFilter = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS, TASK_VIEW_OVERVIEW].includes(parsed?.ui?.activeTaskListFilter)
         ? parsed.ui.activeTaskListFilter
         : normalizeTaskListId(parsed?.ui?.activeTaskListFilter);
