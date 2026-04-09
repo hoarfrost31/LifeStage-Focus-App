@@ -1912,6 +1912,11 @@
         0 0 0 1px rgba(248, 250, 252, 0.35);
     }
 
+    .today-task.drag-ready {
+      outline: 1px solid rgba(248, 250, 252, 0.45);
+      box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.28);
+    }
+
     .today-task:active {
       transform: scale(0.98);
     }
@@ -5969,6 +5974,7 @@
         sourceIndex: 0,
         targetIndex: 0
       };
+      item.classList.add("drag-ready");
       initializeTodayTaskDragList(activeTodayTaskDrag, blockId);
       item.setPointerCapture(event.pointerId);
     }
@@ -5982,6 +5988,7 @@
         return;
       }
       activeTodayTaskDrag.moved = true;
+      activeTodayTaskDrag.item.classList.remove("drag-ready");
       activeTodayTaskDrag.item.classList.add("dragging");
       activeTodayTaskDrag.item.style.transform = `translateY(${activeTodayTaskDrag.deltaY}px)`;
 
@@ -5995,6 +6002,7 @@
 
       activeTodayTaskDrag.targetIndex = getTodayTaskDragTargetIndex(event.clientY, activeTodayTaskDrag);
       updateTodayTaskDragPreview(activeTodayTaskDrag);
+      maybeAutoScrollTodayList(event.clientY);
       event.preventDefault();
     }
 
@@ -6004,6 +6012,7 @@
       }
       const { taskId, sourceBlockId, hoverBlockId, item, moved } = activeTodayTaskDrag;
       item.style.transform = "";
+      item.classList.remove("drag-ready");
       item.classList.remove("dragging");
       clearTodayTaskDragPreview(activeTodayTaskDrag);
       clearTodayDragHoverBlock();
@@ -6101,6 +6110,21 @@
           item.style.transform = "";
         }
       });
+    }
+
+    function maybeAutoScrollTodayList(clientY) {
+      const container = elements.todayList;
+      if (!container) {
+        return;
+      }
+      const rect = container.getBoundingClientRect();
+      const edgeThreshold = 48;
+      const maxStep = 14;
+      if (clientY > rect.bottom - edgeThreshold) {
+        container.scrollBy({ top: maxStep, behavior: "auto" });
+      } else if (clientY < rect.top + edgeThreshold) {
+        container.scrollBy({ top: -maxStep, behavior: "auto" });
+      }
     }
 
     function getTodayTaskDropIndex(clientY, sourceTaskId, blockId) {
