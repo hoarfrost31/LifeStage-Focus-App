@@ -5960,8 +5960,14 @@
         deltaY: 0,
         moved: false,
         item,
-        hoverTaskId: null
+        list: null,
+        itemOrder: [],
+        reducedOrder: [],
+        gapOffset: 0,
+        sourceIndex: 0,
+        targetIndex: 0
       };
+      initializeTodayTaskDragList(activeTodayTaskDrag, blockId);
       item.setPointerCapture(event.pointerId);
     }
 
@@ -5978,12 +5984,15 @@
       activeTodayTaskDrag.item.style.transform = `translateY(${activeTodayTaskDrag.deltaY}px)`;
 
       const hoverBlockId = getTodayTaskHoverBlockId(event.clientX, event.clientY) || activeTodayTaskDrag.sourceBlockId;
+      if (hoverBlockId !== activeTodayTaskDrag.hoverBlockId) {
+        clearTodayTaskDragPreview(activeTodayTaskDrag);
+        initializeTodayTaskDragList(activeTodayTaskDrag, hoverBlockId);
+      }
       activeTodayTaskDrag.hoverBlockId = hoverBlockId;
       setTodayDragHoverBlock(hoverBlockId);
 
-      const hoverTaskId = getTodayTaskHoverTargetId(event.clientX, event.clientY, activeTodayTaskDrag);
-      activeTodayTaskDrag.hoverTaskId = hoverTaskId;
-      updateTodayTaskDragPreview(hoverTaskId);
+      activeTodayTaskDrag.targetIndex = getTodayTaskDragTargetIndex(event.clientY, activeTodayTaskDrag);
+      updateTodayTaskDragPreview(activeTodayTaskDrag);
       event.preventDefault();
     }
 
@@ -5991,18 +6000,18 @@
       if (!activeTodayTaskDrag || activeTodayTaskDrag.pointerId !== event.pointerId) {
         return;
       }
-      const { taskId, sourceBlockId, hoverBlockId, item, moved, hoverTaskId } = activeTodayTaskDrag;
+      const { taskId, sourceBlockId, hoverBlockId, item, moved } = activeTodayTaskDrag;
       item.style.transform = "";
       item.classList.remove("dragging");
-      clearTodayTaskDragPreview();
+      clearTodayTaskDragPreview(activeTodayTaskDrag);
       clearTodayDragHoverBlock();
       item.releasePointerCapture(event.pointerId);
 
       if (moved) {
         suppressClickUntil = Date.now() + 300;
         const targetBlockId = hoverBlockId || sourceBlockId;
-        const targetIndex = hoverTaskId
-          ? getTodayTaskTargetIndex(taskId, targetBlockId, hoverTaskId)
+        const targetIndex = Number.isInteger(activeTodayTaskDrag.targetIndex)
+          ? activeTodayTaskDrag.targetIndex
           : getTodayTaskDropIndex(event.clientY, taskId, targetBlockId);
         reorderTodayTaskInBlock(taskId, targetBlockId, targetIndex);
       }
@@ -6027,49 +6036,59 @@
       });
     }
 
-    function getTodayTaskHoverTargetId(clientX, clientY, dragState) {
-      if (dragState?.hoverTaskId) {
-        const lockedItem = elements.todayList.querySelector(
-          `.today-task[data-today-task-id="${dragState.hoverTaskId}"]`
-        );
-        if (lockedItem) {
-          const rect = lockedItem.getBoundingClientRect();
-          if (clientY >= rect.top && clientY <= rect.bottom) {
-            return dragState.hoverTaskId;
-          }
+    function initializeTodayTaskDragList(dragState, blockId) {
+      const block = elements.todayList.querySelector(`.today-block[data-block-id="${blockId}"]`);
+      const list = block ? [...block.querySelectorAll(".today-task")] : [];
+      const sourceIndex = list.findIndex((item) => item.dataset.todayTaskId === dragState.taskId);
+      const reducedOrder = list
+        .filter((item) => item.dataset.todayTaskId !== dragState.taskId)
+        .map((item) => item.dataset.todayTaskId);
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => ({
+        id: item.dataset.todayTaskId,
+        midpoint: item.getBoundingClientRect().top + (item.getBoundingClientRect().height / 2)
+      }));
+      dragState.reducedOrder = reducedOrder;
+      dragState.gapOffset = dragState.item.getBoundingClientRect().height + 6;
+      dragState.sourceIndex = sourceIndex >= 0 ? sourceIndex : reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+    }
+
+    function getTodayTaskDragTargetIndex(clientY, dragState) {
+      if (!dragState.reducedOrder.length) {
+        return dragState.sourceIndex;
+      }
+      let insertionIndex = 0;
+      for (const entry of dragState.itemOrder) {
+        if (entry.id === dragState.taskId) {
+          continue;
+        }
+        if (clientY > entry.midpoint) {
+          insertionIndex += 1;
         }
       }
-
-      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".today-task");
-      if (!hoveredItem?.dataset.todayTaskId) {
-        return null;
-      }
-      if (hoveredItem.dataset.todayTaskId === dragState?.taskId) {
-        return null;
-      }
-      if (hoveredItem.dataset.blockId !== dragState?.hoverBlockId) {
-        return null;
-      }
-      return hoveredItem.dataset.todayTaskId;
+      return insertionIndex;
     }
 
-    function updateTodayTaskDragPreview(hoverTaskId) {
-      clearTodayTaskDragPreview();
-      if (!activeTodayTaskDrag?.moved || !hoverTaskId) {
+    function updateTodayTaskDragPreview(dragState) {
+      clearTodayTaskDragPreview(dragState);
+      if (!dragState.moved) {
         return;
       }
-      const hoverItem = elements.todayList.querySelector(
-        `.today-task[data-today-task-id="${hoverTaskId}"]`
-      );
-      if (!hoverItem) {
-        return;
-      }
-      const direction = activeTodayTaskDrag.deltaY < 0 ? 1 : -1;
-      hoverItem.style.transform = `translateY(${direction * (activeTodayTaskDrag.item.getBoundingClientRect().height + 6)}px)`;
+      const items = dragState.list.filter((item) => item.dataset.todayTaskId !== dragState.taskId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
     }
 
-    function clearTodayTaskDragPreview() {
-      elements.todayList.querySelectorAll(".today-task").forEach((item) => {
+    function clearTodayTaskDragPreview(dragState) {
+      const list = dragState?.list || elements.todayList.querySelectorAll(".today-task");
+      [...list].forEach((item) => {
         if (!item.classList.contains("dragging")) {
           item.style.transform = "";
         }
@@ -6089,16 +6108,6 @@
         }
       }
       return items.length;
-    }
-
-    function getTodayTaskTargetIndex(taskId, blockId, hoverTaskId) {
-      const tasks = getTasksForBlock(blockId, { topLevelOnly: true });
-      const sourceIndex = tasks.findIndex((task) => task.id === taskId);
-      const hoverIndex = tasks.findIndex((task) => task.id === hoverTaskId);
-      if (sourceIndex < 0 || hoverIndex < 0) {
-        return sourceIndex < 0 ? 0 : sourceIndex;
-      }
-      return hoverIndex;
     }
 
     function reorderTodayTaskInBlock(taskId, blockId, targetIndex) {
