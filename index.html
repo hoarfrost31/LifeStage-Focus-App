@@ -1721,6 +1721,15 @@
       display: none;
     }
 
+    .today-block.drag-open .today-block-tasks,
+    .today-block.drag-open .today-task-composer {
+      display: flex;
+    }
+
+    .today-block.drag-open .today-task-composer {
+      display: grid;
+    }
+
     .today-block:hover {
       border-color: rgba(255, 255, 255, 0.14);
       box-shadow: 0 12px 22px rgba(0, 0, 0, 0.2);
@@ -1877,6 +1886,10 @@
       gap: 6px;
     }
 
+    .today-block.drag-open .today-block-tasks {
+      display: flex;
+    }
+
     .today-task {
       display: grid;
       grid-template-columns: auto 1fr;
@@ -1887,6 +1900,14 @@
       border: 1px solid rgba(255, 255, 255, 0.06);
       background: rgba(255, 255, 255, 0.04);
       transition: transform 0.15s ease;
+    }
+
+    .today-task.dragging {
+      opacity: 0.92;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+      z-index: 3;
+      position: relative;
+      pointer-events: none;
     }
 
     .today-task:active {
@@ -1930,6 +1951,10 @@
     .today-task-title {
       font-size: 0.84rem;
       color: rgba(248, 250, 252, 0.78);
+    }
+
+    .today-task-title[data-drag-today-task-handle] {
+      cursor: grab;
     }
 
     .today-task-empty {
@@ -4948,6 +4973,7 @@
     let activeLinkedTaskDrag = null;
     let activeBlockDrag = null;
     let activeMilestoneDrag = null;
+    let activeTodayTaskDrag = null;
     let activeMilestoneTaskDrag = null;
     let activeDrawerGesture = null;
     let suppressClickUntil = 0;
@@ -5271,6 +5297,10 @@
       elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
       elements.todayList.addEventListener("click", handleTodayListClick);
       elements.todayList.addEventListener("keydown", handleTodayListKeydown);
+      elements.todayList.addEventListener("pointerdown", handleTodayTaskDragStart);
+      elements.todayList.addEventListener("pointermove", handleTodayTaskDragMove);
+      elements.todayList.addEventListener("pointerup", handleTodayTaskDragEnd);
+      elements.todayList.addEventListener("pointercancel", handleTodayTaskDragEnd);
       elements.linkedTasksList.addEventListener("click", handleLinkedTaskListClick);
       elements.linkedTasksList.addEventListener("pointerdown", handleLinkedTaskDragStart);
       elements.linkedTasksList.addEventListener("pointermove", handleLinkedTaskDragMove);
@@ -5798,13 +5828,13 @@
         }
         const taskMarkup = tasks.length
           ? `${tasks.map((task) => `
-            <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}">
+            <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}" data-today-task-id="${task.id}" data-block-id="${block.id}">
               <button class="today-task-toggle" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
                 <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-              <div class="today-task-title">${escapeHtml(task.title)}</div>
+              <div class="today-task-title" data-drag-today-task-handle="${task.id}">${escapeHtml(task.title)}</div>
             </div>
           `).join("")}
           <button class="today-task-add-inline" type="button" data-add-task-inline="${block.id}">+ Add task</button>`
@@ -5841,6 +5871,10 @@
     }
 
     function handleTodayListClick(event) {
+      if (Date.now() < suppressClickUntil) {
+        return;
+      }
+
       const toggleBlockButton = event.target.closest("[data-toggle-today-block]");
       if (toggleBlockButton) {
         const blockId = toggleBlockButton.dataset.toggleTodayBlock;
@@ -5901,6 +5935,201 @@
         const blockId = input.dataset.taskInput;
         commitInlineTask(blockId);
       }
+    }
+
+    function handleTodayTaskDragStart(event) {
+      const handle = event.target.closest("[data-drag-today-task-handle]");
+      if (!handle) {
+        return;
+      }
+      const item = handle.closest(".today-task");
+      if (!item) {
+        return;
+      }
+      const taskId = handle.dataset.dragTodayTaskHandle;
+      const blockId = item.dataset.blockId;
+      if (!taskId || !blockId) {
+        return;
+      }
+      activeTodayTaskDrag = {
+        taskId,
+        sourceBlockId: blockId,
+        hoverBlockId: blockId,
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        item,
+        hoverTaskId: null
+      };
+      item.setPointerCapture(event.pointerId);
+    }
+
+    function handleTodayTaskDragMove(event) {
+      if (!activeTodayTaskDrag || activeTodayTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      activeTodayTaskDrag.deltaY = event.clientY - activeTodayTaskDrag.startY;
+      if (!activeTodayTaskDrag.moved && Math.abs(activeTodayTaskDrag.deltaY) < 8) {
+        return;
+      }
+      activeTodayTaskDrag.moved = true;
+      activeTodayTaskDrag.item.classList.add("dragging");
+      activeTodayTaskDrag.item.style.transform = `translateY(${activeTodayTaskDrag.deltaY}px)`;
+
+      const hoverBlockId = getTodayTaskHoverBlockId(event.clientX, event.clientY) || activeTodayTaskDrag.sourceBlockId;
+      activeTodayTaskDrag.hoverBlockId = hoverBlockId;
+      setTodayDragHoverBlock(hoverBlockId);
+
+      const hoverTaskId = getTodayTaskHoverTargetId(event.clientX, event.clientY, activeTodayTaskDrag);
+      activeTodayTaskDrag.hoverTaskId = hoverTaskId;
+      updateTodayTaskDragPreview(hoverTaskId);
+      event.preventDefault();
+    }
+
+    function handleTodayTaskDragEnd(event) {
+      if (!activeTodayTaskDrag || activeTodayTaskDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      const { taskId, sourceBlockId, hoverBlockId, item, moved, hoverTaskId } = activeTodayTaskDrag;
+      item.style.transform = "";
+      item.classList.remove("dragging");
+      clearTodayTaskDragPreview();
+      clearTodayDragHoverBlock();
+      item.releasePointerCapture(event.pointerId);
+
+      if (moved) {
+        suppressClickUntil = Date.now() + 300;
+        const targetBlockId = hoverBlockId || sourceBlockId;
+        const targetIndex = hoverTaskId
+          ? getTodayTaskTargetIndex(taskId, targetBlockId, hoverTaskId)
+          : getTodayTaskDropIndex(event.clientY, taskId, targetBlockId);
+        reorderTodayTaskInBlock(taskId, targetBlockId, targetIndex);
+      }
+
+      activeTodayTaskDrag = null;
+    }
+
+    function getTodayTaskHoverBlockId(clientX, clientY) {
+      const hoveredBlock = document.elementFromPoint(clientX, clientY)?.closest(".today-block");
+      return hoveredBlock?.dataset.blockId || null;
+    }
+
+    function setTodayDragHoverBlock(blockId) {
+      elements.todayList.querySelectorAll(".today-block").forEach((block) => {
+        block.classList.toggle("drag-open", block.dataset.blockId === blockId);
+      });
+    }
+
+    function clearTodayDragHoverBlock() {
+      elements.todayList.querySelectorAll(".today-block").forEach((block) => {
+        block.classList.remove("drag-open");
+      });
+    }
+
+    function getTodayTaskHoverTargetId(clientX, clientY, dragState) {
+      if (dragState?.hoverTaskId) {
+        const lockedItem = elements.todayList.querySelector(
+          `.today-task[data-today-task-id="${dragState.hoverTaskId}"]`
+        );
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverTaskId;
+          }
+        }
+      }
+
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".today-task");
+      if (!hoveredItem?.dataset.todayTaskId) {
+        return null;
+      }
+      if (hoveredItem.dataset.todayTaskId === dragState?.taskId) {
+        return null;
+      }
+      if (hoveredItem.dataset.blockId !== dragState?.hoverBlockId) {
+        return null;
+      }
+      return hoveredItem.dataset.todayTaskId;
+    }
+
+    function updateTodayTaskDragPreview(hoverTaskId) {
+      clearTodayTaskDragPreview();
+      if (!activeTodayTaskDrag?.moved || !hoverTaskId) {
+        return;
+      }
+      const hoverItem = elements.todayList.querySelector(
+        `.today-task[data-today-task-id="${hoverTaskId}"]`
+      );
+      if (!hoverItem) {
+        return;
+      }
+      const direction = activeTodayTaskDrag.deltaY < 0 ? 1 : -1;
+      hoverItem.style.transform = `translateY(${direction * (activeTodayTaskDrag.item.getBoundingClientRect().height + 6)}px)`;
+    }
+
+    function clearTodayTaskDragPreview() {
+      elements.todayList.querySelectorAll(".today-task").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+    }
+
+    function getTodayTaskDropIndex(clientY, sourceTaskId, blockId) {
+      const items = [...elements.todayList.querySelectorAll(".today-task")]
+        .filter((item) => item.dataset.blockId === blockId && item.dataset.todayTaskId !== sourceTaskId);
+      if (!items.length) {
+        return 0;
+      }
+      for (let index = 0; index < items.length; index += 1) {
+        const rect = items[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
+        }
+      }
+      return items.length;
+    }
+
+    function getTodayTaskTargetIndex(taskId, blockId, hoverTaskId) {
+      const tasks = getTasksForBlock(blockId, { topLevelOnly: true });
+      const sourceIndex = tasks.findIndex((task) => task.id === taskId);
+      const hoverIndex = tasks.findIndex((task) => task.id === hoverTaskId);
+      if (sourceIndex < 0 || hoverIndex < 0) {
+        return sourceIndex < 0 ? 0 : sourceIndex;
+      }
+      return hoverIndex;
+    }
+
+    function reorderTodayTaskInBlock(taskId, blockId, targetIndex) {
+      const sourceIndex = state.tasks.findIndex((task) => task.id === taskId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const movedTask = { ...state.tasks[sourceIndex], blockId };
+      const nextTasks = [...state.tasks];
+      nextTasks.splice(sourceIndex, 1);
+
+      const targetTasks = nextTasks.filter((task) => task.blockId === blockId && !task.parentTaskId);
+      const safeIndex = Math.max(0, Math.min(targetIndex, targetTasks.length));
+
+      let insertionIndex = nextTasks.length;
+      let count = 0;
+      for (let index = 0; index < nextTasks.length; index += 1) {
+        const task = nextTasks[index];
+        if (task.blockId === blockId && !task.parentTaskId) {
+          if (count === safeIndex) {
+            insertionIndex = index;
+            break;
+          }
+          count += 1;
+        }
+      }
+
+      nextTasks.splice(insertionIndex, 0, movedTask);
+      state.tasks = nextTasks;
+      persistState({ immediate: true });
+      render();
     }
 
     function openInlineTaskComposer(blockId) {
