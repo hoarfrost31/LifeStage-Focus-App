@@ -66,29 +66,16 @@
       display: flex;
       justify-content: center;
       padding: 0;
-      min-height: 100vh;
-      position: relative;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
       overflow-x: hidden;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(16px);
-      border-radius: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
     .app-shell {
       width: 100%;
       max-width: 420px;
-      min-height: 100vh;
+      min-height: calc(100vh - env(safe-area-inset-bottom, 0px));
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -96,6 +83,19 @@
       padding-top: calc(10px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
       isolation: isolate;
+    }
+
+    .app-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--elevation-card);
+      backdrop-filter: blur(16px);
+      z-index: 0;
+      pointer-events: none;
     }
 
     .phase-rail,
@@ -149,17 +149,6 @@
       box-shadow: var(--elevation-card);
       backdrop-filter: blur(16px);
       padding: 16px;
-    }
-
-    .tasks-card,
-    .phases-card,
-    .timeline-card {
-      background: transparent;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-      backdrop-filter: none;
-      padding: 0;
     }
 
     .app-shell > :not(.bottom-nav-card) {
@@ -599,7 +588,7 @@
     }
 
     .tasks-list.overview-zoom {
-      transform: none;
+      transform: scale(1.08);
       transform-origin: top center;
       padding-bottom: 20px;
     }
