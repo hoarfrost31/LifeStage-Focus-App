@@ -526,7 +526,7 @@
     .floating-actions-layer {
       position: fixed;
       inset: 0;
-      z-index: 30;
+      z-index: 12;
       pointer-events: none;
     }
 
@@ -9461,12 +9461,11 @@
     }
 
     function handleBlockDelete() {
-      if (state.ui.blockModalMode !== "edit") {
+      setBlockMenuOpen(false);
+      const targetId = state.ui.editingBlockId || elements.blockId.value;
+      if (!targetId) {
         return;
       }
-
-      setBlockMenuOpen(false);
-      const targetId = state.ui.editingBlockId;
       state.blocks = state.blocks.filter((block) => block.id !== targetId);
       state.tasks = state.tasks.map((task) =>
         task.blockId === targetId ? { ...task, blockId: null } : task
