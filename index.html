@@ -625,6 +625,22 @@
       transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease;
     }
 
+    .task-note-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(248, 250, 252, 0.75);
+      flex-shrink: 0;
+    }
+
+    .task-note-icon svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+    }
+
     .task-expand {
       width: 22px;
       height: 22px;
@@ -1940,6 +1956,22 @@
       transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease;
     }
 
+    .today-note-icon {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(248, 250, 252, 0.75);
+      flex-shrink: 0;
+    }
+
+    .today-note-icon svg {
+      width: 12px;
+      height: 12px;
+      display: block;
+    }
+
     .today-task-toggle svg {
       width: 11px;
       height: 11px;
@@ -2727,6 +2759,52 @@
       flex-direction: column;
       gap: 4px;
       z-index: 4;
+    }
+
+    #task-menu-sheet-backdrop .task-context-menu {
+      position: static;
+      display: flex;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      gap: 8px;
+    }
+
+    #task-menu-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      z-index: 28;
+    }
+
+    #task-menu-sheet-backdrop.open {
+      display: flex;
+    }
+
+    .task-menu-sheet {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px 20px 16px 16px;
+      padding: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transform: translateY(100%);
+      opacity: 0.95;
+      transition: transform 0.28s ease, opacity 0.28s ease;
+    }
+
+    #task-menu-sheet-backdrop.open .task-menu-sheet {
+      transform: translateY(0);
+      opacity: 1;
     }
 
     .task-context-menu.open {
@@ -4682,27 +4760,11 @@
               <circle cx="8" cy="12.8" r="1.2"/>
             </svg>
           </button>
-          <div class="task-context-menu" id="task-context-menu" aria-hidden="true">
-            <button type="button" id="task-menu-add-subtask-button">Add subtask</button>
-            <label>
-              Move to
-              <select id="task-list-select" name="taskListId"></select>
-            </label>
-            <label>
-              Move to Section
-              <select id="task-section-select" name="taskSectionId"></select>
-            </label>
-            <label>
-              Link to block
-              <select id="task-block-select" name="taskBlockId"></select>
-            </label>
-            <button type="button" id="task-menu-close-button">Close</button>
-            <button class="danger" type="button" id="task-menu-delete-button">Delete task</button>
-          </div>
         </div>
       </div>
       <form id="task-form">
         <input type="hidden" id="task-id">
+        <input type="hidden" id="task-is-note">
         <input type="hidden" id="task-parent-id">
         <input type="hidden" id="task-due-datetime">
         <input type="hidden" id="task-repeat-interval" value="1">
@@ -4797,6 +4859,29 @@
           </div>
         </div>
       </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="task-menu-sheet-backdrop" aria-hidden="true">
+    <section class="modal task-menu-sheet" aria-label="Task options">
+      <div class="task-context-menu open" aria-hidden="false">
+        <button type="button" id="task-menu-add-subtask-button">Add subtask</button>
+        <label>
+          Move to
+          <select id="task-list-select" name="taskListId"></select>
+        </label>
+        <label>
+          Move to Section
+          <select id="task-section-select" name="taskSectionId"></select>
+        </label>
+        <label>
+          Link to block
+          <select id="task-block-select" name="taskBlockId"></select>
+        </label>
+        <button type="button" id="task-menu-toggle-note-button">Convert to note</button>
+        <button type="button" id="task-menu-close-button">Close</button>
+        <button class="danger" type="button" id="task-menu-delete-button">Delete task</button>
+      </div>
     </section>
   </div>
 
@@ -5137,6 +5222,7 @@
       blockSettingsPanel: document.getElementById("block-settings-panel"),
       taskForm: document.getElementById("task-form"),
       taskId: document.getElementById("task-id"),
+      taskIsNote: document.getElementById("task-is-note"),
       taskParentId: document.getElementById("task-parent-id"),
       taskDueDateTime: document.getElementById("task-due-datetime"),
       taskRepeatInterval: document.getElementById("task-repeat-interval"),
@@ -5160,10 +5246,11 @@
       taskSectionSelect: document.getElementById("task-section-select"),
       taskScheduleButton: document.getElementById("task-schedule-button"),
       taskMenuButton: document.getElementById("task-menu-button"),
-      taskContextMenu: document.getElementById("task-context-menu"),
+      taskMenuSheetBackdrop: document.getElementById("task-menu-sheet-backdrop"),
       taskMenuAddSubtaskButton: document.getElementById("task-menu-add-subtask-button"),
       taskMenuCloseButton: document.getElementById("task-menu-close-button"),
       taskMenuDeleteButton: document.getElementById("task-menu-delete-button"),
+      taskMenuToggleNoteButton: document.getElementById("task-menu-toggle-note-button"),
       taskSubtaskInlineForm: document.getElementById("task-subtask-inline-form"),
       taskSubtaskInlineInput: document.getElementById("task-subtask-inline-input"),
       saveSubtaskInlineButton: document.getElementById("save-subtask-inline-button"),
@@ -5415,11 +5502,13 @@
       elements.taskMenuButton.addEventListener("click", handleTaskMenuToggle);
       elements.taskMenuButton.addEventListener("pointerdown", stopTaskMenuInteraction);
       elements.taskMenuButton.addEventListener("touchstart", stopTaskMenuInteraction, { passive: false });
-      elements.taskContextMenu.addEventListener("pointerdown", stopTaskMenuInteraction);
-      elements.taskContextMenu.addEventListener("touchstart", stopTaskMenuInteraction, { passive: false });
+      elements.taskMenuSheetBackdrop.addEventListener("pointerdown", stopTaskMenuInteraction);
+      elements.taskMenuSheetBackdrop.addEventListener("touchstart", stopTaskMenuInteraction, { passive: false });
       elements.taskMenuAddSubtaskButton.addEventListener("click", handleTaskMenuAddSubtask);
-      elements.taskMenuCloseButton.addEventListener("click", () => closeModal("task"));
+      elements.taskMenuCloseButton.addEventListener("click", () => setTaskMenuOpen(false));
+      elements.taskMenuToggleNoteButton.addEventListener("click", handleTaskMenuToggleNote);
       elements.taskMenuDeleteButton.addEventListener("click", handleTaskDelete);
+      elements.taskMenuSheetBackdrop.addEventListener("click", handleTaskMenuBackdropClick);
       elements.taskListSelect.addEventListener("change", handleTaskListSelectChange);
       elements.taskSectionSelect.addEventListener("change", handleTaskSectionSelectChange);
       elements.taskBlockSelect.addEventListener("change", handleTaskBlockSelectChange);
@@ -5851,16 +5940,27 @@
           completedBlocks += 1;
         }
         const taskMarkup = tasks.length
-          ? `${tasks.map((task) => `
+          ? `${tasks.map((task) => {
+            const isNote = Boolean(task.isNote);
+            const toggleMarkup = isNote
+              ? `<span class="today-note-icon" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 3.5h6.8L13 5.7v6.8a1.4 1.4 0 0 1-1.4 1.4H4A1.4 1.4 0 0 1 2.6 12.5V4.9A1.4 1.4 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M10.8 3.5v2.2H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  </svg>
+                </span>`
+              : `<button class="today-task-toggle" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>`;
+            return `
             <div class="today-task ${task.isDone ? "done" : ""}" data-edit-task="${task.id}" data-today-task-id="${task.id}" data-block-id="${block.id}">
-              <button class="today-task-toggle" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
-                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
+              ${toggleMarkup}
               <div class="today-task-title" data-drag-today-task-handle="${task.id}">${escapeHtml(task.title)}</div>
             </div>
-          `).join("")}
+          `;
+          }).join("")}
           <button class="today-task-add-inline" type="button" data-add-task-inline="${block.id}">+ Add task</button>`
           : `<div class="today-task-empty" data-add-task-inline="${block.id}">+ Add task</div>`;
         return `
@@ -6666,6 +6766,19 @@
       const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const isOverdue = occurrence ? isTaskOccurrenceOverdue(occurrence, new Date()) : false;
       const showScheduleMeta = depth === 0;
+      const isNote = Boolean(task.isNote);
+      const toggleMarkup = isNote
+        ? `<span class="task-note-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 3.5h6.8L13 5.7v6.8a1.4 1.4 0 0 1-1.4 1.4H4A1.4 1.4 0 0 1 2.6 12.5V4.9A1.4 1.4 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M10.8 3.5v2.2H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </span>`
+        : `<button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>`;
       const metaItems = [
         showScheduleMeta ? (block ? `<span>${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}</span>` : `<span>Standalone</span>`) : "",
         showScheduleMeta && block ? `<span class="task-block-chip">${escapeHtml(block.title)}</span>` : "",
@@ -6681,11 +6794,7 @@
               </svg>
             </button>
           ` : `<span class="task-expand-placeholder" aria-hidden="true"></span>`}
-          <button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+          ${toggleMarkup}
           <button class="task-main-button" type="button" data-edit-task="${task.id}" data-drag-task-handle="${task.id}">
             <div class="task-main-row">
               <div class="task-title">${escapeHtml(task.title)}</div>
@@ -6757,6 +6866,19 @@
       const repeatMeta = occurrence?.repeatRule ? getRepeatIconMarkup(formatRepeatRuleSummary(occurrence.repeatRule)) : "";
       const listName = getTaskListById(task.listId)?.name || "Inbox";
       const isOverdue = occurrence ? isTaskOccurrenceOverdue(occurrence, new Date()) : false;
+      const isNote = Boolean(task.isNote);
+      const toggleMarkup = isNote
+        ? `<span class="task-note-icon" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 3.5h6.8L13 5.7v6.8a1.4 1.4 0 0 1-1.4 1.4H4A1.4 1.4 0 0 1 2.6 12.5V4.9A1.4 1.4 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M10.8 3.5v2.2H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+          </span>`
+        : `<button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>`;
       const metaItems = [
         `<span class="task-list-chip">${escapeHtml(listName)}</span>`,
         repeatMeta,
@@ -6765,11 +6887,7 @@
       return `
         <div class="task-item ${task.isDone ? "done" : ""}" data-task-id="${task.id}" data-parent-task-id="${task.parentTaskId || ""}" data-open-task="${task.id}">
           <span class="task-expand-placeholder" aria-hidden="true"></span>
-          <button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
+          ${toggleMarkup}
           <button class="task-main-button" type="button" data-edit-task="${task.id}">
             <div class="task-main-row">
               <div class="task-title">${escapeHtml(task.title)}</div>
@@ -7979,14 +8097,14 @@
     }
 
     function setTaskMenuOpen(isOpen) {
-      elements.taskContextMenu.classList.toggle("open", isOpen);
-      elements.taskContextMenu.setAttribute("aria-hidden", String(!isOpen));
+      elements.taskMenuSheetBackdrop.classList.toggle("open", isOpen);
+      elements.taskMenuSheetBackdrop.setAttribute("aria-hidden", String(!isOpen));
       elements.taskMenuButton.setAttribute("aria-expanded", String(isOpen));
     }
 
     function handleTaskMenuToggle(event) {
       event.stopPropagation();
-      setTaskMenuOpen(!elements.taskContextMenu.classList.contains("open"));
+      setTaskMenuOpen(!elements.taskMenuSheetBackdrop.classList.contains("open"));
     }
 
     function handleTaskMenuAddSubtask() {
@@ -8049,14 +8167,14 @@
       }
 
       if (!isTaskModalOpen() || !state.ui.taskModalIsEditing) {
-        if (isTaskModalOpen() && !elements.taskContextMenu.contains(event.target) && !elements.taskMenuButton.contains(event.target)) {
+        if (isTaskModalOpen() && !elements.taskMenuSheetBackdrop.contains(event.target) && !elements.taskMenuButton.contains(event.target)) {
           setTaskMenuOpen(false);
         }
         return;
       }
 
       if (elements.taskModalSheet.contains(event.target)) {
-        if (!elements.taskContextMenu.contains(event.target) && !elements.taskMenuButton.contains(event.target)) {
+        if (!elements.taskMenuSheetBackdrop.contains(event.target) && !elements.taskMenuButton.contains(event.target)) {
           setTaskMenuOpen(false);
         }
         return;
@@ -8094,6 +8212,39 @@
         restoreTaskEditingFocus();
       }
       event.stopPropagation();
+    }
+
+    function handleTaskMenuBackdropClick(event) {
+      if (event.target === elements.taskMenuSheetBackdrop) {
+        setTaskMenuOpen(false);
+      }
+    }
+
+    function handleTaskMenuToggleNote() {
+      const isNote = elements.taskIsNote.value === "true";
+      const nextIsNote = !isNote;
+      elements.taskIsNote.value = nextIsNote ? "true" : "false";
+      if (nextIsNote) {
+        elements.taskDueDateTime.value = "";
+        writeTaskRepeatRuleToFields(null);
+      }
+      renderTaskScheduleSummary();
+      updateTaskMenuNoteLabel();
+      if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
+        state.tasks = state.tasks.map((task) =>
+          task.id === state.ui.editingTaskId
+            ? { ...task, isNote: nextIsNote, isDone: nextIsNote ? false : task.isDone }
+            : task
+        );
+        persistState({ immediate: true });
+        render();
+      }
+    }
+
+    function updateTaskMenuNoteLabel() {
+      const isNote = elements.taskIsNote.value === "true";
+      elements.taskMenuToggleNoteButton.textContent = isNote ? "Convert to task" : "Convert to note";
+      elements.taskMenuAddSubtaskButton.style.display = isNote ? "none" : "";
     }
 
     function restoreTaskEditingFocus() {
@@ -8140,6 +8291,7 @@
         : null;
       const dueDateTime = elements.taskDueDateTime.value || "";
       const repeatRule = readTaskRepeatRuleFromFields();
+      const isNote = elements.taskIsNote.value === "true";
       return {
         id: elements.taskId.value || crypto.randomUUID(),
         title,
@@ -8149,7 +8301,8 @@
         listId,
         sectionId,
         dueDateTime,
-        repeatRule
+        repeatRule,
+        isNote
       };
     }
 
@@ -8170,7 +8323,8 @@
         listId: draft.parentTaskId ? (getTaskById(draft.parentTaskId)?.listId || draft.listId) : draft.listId,
         sectionId: draft.parentTaskId ? null : draft.sectionId,
         dueDateTime: draft.dueDateTime || "",
-        repeatRule: draft.dueDateTime ? draft.repeatRule : null,
+        repeatRule: draft.dueDateTime && !draft.isNote ? draft.repeatRule : null,
+        isNote: Boolean(draft.isNote),
         isDone: existingTask ? Boolean(existingTask.isDone) : false,
         isCollapsed: existingTask ? Boolean(existingTask.isCollapsed) : false
       };
@@ -9232,6 +9386,9 @@
     function toggleTask(taskId) {
       state.tasks = state.tasks.map((task) => {
         if (task.id !== taskId) {
+          return task;
+        }
+        if (task.isNote) {
           return task;
         }
         const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
@@ -10668,6 +10825,7 @@
       state.ui.editingTaskId = task ? task.id : null;
       state.ui.taskModalParentId = resolvedParentTaskId;
       elements.taskId.value = task ? task.id : "";
+      elements.taskIsNote.value = task?.isNote ? "true" : "false";
       elements.taskParentId.value = resolvedParentTaskId || "";
       elements.taskTitleInput.value = task ? task.title : "";
       elements.taskNotes.value = task ? task.notes || "" : "";
@@ -10687,6 +10845,7 @@
       elements.taskMenuDeleteButton.style.display = task ? "" : "none";
       setTaskFormattingTrayOpen(false);
       setTaskMenuOpen(false);
+      updateTaskMenuNoteLabel();
       closeInlineSubtaskComposer();
       renderTaskSubtasks();
       setTaskModalSheetState("full");
@@ -11455,7 +11614,8 @@
         repeatRule: normalizeRepeatRule(task?.repeatRule),
         parentTaskId: typeof task?.parentTaskId === "string" && task.parentTaskId ? task.parentTaskId : null,
         isDone: Boolean(task?.isDone),
-        isCollapsed: Boolean(task?.isCollapsed)
+        isCollapsed: Boolean(task?.isCollapsed),
+        isNote: Boolean(task?.isNote)
       }));
 
       const validTaskIds = new Set(normalizedTasks.map((task) => task.id));
