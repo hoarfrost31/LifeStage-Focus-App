@@ -1721,13 +1721,11 @@
       display: none;
     }
 
-    .today-block.drag-open .today-block-tasks,
-    .today-block.drag-open .today-task-composer {
-      display: flex;
-    }
-
-    .today-block.drag-open .today-task-composer {
-      display: grid;
+    .today-block.drag-hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.24),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
 
     .today-block:hover {
@@ -1908,6 +1906,10 @@
       z-index: 3;
       position: relative;
       pointer-events: none;
+      outline: 1px solid rgba(248, 250, 252, 0.45);
+      box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(248, 250, 252, 0.35);
     }
 
     .today-task:active {
@@ -6014,6 +6016,12 @@
           ? activeTodayTaskDrag.targetIndex
           : getTodayTaskDropIndex(event.clientY, taskId, targetBlockId);
         reorderTodayTaskInBlock(taskId, targetBlockId, targetIndex);
+        state.ui.todayCollapsedByBlock = {
+          ...state.ui.todayCollapsedByBlock,
+          [targetBlockId]: false
+        };
+        persistState({ immediate: true });
+        render();
       }
 
       activeTodayTaskDrag = null;
@@ -6026,13 +6034,13 @@
 
     function setTodayDragHoverBlock(blockId) {
       elements.todayList.querySelectorAll(".today-block").forEach((block) => {
-        block.classList.toggle("drag-open", block.dataset.blockId === blockId);
+        block.classList.toggle("drag-hover", block.dataset.blockId === blockId);
       });
     }
 
     function clearTodayDragHoverBlock() {
       elements.todayList.querySelectorAll(".today-block").forEach((block) => {
-        block.classList.remove("drag-open");
+        block.classList.remove("drag-hover");
       });
     }
 
@@ -6137,8 +6145,6 @@
 
       nextTasks.splice(insertionIndex, 0, movedTask);
       state.tasks = nextTasks;
-      persistState({ immediate: true });
-      render();
     }
 
     function openInlineTaskComposer(blockId) {
