@@ -5338,7 +5338,7 @@
 
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
-    const DRAG_HOLD_DELAY_MS = 120;
+    const DRAG_HOLD_DELAY_MS = 220;
     const STORAGE_KEY = "lifestage-focus-state-v1";
     const LEGACY_DEVICE_ID_KEY = "lifestage-focus-device-id-v1";
     const FIREBASE_COLLECTION = "lifestageFocusStates";
@@ -6530,20 +6530,31 @@
         sourceBlockId: blockId,
         hoverBlockId: blockId,
         pointerId: event.pointerId,
+        startX: event.clientX,
         startY: event.clientY,
         deltaY: 0,
         moved: false,
+        activated: false,
+        hasPointerCapture: false,
         item,
         list: null,
         itemOrder: [],
         reducedOrder: [],
         gapOffset: 0,
         sourceIndex: 0,
-        targetIndex: 0
+        targetIndex: 0,
+        activationTimer: window.setTimeout(() => {
+          if (activeTodayTaskDrag && activeTodayTaskDrag.pointerId === event.pointerId) {
+            activeTodayTaskDrag.activated = true;
+            activeTodayTaskDrag.item.classList.add("drag-ready");
+            if (!activeTodayTaskDrag.hasPointerCapture) {
+              activeTodayTaskDrag.item.setPointerCapture(event.pointerId);
+              activeTodayTaskDrag.hasPointerCapture = true;
+            }
+            initializeTodayTaskDragList(activeTodayTaskDrag, blockId);
+          }
+        }, DRAG_HOLD_DELAY_MS)
       };
-      item.classList.add("drag-ready");
-      initializeTodayTaskDragList(activeTodayTaskDrag, blockId);
-      item.setPointerCapture(event.pointerId);
     }
 
     function handleTodayTaskDragMove(event) {
@@ -6551,6 +6562,18 @@
         return;
       }
       activeTodayTaskDrag.deltaY = event.clientY - activeTodayTaskDrag.startY;
+      if (!activeTodayTaskDrag.activated) {
+        const deltaX = event.clientX - activeTodayTaskDrag.startX;
+        if (Math.abs(deltaX) > 8 || Math.abs(activeTodayTaskDrag.deltaY) > 8) {
+          window.clearTimeout(activeTodayTaskDrag.activationTimer);
+          activeTodayTaskDrag.item.classList.remove("drag-ready");
+          if (activeTodayTaskDrag.hasPointerCapture) {
+            activeTodayTaskDrag.item.releasePointerCapture(event.pointerId);
+          }
+          activeTodayTaskDrag = null;
+        }
+        return;
+      }
       if (!activeTodayTaskDrag.moved && Math.abs(activeTodayTaskDrag.deltaY) < 8) {
         return;
       }
@@ -6577,13 +6600,16 @@
       if (!activeTodayTaskDrag || activeTodayTaskDrag.pointerId !== event.pointerId) {
         return;
       }
+      window.clearTimeout(activeTodayTaskDrag.activationTimer);
       const { taskId, sourceBlockId, hoverBlockId, item, moved } = activeTodayTaskDrag;
       item.style.transform = "";
       item.classList.remove("drag-ready");
       item.classList.remove("dragging");
       clearTodayTaskDragPreview(activeTodayTaskDrag);
       clearTodayDragHoverBlock();
-      item.releasePointerCapture(event.pointerId);
+      if (activeTodayTaskDrag.hasPointerCapture) {
+        item.releasePointerCapture(event.pointerId);
+      }
 
       if (moved) {
         suppressClickUntil = Date.now() + 300;
@@ -11464,20 +11490,31 @@
         taskId,
         milestoneId,
         pointerId: event.pointerId,
+        startX: event.clientX,
         startY: event.clientY,
         deltaY: 0,
         moved: false,
+        activated: false,
+        hasPointerCapture: false,
         item,
         list: null,
         itemOrder: [],
         reducedOrder: [],
         gapOffset: 0,
         sourceIndex: 0,
-        targetIndex: 0
+        targetIndex: 0,
+        activationTimer: window.setTimeout(() => {
+          if (activeMilestoneTaskDrag && activeMilestoneTaskDrag.pointerId === event.pointerId) {
+            activeMilestoneTaskDrag.activated = true;
+            activeMilestoneTaskDrag.item.classList.add("drag-ready");
+            if (!activeMilestoneTaskDrag.hasPointerCapture) {
+              activeMilestoneTaskDrag.item.setPointerCapture(event.pointerId);
+              activeMilestoneTaskDrag.hasPointerCapture = true;
+            }
+            initializeMilestoneTaskDragList(activeMilestoneTaskDrag, milestoneId);
+          }
+        }, DRAG_HOLD_DELAY_MS)
       };
-      item.classList.add("drag-ready");
-      initializeMilestoneTaskDragList(activeMilestoneTaskDrag, milestoneId);
-      item.setPointerCapture(event.pointerId);
     }
 
     function handleMilestoneTaskDragMove(event) {
@@ -11485,6 +11522,18 @@
         return;
       }
       activeMilestoneTaskDrag.deltaY = event.clientY - activeMilestoneTaskDrag.startY;
+      if (!activeMilestoneTaskDrag.activated) {
+        const deltaX = event.clientX - activeMilestoneTaskDrag.startX;
+        if (Math.abs(deltaX) > 8 || Math.abs(activeMilestoneTaskDrag.deltaY) > 8) {
+          window.clearTimeout(activeMilestoneTaskDrag.activationTimer);
+          activeMilestoneTaskDrag.item.classList.remove("drag-ready");
+          if (activeMilestoneTaskDrag.hasPointerCapture) {
+            activeMilestoneTaskDrag.item.releasePointerCapture(event.pointerId);
+          }
+          activeMilestoneTaskDrag = null;
+        }
+        return;
+      }
       if (!activeMilestoneTaskDrag.moved && Math.abs(activeMilestoneTaskDrag.deltaY) < 8) {
         return;
       }
@@ -11501,12 +11550,15 @@
       if (!activeMilestoneTaskDrag || activeMilestoneTaskDrag.pointerId !== event.pointerId) {
         return;
       }
+      window.clearTimeout(activeMilestoneTaskDrag.activationTimer);
       const { taskId, milestoneId, item, moved } = activeMilestoneTaskDrag;
       item.style.transform = "";
       item.classList.remove("drag-ready");
       item.classList.remove("dragging");
       clearMilestoneTaskDragPreview(activeMilestoneTaskDrag);
-      item.releasePointerCapture(event.pointerId);
+      if (activeMilestoneTaskDrag.hasPointerCapture) {
+        item.releasePointerCapture(event.pointerId);
+      }
       if (moved) {
         suppressClickUntil = Date.now() + 300;
         const targetIndex = Number.isInteger(activeMilestoneTaskDrag.targetIndex)
