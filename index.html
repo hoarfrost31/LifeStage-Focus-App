@@ -580,6 +580,12 @@
       padding: 10px 12px 0;
     }
 
+    .tasks-list.overview-zoom {
+      transform: scale(1.08);
+      transform-origin: top center;
+      padding-bottom: 20px;
+    }
+
     .task-list-overview-section {
       display: flex;
       flex-direction: column;
@@ -2066,6 +2072,7 @@
 
     .today-task-title[data-drag-today-task-handle] {
       cursor: grab;
+      touch-action: none;
     }
 
     .today-task-empty {
@@ -3592,8 +3599,8 @@
       width: min(calc(100vw - 32px), 420px);
       max-height: calc(100vh - 32px);
       overflow: auto;
-      background: rgba(18, 18, 20, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--panel);
+      border: 1px solid var(--border);
       border-radius: 24px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       backdrop-filter: none;
@@ -6367,6 +6374,7 @@
       if (!item) {
         return;
       }
+      event.preventDefault();
       const taskId = handle.dataset.dragTodayTaskHandle;
       const blockId = item.dataset.blockId;
       if (!taskId || !blockId) {
@@ -7041,9 +7049,11 @@
     function renderTasks() {
       if (state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW) {
         elements.tasksListToolbar.classList.add("hidden");
+        elements.tasksList.classList.add("overview-zoom");
         elements.tasksList.innerHTML = renderTaskListOverview();
         return;
       }
+      elements.tasksList.classList.remove("overview-zoom");
 
       const isDynamicView = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter);
       elements.tasksListToolbar.classList.toggle("hidden", isDynamicView);
