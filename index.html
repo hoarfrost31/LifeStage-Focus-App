@@ -3569,6 +3569,11 @@
       pointer-events: none;
     }
 
+    .milestone-task.drag-ready {
+      outline: 1px solid rgba(248, 250, 252, 0.45);
+      box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.28);
+    }
+
     .milestone-task.done .milestone-task-title {
       text-decoration: line-through;
       color: rgba(255, 255, 255, 0.46);
@@ -10407,8 +10412,15 @@
         deltaY: 0,
         moved: false,
         item,
-        hoverTaskId: null
+        list: null,
+        itemOrder: [],
+        reducedOrder: [],
+        gapOffset: 0,
+        sourceIndex: 0,
+        targetIndex: 0
       };
+      item.classList.add("drag-ready");
+      initializeMilestoneTaskDragList(activeMilestoneTaskDrag, milestoneId);
       item.setPointerCapture(event.pointerId);
     }
 
@@ -10421,11 +10433,11 @@
         return;
       }
       activeMilestoneTaskDrag.moved = true;
+      activeMilestoneTaskDrag.item.classList.remove("drag-ready");
       activeMilestoneTaskDrag.item.classList.add("dragging");
       activeMilestoneTaskDrag.item.style.transform = `translateY(${activeMilestoneTaskDrag.deltaY}px)`;
-      const hoverTaskId = getMilestoneTaskHoverTargetId(event.clientX, event.clientY, activeMilestoneTaskDrag);
-      activeMilestoneTaskDrag.hoverTaskId = hoverTaskId;
-      updateMilestoneTaskDragPreview(hoverTaskId);
+      activeMilestoneTaskDrag.targetIndex = getMilestoneTaskDragTargetIndex(event.clientY, activeMilestoneTaskDrag);
+      updateMilestoneTaskDragPreview(activeMilestoneTaskDrag);
       event.preventDefault();
     }
 
@@ -10433,64 +10445,73 @@
       if (!activeMilestoneTaskDrag || activeMilestoneTaskDrag.pointerId !== event.pointerId) {
         return;
       }
-      const { taskId, milestoneId, item, moved, hoverTaskId } = activeMilestoneTaskDrag;
+      const { taskId, milestoneId, item, moved } = activeMilestoneTaskDrag;
       item.style.transform = "";
+      item.classList.remove("drag-ready");
       item.classList.remove("dragging");
-      clearMilestoneTaskDragPreview();
+      clearMilestoneTaskDragPreview(activeMilestoneTaskDrag);
       item.releasePointerCapture(event.pointerId);
       if (moved) {
         suppressClickUntil = Date.now() + 300;
-        const targetIndex = hoverTaskId
-          ? getMilestoneTaskTargetIndex(taskId, milestoneId, hoverTaskId)
+        const targetIndex = Number.isInteger(activeMilestoneTaskDrag.targetIndex)
+          ? activeMilestoneTaskDrag.targetIndex
           : getMilestoneTaskDropIndex(event.clientY, taskId, milestoneId);
         reorderMilestoneTaskInMilestone(taskId, milestoneId, targetIndex);
       }
       activeMilestoneTaskDrag = null;
     }
 
-    function getMilestoneTaskHoverTargetId(clientX, clientY, dragState) {
-      if (dragState?.hoverTaskId) {
-        const lockedItem = elements.phaseDetailBody.querySelector(
-          `.milestone-task[data-milestone-task-id="${dragState.hoverTaskId}"]`
-        );
-        if (lockedItem) {
-          const rect = lockedItem.getBoundingClientRect();
-          if (clientY >= rect.top && clientY <= rect.bottom) {
-            return dragState.hoverTaskId;
-          }
+    function initializeMilestoneTaskDragList(dragState, milestoneId) {
+      const list = [...elements.phaseDetailBody.querySelectorAll(`.milestone-task[data-milestone-id="${milestoneId}"]`)];
+      const sourceIndex = list.findIndex((item) => item.dataset.milestoneTaskId === dragState.taskId);
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => ({
+        id: item.dataset.milestoneTaskId,
+        midpoint: item.getBoundingClientRect().top + (item.getBoundingClientRect().height / 2)
+      }));
+      dragState.reducedOrder = list
+        .filter((item) => item.dataset.milestoneTaskId !== dragState.taskId)
+        .map((item) => item.dataset.milestoneTaskId);
+      dragState.gapOffset = dragState.item.getBoundingClientRect().height + 8;
+      dragState.sourceIndex = sourceIndex >= 0 ? sourceIndex : dragState.reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+    }
+
+    function getMilestoneTaskDragTargetIndex(clientY, dragState) {
+      if (!dragState.reducedOrder.length) {
+        return dragState.sourceIndex;
+      }
+      let insertionIndex = 0;
+      for (const entry of dragState.itemOrder) {
+        if (entry.id === dragState.taskId) {
+          continue;
+        }
+        if (clientY > entry.midpoint) {
+          insertionIndex += 1;
         }
       }
-
-      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".milestone-task");
-      if (!hoveredItem?.dataset.milestoneTaskId) {
-        return null;
-      }
-      if (hoveredItem.dataset.milestoneTaskId === dragState?.taskId) {
-        return null;
-      }
-      if (hoveredItem.dataset.milestoneId !== dragState?.milestoneId) {
-        return null;
-      }
-      return hoveredItem.dataset.milestoneTaskId;
+      return insertionIndex;
     }
 
-    function updateMilestoneTaskDragPreview(hoverTaskId) {
-      clearMilestoneTaskDragPreview();
-      if (!activeMilestoneTaskDrag?.moved || !hoverTaskId) {
+    function updateMilestoneTaskDragPreview(dragState) {
+      clearMilestoneTaskDragPreview(dragState);
+      if (!dragState.moved) {
         return;
       }
-      const hoverItem = elements.phaseDetailBody.querySelector(
-        `.milestone-task[data-milestone-task-id="${hoverTaskId}"]`
-      );
-      if (!hoverItem) {
-        return;
-      }
-      const direction = activeMilestoneTaskDrag.deltaY < 0 ? 1 : -1;
-      hoverItem.style.transform = `translateY(${direction * (activeMilestoneTaskDrag.item.getBoundingClientRect().height + 8)}px)`;
+      const items = dragState.list.filter((item) => item.dataset.milestoneTaskId !== dragState.taskId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
     }
 
-    function clearMilestoneTaskDragPreview() {
-      elements.phaseDetailBody.querySelectorAll(".milestone-task").forEach((item) => {
+    function clearMilestoneTaskDragPreview(dragState) {
+      const list = dragState?.list || elements.phaseDetailBody.querySelectorAll(".milestone-task");
+      [...list].forEach((item) => {
         if (!item.classList.contains("dragging")) {
           item.style.transform = "";
         }
@@ -10510,16 +10531,6 @@
         }
       }
       return items.length;
-    }
-
-    function getMilestoneTaskTargetIndex(taskId, milestoneId, hoverTaskId) {
-      const tasks = getMilestoneTasks(milestoneId);
-      const sourceIndex = tasks.findIndex((task) => task.id === taskId);
-      const hoverIndex = tasks.findIndex((task) => task.id === hoverTaskId);
-      if (sourceIndex < 0 || hoverIndex < 0) {
-        return sourceIndex < 0 ? 0 : sourceIndex;
-      }
-      return hoverIndex;
     }
 
     function reorderMilestoneTaskInMilestone(taskId, milestoneId, targetIndex) {
