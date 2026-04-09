@@ -9471,7 +9471,9 @@
         task.blockId === targetId ? { ...task, blockId: null } : task
       );
       persistState({ immediate: true });
-      closeModal("block");
+      state.ui.editingBlockId = null;
+      state.ui.blockModalMode = "create";
+      closeModal("block", { skipCommit: true });
       render();
     }
 
