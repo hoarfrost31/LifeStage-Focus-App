@@ -3122,6 +3122,13 @@
       gap: 10px;
       box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
       backdrop-filter: blur(16px);
+      position: relative;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .milestone-card.menu-open {
+      z-index: 40;
     }
 
     .milestone-card.dragging {
@@ -9981,6 +9988,7 @@
       if (menuToggleButton) {
         const milestoneId = menuToggleButton.dataset.toggleMilestoneMenu;
         const menu = elements.phaseDetailBody.querySelector(`[data-milestone-menu="${milestoneId}"]`);
+        const card = menuToggleButton.closest(".milestone-card");
         if (!menu) {
           return;
         }
@@ -9994,6 +10002,9 @@
             "aria-expanded",
             String(button === menuToggleButton && shouldOpen)
           );
+        });
+        elements.phaseDetailBody.querySelectorAll(".milestone-card").forEach((item) => {
+          item.classList.toggle("menu-open", shouldOpen && item === card);
         });
         return;
       }
