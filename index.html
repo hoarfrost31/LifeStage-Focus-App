@@ -5577,9 +5577,6 @@
         }
         return;
       }
-      if (state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW && state.ui.lastTaskListFilter) {
-        state.ui.activeTaskListFilter = state.ui.lastTaskListFilter;
-      }
       setActiveTab("tasks");
     });
     elements.tabPhases.addEventListener("click", () => {
