@@ -11991,8 +11991,20 @@
       const phases = Array.isArray(payload.phases) ? payload.phases : [];
       const blocks = Array.isArray(payload.blocks) ? payload.blocks : [];
       const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
+      const milestones = Array.isArray(payload.milestones) ? payload.milestones : [];
+      const milestoneTasks = Array.isArray(payload.milestoneTasks) ? payload.milestoneTasks : [];
+      const taskLists = Array.isArray(payload.taskLists) ? payload.taskLists : [];
+      const sections = Array.isArray(payload.sections) ? payload.sections : [];
 
-      return phases.length > 0 || blocks.length > 0 || tasks.length > 0;
+      return (
+        phases.length > 0
+        || blocks.length > 0
+        || tasks.length > 0
+        || milestones.length > 0
+        || milestoneTasks.length > 0
+        || taskLists.length > 0
+        || sections.length > 0
+      );
     }
 
     function getPayloadUpdatedAt(payload) {
