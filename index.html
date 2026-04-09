@@ -4369,11 +4369,6 @@
         <button class="primary-button floating-add-button" id="add-phase-button" type="button" aria-label="Add phase">+</button>
       </div>
       <div class="timeline-actions" id="timeline-actions">
-        <button class="mode-toggle" id="toggle-compact-button" type="button" aria-label="Toggle compact timeline view">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 5.1h10M3 8h10M3 10.9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </button>
         <button class="primary-button floating-add-button" id="add-block-button" type="button" aria-label="Add block">+</button>
       </div>
     </div>
@@ -5342,7 +5337,7 @@
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
       elements.phaseActiveToggleButton.addEventListener("click", handlePhaseActiveToggle);
       elements.phaseSettingsButton.addEventListener("click", handlePhaseSettingsToggle);
-      elements.toggleCompactButton.addEventListener("click", handleCompactToggle);
+      elements.toggleCompactButton?.addEventListener("click", handleCompactToggle);
       elements.installAppButton.addEventListener("click", handleInstallApp);
       elements.phaseReadEditButton.addEventListener("click", handlePhaseReadEdit);
       elements.phaseReadToggleButton.addEventListener("click", handlePhaseReadToggleActive);
@@ -5482,11 +5477,13 @@
 
     function render() {
       document.body.classList.toggle("compact-mode", state.ui.isCompactTimeline);
-      elements.toggleCompactButton.classList.toggle("active", state.ui.isCompactTimeline);
-      elements.toggleCompactButton.innerHTML = state.ui.isCompactTimeline
-        ? `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.7" y="3.1" width="10.6" height="9.8" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5.2 6h5.6M5.2 8h5.6M5.2 10h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`
-        : `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 5.1h10M3 8h10M3 10.9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
-      elements.toggleCompactButton.setAttribute("aria-label", state.ui.isCompactTimeline ? "Switch to expanded timeline" : "Switch to compact timeline");
+      if (elements.toggleCompactButton) {
+        elements.toggleCompactButton.classList.toggle("active", state.ui.isCompactTimeline);
+        elements.toggleCompactButton.innerHTML = state.ui.isCompactTimeline
+          ? `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.7" y="3.1" width="10.6" height="9.8" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5.2 6h5.6M5.2 8h5.6M5.2 10h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`
+          : `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 5.1h10M3 8h10M3 10.9h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+        elements.toggleCompactButton.setAttribute("aria-label", state.ui.isCompactTimeline ? "Switch to expanded timeline" : "Switch to compact timeline");
+      }
       elements.taskDrawer.classList.toggle("open", state.ui.isTaskDrawerOpen);
       elements.drawerBackdrop.classList.toggle("open", state.ui.isTaskDrawerOpen);
       elements.scheduleModalBackdrop.classList.toggle("open", state.ui.scheduleModalOpen);
