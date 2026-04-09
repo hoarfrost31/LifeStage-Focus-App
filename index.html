@@ -13,8 +13,8 @@
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
   </script>
   <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-11">
-  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-11">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-11">
+  <link rel="icon" type="image/svg+xml" sizes="192x192" href="./icons/icon-192.svg?v=2026-04-05-11">
+  <link rel="apple-touch-icon" href="./icons/icon-192.svg?v=2026-04-05-11">
   <title>LifeStage Focus App</title>
   <style>
     :root {
@@ -3568,6 +3568,67 @@
       flex: 1 1 120px;
     }
 
+    .settings-backdrop {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 30;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .settings-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .settings-modal {
+      width: min(calc(100vw - 32px), 420px);
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      background: rgba(18, 18, 20, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      backdrop-filter: none;
+      transform: translateY(16px) scale(0.97);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    }
+
+    .settings-backdrop.open .settings-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .settings-backdrop.closing {
+      opacity: 0;
+      pointer-events: none;
+      transition-duration: 0.3s;
+    }
+
+    .settings-backdrop.closing .settings-modal {
+      transform: translateY(18px) scale(0.97);
+      opacity: 0;
+      transition-duration: 0.3s;
+    }
+
+    body.settings-open .app-shell,
+    body.settings-open .bottom-nav-card {
+      filter: blur(8px);
+      pointer-events: none;
+    }
+
+    body.settings-open {
+      overflow: hidden;
+    }
+
     .theme-option {
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -4478,12 +4539,6 @@
           </button>
           <span class="phase-badge" id="active-task-list-label">Tasks</span>
         </div>
-        <button class="settings-gear settings-gear-button" type="button" aria-label="Open settings">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.9 1.6h2.2l.3 1.4c.4.1.8.3 1.1.6l1.3-.6 1.1 2-1.1.9c.1.4.2.7.2 1.1s-.1.8-.2 1.1l1.1.9-1.1 2-1.3-.6c-.3.3-.7.5-1.1.6l-.3 1.4H6.9l-.3-1.4c-.4-.1-.8-.3-1.1-.6l-1.3.6-1.1-2 1.1-.9c-.1-.4-.2-.7-.2-1.1s.1-.8.2-1.1l-1.1-.9 1.1-2 1.3.6c.3-.3.7-.5 1.1-.6l.3-1.4Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.1"/>
-          </svg>
-        </button>
       </div>
       <div class="tasks-wrap">
         <div class="tasks-list-toolbar" id="tasks-list-toolbar">
@@ -4519,12 +4574,6 @@
             </div>
           </div>
         </div>
-        <button class="settings-gear settings-gear-button" type="button" aria-label="Open settings">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.9 1.6h2.2l.3 1.4c.4.1.8.3 1.1.6l1.3-.6 1.1 2-1.1.9c.1.4.2.7.2 1.1s-.1.8-.2 1.1l1.1.9-1.1 2-1.3-.6c-.3.3-.7.5-1.1.6l-.3 1.4H6.9l-.3-1.4c-.4-.1-.8-.3-1.1-.6l-1.3.6-1.1-2 1.1-.9c-.1-.4-.2-.7-.2-1.1s.1-.8.2-1.1l-1.1-.9 1.1-2 1.3.6c.3-.3.7-.5 1.1-.6l.3-1.4Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.1"/>
-          </svg>
-        </button>
       </div>
       <div class="phase-rail" id="phase-rail" aria-label="Phases"></div>
       <div class="phase-detail panel-hidden" id="phase-detail">
@@ -4534,38 +4583,6 @@
           <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
         </div>
         <div class="phase-detail-body" id="phase-detail-body"></div>
-      </div>
-    </section>
-
-    <section class="card themes-card panel-hidden" id="themes-card">
-      <div class="section-header compact-header">
-        <div class="header-actions">
-          <span class="phase-badge">Settings</span>
-        </div>
-        <button class="settings-gear settings-gear-button" type="button" aria-label="Open settings">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.9 1.6h2.2l.3 1.4c.4.1.8.3 1.1.6l1.3-.6 1.1 2-1.1.9c.1.4.2.7.2 1.1s-.1.8-.2 1.1l1.1.9-1.1 2-1.3-.6c-.3.3-.7.5-1.1.6l-.3 1.4H6.9l-.3-1.4c-.4-.1-.8-.3-1.1-.6l-1.3.6-1.1-2 1.1-.9c-.1-.4-.2-.7-.2-1.1s.1-.8.2-1.1l-1.1-.9 1.1-2 1.3.6c.3-.3.7-.5 1.1-.6l.3-1.4Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.1"/>
-          </svg>
-        </button>
-      </div>
-      <div class="themes-wrap">
-        <div class="themes-title">Choose a mood</div>
-        <div class="themes-list" id="themes-list"></div>
-        <div class="cloud-inspector-card" id="cloud-inspector-card">
-          <div class="cloud-inspector-header">
-            <span>Cloud Inspector</span>
-            <span id="cloud-inspector-status">Idle</span>
-          </div>
-          <div class="cloud-inspector-meta" id="cloud-inspector-meta">No snapshot loaded yet.</div>
-          <div class="cloud-inspector-counts" id="cloud-inspector-counts"></div>
-          <div class="cloud-inspector-backups" id="cloud-inspector-backups"></div>
-          <div class="cloud-inspector-actions">
-            <button class="ghost-button" id="cloud-inspector-refresh" type="button">Refresh</button>
-            <button class="ghost-button" id="cloud-inspector-backup" type="button">Backup Now</button>
-            <button class="primary-button" id="cloud-inspector-restore" type="button">Restore From Cloud</button>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -4662,6 +4679,35 @@
       </div>
     </section>
   </main>
+
+  <div class="modal-backdrop settings-backdrop" id="settings-backdrop" aria-hidden="true">
+    <section class="modal settings-modal themes-card" id="themes-card" aria-label="Settings">
+      <div class="section-header compact-header">
+        <div class="header-actions">
+          <span class="phase-badge">Settings</span>
+        </div>
+        <button class="close-button" id="settings-close-button" type="button" aria-label="Close settings">&times;</button>
+      </div>
+      <div class="themes-wrap">
+        <div class="themes-title">Choose a mood</div>
+        <div class="themes-list" id="themes-list"></div>
+        <div class="cloud-inspector-card" id="cloud-inspector-card">
+          <div class="cloud-inspector-header">
+            <span>Cloud Inspector</span>
+            <span id="cloud-inspector-status">Idle</span>
+          </div>
+          <div class="cloud-inspector-meta" id="cloud-inspector-meta">No snapshot loaded yet.</div>
+          <div class="cloud-inspector-counts" id="cloud-inspector-counts"></div>
+          <div class="cloud-inspector-backups" id="cloud-inspector-backups"></div>
+          <div class="cloud-inspector-actions">
+            <button class="ghost-button" id="cloud-inspector-refresh" type="button">Refresh</button>
+            <button class="ghost-button" id="cloud-inspector-backup" type="button">Backup Now</button>
+            <button class="primary-button" id="cloud-inspector-restore" type="button">Restore From Cloud</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <div class="modal-backdrop" id="phase-modal-backdrop" aria-hidden="true">
     <section class="modal" aria-labelledby="phase-modal-title">
@@ -5245,7 +5291,10 @@
         lastSyncedAt: null,
         lastNonSettingsTab: "timeline",
         lastTabTapped: "",
-        lastTaskListFilter: INBOX_LIST_ID
+        lastTaskListFilter: INBOX_LIST_ID,
+        settingsOpen: false,
+        settingsClosing: false,
+        settingsBlurHold: false
       }
     };
 
@@ -5265,6 +5314,8 @@
     let milestoneTaskModalCloseTimer = null;
     let blockModalCloseTimer = null;
     let phaseModalCloseTimer = null;
+    let settingsCloseTimer = null;
+    let settingsBlurTimer = null;
     let activeTaskSheetDrag = null;
     let appDialogState = null;
     let isTaskModalClosing = false;
@@ -5295,10 +5346,12 @@
       tabTasks: document.getElementById("tab-tasks"),
       tabPhases: document.getElementById("tab-phases"),
       tabTimeline: document.getElementById("tab-timeline"),
-      settingsButtons: document.querySelectorAll(".settings-gear-button"),
+      settingsButtons: document.querySelectorAll(".timeline-card .settings-gear-button"),
       tasksCard: document.querySelector(".tasks-card"),
       phasesCard: document.querySelector(".phases-card"),
       themesCard: document.getElementById("themes-card"),
+      settingsBackdrop: document.getElementById("settings-backdrop"),
+      settingsCloseButton: document.getElementById("settings-close-button"),
       timelineCard: document.querySelector(".timeline-card"),
       phaseTabDropdown: document.getElementById("phase-tab-dropdown"),
       phaseTabDropdownTrigger: document.getElementById("phase-tab-dropdown-trigger"),
@@ -5570,6 +5623,9 @@
     elements.addTaskListButton.addEventListener("click", handleAddTaskList);
     elements.addSectionButton.addEventListener("click", handleAddSection);
     elements.tabTasks.addEventListener("click", () => {
+      if (state.ui.settingsOpen) {
+        closeSettingsModal();
+      }
       if (state.ui.activeTab === "tasks") {
         if (state.ui.activeTaskListFilter !== TASK_VIEW_OVERVIEW) {
           state.ui.activeTaskListFilter = TASK_VIEW_OVERVIEW;
@@ -5580,6 +5636,9 @@
       setActiveTab("tasks");
     });
     elements.tabPhases.addEventListener("click", () => {
+      if (state.ui.settingsOpen) {
+        closeSettingsModal();
+      }
       if (state.ui.activeTab === "phases" && state.ui.phaseDetailOpen) {
         state.ui.phaseDetailOpen = false;
         state.ui.phaseDetailId = null;
@@ -5588,15 +5647,16 @@
       }
       setActiveTab("phases");
     });
-    elements.tabTimeline.addEventListener("click", () => setActiveTab("timeline"));
+    elements.tabTimeline.addEventListener("click", () => {
+      if (state.ui.settingsOpen) {
+        closeSettingsModal();
+      }
+      setActiveTab("timeline");
+    });
     elements.settingsButtons.forEach((button) => {
       button.addEventListener("click", () => {
-        if (state.ui.activeTab === "settings") {
-          setActiveTab(state.ui.lastNonSettingsTab || "tasks");
-          return;
-        }
         state.ui.lastNonSettingsTab = state.ui.activeTab;
-        setActiveTab("settings");
+        openSettingsModal();
       });
     });
       elements.addTaskButton.addEventListener("click", () => openTaskModal(null, null, null, getDefaultTaskListForCompose()));
@@ -5608,9 +5668,17 @@
       elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
       elements.themesList.addEventListener("click", handleThemesListClick);
       elements.cloudInspectorRefresh.addEventListener("click", handleCloudInspectorRefresh);
-      elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
-      elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
-      elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
+    elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
+    elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
+    elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
+    elements.settingsBackdrop?.addEventListener("click", (event) => {
+      if (event.target === elements.settingsBackdrop) {
+        closeSettingsModal();
+      }
+    });
+    elements.settingsCloseButton?.addEventListener("click", () => {
+      closeSettingsModal();
+    });
       elements.todayList.addEventListener("click", handleTodayListClick);
       elements.todayList.addEventListener("keydown", handleTodayListKeydown);
       elements.todayList.addEventListener("pointerdown", handleTodayTaskDragStart);
@@ -5802,33 +5870,36 @@
       elements.scheduleModalBackdrop.setAttribute("aria-hidden", String(!state.ui.scheduleModalOpen));
       elements.taskDrawer.setAttribute("aria-hidden", String(!state.ui.isTaskDrawerOpen));
       elements.drawerBackdrop.setAttribute("aria-hidden", String(!state.ui.isTaskDrawerOpen));
-      elements.tabTasks.classList.toggle("active", state.ui.activeTab === "tasks");
-      elements.tabPhases.classList.toggle("active", state.ui.activeTab === "phases");
-      elements.tabTimeline.classList.toggle("active", state.ui.activeTab === "timeline");
-      elements.tasksCard.classList.toggle("panel-hidden", state.ui.activeTab !== "tasks");
-      elements.phasesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "phases");
-      elements.timelineCard.classList.toggle("panel-hidden", state.ui.activeTab !== "timeline");
-      elements.themesCard.classList.toggle("panel-hidden", state.ui.activeTab !== "settings");
-      elements.addTaskButton.style.display = state.ui.activeTab === "tasks" ? "block" : "none";
-      elements.addPhaseButton.style.display = state.ui.activeTab === "phases" ? "block" : "none";
+      const visibleTab = state.ui.activeTab === "settings"
+        ? (state.ui.lastNonSettingsTab || "timeline")
+        : state.ui.activeTab;
+      elements.tabTasks.classList.toggle("active", visibleTab === "tasks");
+      elements.tabPhases.classList.toggle("active", visibleTab === "phases");
+      elements.tabTimeline.classList.toggle("active", visibleTab === "timeline");
+      elements.tasksCard.classList.toggle("panel-hidden", visibleTab !== "tasks");
+      elements.phasesCard.classList.toggle("panel-hidden", visibleTab !== "phases");
+      elements.timelineCard.classList.toggle("panel-hidden", visibleTab !== "timeline");
+      elements.addTaskButton.style.display = visibleTab === "tasks" ? "block" : "none";
+      elements.addPhaseButton.style.display = visibleTab === "phases" ? "block" : "none";
+      const settingsVisible = state.ui.settingsOpen || state.ui.settingsClosing;
+      elements.settingsBackdrop?.classList.toggle("open", settingsVisible);
+      elements.settingsBackdrop?.classList.toggle("closing", state.ui.settingsClosing);
+      elements.settingsBackdrop?.setAttribute("aria-hidden", String(!settingsVisible));
+      document.body.classList.toggle("settings-open", state.ui.settingsOpen || state.ui.settingsBlurHold);
       elements.addPhaseButton.setAttribute(
         "aria-label",
         state.ui.phaseDetailOpen ? "Add milestone" : "Add phase"
       );
       document.body.dataset.theme = state.ui.activeTheme || "default";
-      const phaseHeaderHidden = state.ui.activeTab === "phases" && state.ui.phaseDetailOpen;
+      const phaseHeaderHidden = visibleTab === "phases" && state.ui.phaseDetailOpen;
       document.querySelector(".phase-tabs-header")?.classList.toggle("hidden", phaseHeaderHidden);
-      const phaseSettingsGear = document.querySelector(".phases-card .settings-gear-button");
-      if (phaseSettingsGear) {
-        phaseSettingsGear.style.display = phaseHeaderHidden ? "none" : "";
-      }
       elements.phaseDetail.querySelector(".phase-detail-title-row")?.classList.toggle("tight", phaseHeaderHidden);
-      const showToday = state.ui.activeTab === "timeline";
+      const showToday = visibleTab === "timeline";
       elements.timelineScroll.style.display = showToday ? "none" : "";
       elements.todayList.style.display = showToday ? "flex" : "none";
       elements.todayHeaderLabel.style.display = showToday ? "block" : "none";
       document.querySelector(".timeline-header-picker")?.classList.toggle("hidden", showToday);
-      elements.timelineActions.style.display = state.ui.activeTab === "timeline" ? "flex" : "none";
+      elements.timelineActions.style.display = visibleTab === "timeline" ? "flex" : "none";
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
       elements.taskModalBackdrop.classList.toggle("milestone-task-mode", state.ui.taskModalKind === "milestone");
@@ -7236,6 +7307,47 @@
       render();
     }
 
+    function openSettingsModal() {
+      if (settingsCloseTimer) {
+        clearTimeout(settingsCloseTimer);
+        settingsCloseTimer = null;
+      }
+      if (settingsBlurTimer) {
+        clearTimeout(settingsBlurTimer);
+        settingsBlurTimer = null;
+      }
+      state.ui.settingsClosing = false;
+      state.ui.settingsBlurHold = false;
+      state.ui.settingsOpen = true;
+      render();
+    }
+
+    function closeSettingsModal() {
+      if (!state.ui.settingsOpen || state.ui.settingsClosing) {
+        return;
+      }
+      state.ui.settingsClosing = true;
+      state.ui.settingsBlurHold = true;
+      render();
+      if (settingsBlurTimer) {
+        clearTimeout(settingsBlurTimer);
+      }
+      settingsBlurTimer = setTimeout(() => {
+        state.ui.settingsBlurHold = false;
+        settingsBlurTimer = null;
+        render();
+      }, 120);
+      if (settingsCloseTimer) {
+        clearTimeout(settingsCloseTimer);
+      }
+      settingsCloseTimer = setTimeout(() => {
+        state.ui.settingsOpen = false;
+        state.ui.settingsClosing = false;
+        settingsCloseTimer = null;
+        render();
+      }, 300);
+    }
+
     function handleTaskDrawerClick(event) {
       const deleteButton = event.target.closest("[data-delete-task-list]");
       if (deleteButton) {
@@ -7707,6 +7819,9 @@
     }
 
     function setActiveTab(tab) {
+      if (state.ui.settingsOpen) {
+        closeSettingsModal();
+      }
       if (tab !== "settings" && state.ui.activeTab !== "settings") {
         state.ui.lastNonSettingsTab = tab;
       }
@@ -12410,7 +12525,7 @@
         .filter(Boolean);
 
       state.ui.isCompactTimeline = Boolean(parsed?.ui?.isCompactTimeline);
-      state.ui.activeTab = ["tasks", "phases", "timeline", "settings"].includes(parsed?.ui?.activeTab)
+      state.ui.activeTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.activeTab)
         ? parsed.ui.activeTab
         : "timeline";
       state.ui.lastNonSettingsTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.lastNonSettingsTab)
