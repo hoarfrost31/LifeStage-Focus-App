@@ -545,6 +545,10 @@
       pointer-events: none;
     }
 
+    .floating-actions-layer.overlay-blocked .floating-action-group > * {
+      pointer-events: none;
+    }
+
     .floating-action-group {
       position: fixed;
       right: var(--floating-action-right, 18px);
@@ -1907,7 +1911,6 @@
         inset 0 0 20px rgba(255, 255, 255, 0.02);
     }
 
-    .today-block.is-collapsed .today-block-tasks,
     .today-block.is-collapsed .today-task-composer {
       display: none;
     }
@@ -2073,6 +2076,19 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      overflow: hidden;
+      height: auto;
+      opacity: 1;
+      transform: translateY(0);
+      transition: height 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.24s ease;
+      will-change: height, opacity, transform;
+    }
+
+    .today-block.is-collapsed .today-block-tasks {
+      height: 0;
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
     }
 
     .today-block.drag-open .today-block-tasks {
@@ -2988,15 +3004,24 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(8px);
-      display: none;
+      display: flex;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
       align-items: flex-end;
       justify-content: center;
       padding: 16px;
       z-index: 28;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
     #task-menu-sheet-backdrop.open {
-      display: flex;
+      visibility: visible;
+    }
+
+    #task-menu-sheet-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .task-menu-sheet {
@@ -3010,12 +3035,17 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
       transform: translateY(100%);
       opacity: 0.95;
-      transition: transform 0.28s ease, opacity 0.28s ease;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
     }
 
-    #task-menu-sheet-backdrop.open .task-menu-sheet {
+    #task-menu-sheet-backdrop.active .task-menu-sheet {
       transform: translateY(0);
       opacity: 1;
+    }
+
+    #task-menu-sheet-backdrop.closing .task-menu-sheet {
+      transform: translateY(100%);
+      opacity: 0.95;
     }
 
     .task-context-menu.open {
@@ -3908,6 +3938,21 @@
       text-transform: uppercase;
     }
 
+    .milestone-deadline {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: 10px;
+    }
+
+    .milestone-deadline.soon {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .milestone-deadline.overdue {
+      color: var(--danger);
+    }
+
     .milestone-progress-bar {
       height: 6px;
       border-radius: 999px;
@@ -3945,10 +3990,19 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      overflow: hidden;
+      height: auto;
+      opacity: 1;
+      transform: translateY(0);
+      transition: height 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.24s ease;
+      will-change: height, opacity, transform;
     }
 
     .milestone-card.is-collapsed .milestone-body {
-      display: none;
+      height: 0;
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
     }
 
     .milestone-tasks {
@@ -4631,16 +4685,16 @@
       gap: 10px;
       padding: 10px 12px;
       border-radius: 16px;
-      background: rgba(18, 18, 18, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(180deg, var(--panel-soft), var(--panel));
+      border: 1px solid var(--border);
       color: var(--text);
       font-size: 0.82rem;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+      box-shadow: var(--elevation-card), inset 0 1px 0 rgba(255, 255, 255, 0.04);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
       z-index: 30;
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(16px);
     }
 
     .undo-toast.open {
@@ -4653,14 +4707,24 @@
       width: 30px;
       height: 30px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       padding: 0;
       cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .undo-toast-button:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .undo-toast-button:active {
+      transform: scale(0.96);
     }
 
     .undo-toast-button svg {
@@ -5236,8 +5300,8 @@
     </section>
   </div>
 
-  <div class="modal-backdrop" id="task-menu-sheet-backdrop" aria-hidden="true">
-    <section class="modal task-menu-sheet" aria-label="Task options">
+  <div id="task-menu-sheet-backdrop" aria-hidden="true">
+    <section class="task-menu-sheet" aria-label="Task options">
       <div class="task-context-menu open" aria-hidden="false">
         <button type="button" id="task-menu-add-subtask-button">Add subtask</button>
         <label>
@@ -5488,6 +5552,7 @@
     let milestoneTaskModalCloseTimer = null;
     let blockModalCloseTimer = null;
     let phaseModalCloseTimer = null;
+    let taskMenuSheetCloseTimer = null;
     let settingsCloseTimer = null;
     let settingsBlurTimer = null;
     let activeTaskSheetDrag = null;
@@ -5731,11 +5796,16 @@
 
       const isPrompt = appDialogState.mode === "prompt";
       elements.appDialogInputWrap.hidden = !isPrompt;
+      const inputType = isPrompt ? (config?.inputType || "text") : "text";
+      const inputMaxLength = isPrompt && Number.isInteger(config?.maxLength) ? config.maxLength : 80;
+      elements.appDialogInput.type = inputType;
+      elements.appDialogInput.maxLength = inputType === "datetime-local" ? 64 : inputMaxLength;
       elements.appDialogInput.value = isPrompt ? (config?.defaultValue || "") : "";
       elements.appDialogInput.placeholder = isPrompt ? (config?.placeholder || "") : "";
 
       elements.appDialogBackdrop.classList.add("open");
       elements.appDialogBackdrop.setAttribute("aria-hidden", "false");
+      syncFloatingActionsVisibility();
 
       requestAnimationFrame(() => {
         if (isPrompt) {
@@ -5751,7 +5821,10 @@
       appDialogState = null;
       elements.appDialogBackdrop.classList.remove("open");
       elements.appDialogBackdrop.setAttribute("aria-hidden", "true");
+      elements.appDialogInput.type = "text";
+      elements.appDialogInput.maxLength = 80;
       elements.appDialogInput.value = "";
+      syncFloatingActionsVisibility();
     }
 
     function confirmAppDialog() {
@@ -6087,14 +6160,7 @@
       elements.phaseRail.classList.toggle("panel-hidden", state.ui.phaseDetailOpen);
       elements.phaseDetail.classList.toggle("panel-hidden", !state.ui.phaseDetailOpen);
       elements.taskModalBackdrop.classList.toggle("milestone-task-mode", state.ui.taskModalKind === "milestone");
-      const isModalOpen =
-        elements.phaseModalBackdrop.classList.contains("open")
-        || elements.blockModalBackdrop.classList.contains("open")
-        || elements.taskModalBackdrop.classList.contains("open")
-        || elements.scheduleModalBackdrop.classList.contains("open")
-        || elements.phaseReadModalBackdrop.classList.contains("open")
-        || elements.appDialogBackdrop.classList.contains("open");
-      elements.floatingActionsLayer.style.display = isModalOpen ? "none" : "block";
+      syncFloatingActionsVisibility();
       renderTaskDrawer();
       renderTasks();
       renderPhaseTabControls();
@@ -6113,6 +6179,79 @@
       renderTodayView();
       renderSummary();
       renderSyncStatus();
+    }
+
+    function syncFloatingActionsVisibility() {
+      if (!elements.floatingActionsLayer) {
+        return;
+      }
+      const hasOverlayOpen =
+        elements.phaseModalBackdrop.classList.contains("open")
+        || elements.blockModalBackdrop.classList.contains("open")
+        || elements.taskModalBackdrop.classList.contains("open")
+        || elements.milestoneTaskModalBackdrop.classList.contains("open")
+        || elements.scheduleModalBackdrop.classList.contains("open")
+        || elements.phaseReadModalBackdrop.classList.contains("open")
+        || elements.appDialogBackdrop.classList.contains("open")
+        || elements.taskMenuSheetBackdrop.classList.contains("open")
+        || elements.settingsBackdrop.classList.contains("open");
+      elements.floatingActionsLayer.style.display = "block";
+      elements.floatingActionsLayer.classList.toggle("overlay-blocked", hasOverlayOpen);
+    }
+
+    function animateSectionToggle(container, sectionSelector, collapsedClass, shouldCollapse) {
+      if (!container) {
+        return;
+      }
+      const section = container.querySelector(sectionSelector);
+      if (!section) {
+        container.classList.toggle(collapsedClass, shouldCollapse);
+        return;
+      }
+
+      if (section._collapseCleanup) {
+        section._collapseCleanup();
+      }
+
+      const durationMs = 340;
+      let done = false;
+      const finish = () => {
+        if (done) {
+          return;
+        }
+        done = true;
+        section.removeEventListener("transitionend", onEnd);
+        window.clearTimeout(timer);
+        section.style.overflow = "";
+        section.style.height = shouldCollapse ? "0px" : "auto";
+        section.style.willChange = "";
+        section._collapseCleanup = null;
+      };
+      const onEnd = (event) => {
+        if (event.target === section && event.propertyName === "height") {
+          finish();
+        }
+      };
+
+      section.style.overflow = "hidden";
+      section.style.willChange = "height, opacity, transform";
+
+      if (shouldCollapse) {
+        const startHeight = section.scrollHeight;
+        section.style.height = `${startHeight}px`;
+        section.getBoundingClientRect();
+        container.classList.add(collapsedClass);
+        section.style.height = "0px";
+      } else {
+        container.classList.remove(collapsedClass);
+        section.style.height = "0px";
+        section.getBoundingClientRect();
+        section.style.height = `${section.scrollHeight}px`;
+      }
+
+      section.addEventListener("transitionend", onEnd);
+      const timer = window.setTimeout(finish, durationMs + 80);
+      section._collapseCleanup = finish;
     }
 
     function renderPhaseTabControls() {
@@ -6289,6 +6428,10 @@
           ? `${safeGoalProgress}/${goalTarget} logged`
           : (totalCount ? `${completedCount}/${totalCount} done` : "No tasks yet");
         const progressChip = isGoal ? `<span class="milestone-progress-chip">Goal ${goalTarget}</span>` : "";
+        const deadlineMeta = getMilestoneDeadlineMeta(milestone.deadlineAt);
+        const deadlineMarkup = deadlineMeta
+          ? `<div class="milestone-deadline ${deadlineMeta.state}">${escapeHtml(deadlineMeta.label)}</div>`
+          : "";
         const isCollapsed = Boolean(milestone.isCollapsed);
         const tasksMarkup = isGoal
           ? `<div class="milestone-empty">Goal mode · log progress below.</div>`
@@ -6349,6 +6492,8 @@
                     : `<button type="button" data-set-milestone-goal="${milestone.id}">Switch to Goal</button>`
                   }
                   <button type="button" data-edit-milestone="${milestone.id}">Rename</button>
+                  <button type="button" data-set-milestone-deadline="${milestone.id}">${milestone.deadlineAt ? "Edit Deadline" : "Set Deadline"}</button>
+                  ${milestone.deadlineAt ? `<button type="button" data-clear-milestone-deadline="${milestone.id}">Clear Deadline</button>` : ""}
                   ${isGoal ? `<button type="button" data-set-milestone-goal="${milestone.id}">Edit Goal</button>` : ""}
                   <button class="danger" type="button" data-delete-milestone="${milestone.id}">Delete</button>
                 </div>
@@ -6362,6 +6507,7 @@
               <div class="milestone-progress-bar">
                 <div class="milestone-progress-fill" style="width:${Math.round(progressValue * 100)}%"></div>
               </div>
+              ${deadlineMarkup}
             </div>
             <div class="milestone-body">
               ${isGoal ? `
@@ -6498,12 +6644,15 @@
       if (toggleBlockButton) {
         const blockId = toggleBlockButton.dataset.toggleTodayBlock;
         const current = state.ui.todayCollapsedByBlock?.[blockId];
+        const nextCollapsed = !current;
         state.ui.todayCollapsedByBlock = {
           ...state.ui.todayCollapsedByBlock,
-          [blockId]: !current
+          [blockId]: nextCollapsed
         };
-        persistState({ immediate: true });
-        render();
+        const blockCard = elements.todayList.querySelector(`.today-block[data-block-id="${blockId}"]`);
+        animateSectionToggle(blockCard, ".today-block-tasks", "is-collapsed", nextCollapsed);
+        toggleBlockButton.setAttribute("aria-label", nextCollapsed ? "Expand block" : "Collapse block");
+        persistState();
         return;
       }
 
@@ -8080,24 +8229,18 @@
         setCloudInspectorStatus(isFirebaseConfigured() ? "Firebase not ready" : "Firebase not set");
         return;
       }
-      openAppDialog({
-        mode: "confirm",
-        title: "Backup Cloud State",
-        message: "Save a backup of your current local data to the cloud?",
-        confirmLabel: "Backup",
-        onConfirm: async () => {
-          const payload = buildPersistedState();
-          const backupId = `backup-${Date.now()}`;
-          try {
-            await createCloudBackup(payload);
-            await fetchCloudBackups();
-            setCloudInspectorStatus("Backup saved");
-          } catch (error) {
-            console.error("Cloud backup failed", error);
-            setCloudInspectorStatus("Backup failed");
-          }
+      setCloudInspectorStatus("Backing up");
+      void (async () => {
+        const payload = buildPersistedState();
+        try {
+          await createCloudBackup(payload);
+          await fetchCloudBackups();
+          setCloudInspectorStatus("Backup saved");
+        } catch (error) {
+          console.error("Cloud backup failed", error);
+          setCloudInspectorStatus("Backup failed");
         }
-      });
+      })();
     }
 
     function handleCloudInspectorRestore() {
@@ -8913,8 +9056,29 @@
     }
 
     function setTaskMenuOpen(isOpen) {
-      elements.taskMenuSheetBackdrop.classList.toggle("open", isOpen);
-      elements.taskMenuSheetBackdrop.setAttribute("aria-hidden", String(!isOpen));
+      if (isOpen) {
+        window.clearTimeout(taskMenuSheetCloseTimer);
+        elements.taskMenuSheetBackdrop.classList.remove("closing");
+        elements.taskMenuSheetBackdrop.classList.add("open");
+        elements.taskMenuSheetBackdrop.setAttribute("aria-hidden", "false");
+        requestAnimationFrame(() => {
+          elements.taskMenuSheetBackdrop.classList.add("active");
+          syncFloatingActionsVisibility();
+        });
+      } else {
+        if (!elements.taskMenuSheetBackdrop.classList.contains("open")) {
+          elements.taskMenuButton.setAttribute("aria-expanded", "false");
+          syncFloatingActionsVisibility();
+          return;
+        }
+        elements.taskMenuSheetBackdrop.classList.add("closing");
+        elements.taskMenuSheetBackdrop.classList.remove("active");
+        taskMenuSheetCloseTimer = window.setTimeout(() => {
+          elements.taskMenuSheetBackdrop.classList.remove("open", "closing");
+          elements.taskMenuSheetBackdrop.setAttribute("aria-hidden", "true");
+          syncFloatingActionsVisibility();
+        }, 300);
+      }
       elements.taskMenuButton.setAttribute("aria-expanded", String(isOpen));
     }
 
@@ -11081,6 +11245,7 @@
               title: trimmed,
               goalTarget: 0,
               goalProgress: 0,
+              deadlineAt: "",
               isCollapsed: true
             });
           persistState({ immediate: true });
@@ -11122,11 +11287,19 @@
       const toggleMilestoneButton = event.target.closest("[data-toggle-milestone-collapse]");
       if (toggleMilestoneButton) {
         const milestoneId = toggleMilestoneButton.dataset.toggleMilestoneCollapse;
-        state.milestones = state.milestones.map((item) =>
-          item.id === milestoneId ? { ...item, isCollapsed: !item.isCollapsed } : item
-        );
-        persistState({ immediate: true });
-        render();
+        let nextCollapsed = false;
+        state.milestones = state.milestones.map((item) => {
+          if (item.id !== milestoneId) {
+            return item;
+          }
+          nextCollapsed = !item.isCollapsed;
+          return { ...item, isCollapsed: nextCollapsed };
+        });
+        const card = elements.phaseDetailBody.querySelector(`.milestone-card[data-milestone-id="${milestoneId}"]`);
+        const button = elements.phaseDetailBody.querySelector(`[data-toggle-milestone-collapse="${milestoneId}"]`);
+        animateSectionToggle(card, ".milestone-body", "is-collapsed", nextCollapsed);
+        button?.setAttribute("aria-label", nextCollapsed ? "Expand milestone" : "Collapse milestone");
+        persistState();
         return;
       }
 
@@ -11199,6 +11372,50 @@
             render();
           }
         });
+        return;
+      }
+
+      const setDeadlineButton = event.target.closest("[data-set-milestone-deadline]");
+      if (setDeadlineButton) {
+        const milestoneId = setDeadlineButton.dataset.setMilestoneDeadline;
+        const milestone = state.milestones.find((item) => item.id === milestoneId);
+        if (!milestone) {
+          return;
+        }
+        openAppDialog({
+          mode: "prompt",
+          title: milestone.deadlineAt ? "Edit Deadline" : "Set Deadline",
+          message: "Choose date and time for this milestone.",
+          inputType: "datetime-local",
+          defaultValue: milestone.deadlineAt || "",
+          confirmLabel: "Save Deadline",
+          onConfirm: (value) => {
+            const deadlineValue = String(value || "").trim();
+            if (!deadlineValue) {
+              return;
+            }
+            if (!parseMilestoneDeadline(deadlineValue)) {
+              alert("Please select a valid date and time.");
+              return;
+            }
+            state.milestones = state.milestones.map((item) =>
+              item.id === milestoneId ? { ...item, deadlineAt: deadlineValue } : item
+            );
+            persistState({ immediate: true });
+            render();
+          }
+        });
+        return;
+      }
+
+      const clearDeadlineButton = event.target.closest("[data-clear-milestone-deadline]");
+      if (clearDeadlineButton) {
+        const milestoneId = clearDeadlineButton.dataset.clearMilestoneDeadline;
+        state.milestones = state.milestones.map((item) =>
+          item.id === milestoneId ? { ...item, deadlineAt: "" } : item
+        );
+        persistState({ immediate: true });
+        render();
         return;
       }
 
@@ -11429,7 +11646,11 @@
           state.milestoneTasks = state.milestoneTasks.filter((item) => item.id !== taskId);
           persistState({ immediate: true });
           render();
-          closeModal("milestone-task", { skipCommit: true });
+          if (isTaskModalOpen()) {
+            closeModal("task", { skipCommit: true });
+          } else {
+            closeModal("milestone-task", { skipCommit: true });
+          }
         }
       });
     }
@@ -11437,7 +11658,11 @@
     function handleMilestoneTaskFormSubmit(event) {
       event.preventDefault();
       commitMilestoneTaskModalChanges();
-      closeModal("milestone-task", { skipCommit: true });
+      if (isTaskModalOpen()) {
+        closeModal("task", { skipCommit: true });
+      } else {
+        closeModal("milestone-task", { skipCommit: true });
+      }
     }
 
     function handleMilestoneTaskModalBackdropClick(event) {
@@ -11651,6 +11876,7 @@
       if (!taskId || !milestoneId) {
         return;
       }
+      event.preventDefault();
       activeMilestoneTaskDrag = {
         taskId,
         milestoneId,
@@ -11668,6 +11894,8 @@
         gapOffset: 0,
         sourceIndex: 0,
         targetIndex: 0,
+        scrollLocked: false,
+        originalScrollOverflow: "",
         activationTimer: window.setTimeout(() => {
           if (activeMilestoneTaskDrag && activeMilestoneTaskDrag.pointerId === event.pointerId) {
             activeMilestoneTaskDrag.activated = true;
@@ -11676,6 +11904,9 @@
               activeMilestoneTaskDrag.item.setPointerCapture(event.pointerId);
               activeMilestoneTaskDrag.hasPointerCapture = true;
             }
+            activeMilestoneTaskDrag.scrollLocked = true;
+            activeMilestoneTaskDrag.originalScrollOverflow = elements.phaseDetail.style.overflowY || "";
+            elements.phaseDetail.style.overflowY = "hidden";
             initializeMilestoneTaskDragList(activeMilestoneTaskDrag, milestoneId);
           }
         }, DRAG_HOLD_DELAY_MS)
@@ -11724,6 +11955,9 @@
       if (activeMilestoneTaskDrag.hasPointerCapture) {
         item.releasePointerCapture(event.pointerId);
       }
+      if (activeMilestoneTaskDrag.scrollLocked) {
+        elements.phaseDetail.style.overflowY = activeMilestoneTaskDrag.originalScrollOverflow;
+      }
       if (moved) {
         suppressClickUntil = Date.now() + 300;
         const targetIndex = Number.isInteger(activeMilestoneTaskDrag.targetIndex)
@@ -11751,19 +11985,17 @@
     }
 
     function getMilestoneTaskDragTargetIndex(clientY, dragState) {
-      if (!dragState.reducedOrder.length) {
-        return dragState.sourceIndex;
+      const items = dragState.list.filter((item) => item.dataset.milestoneTaskId !== dragState.taskId);
+      if (!items.length) {
+        return 0;
       }
-      let insertionIndex = 0;
-      for (const entry of dragState.itemOrder) {
-        if (entry.id === dragState.taskId) {
-          continue;
-        }
-        if (clientY > entry.midpoint) {
-          insertionIndex += 1;
+      for (let index = 0; index < items.length; index += 1) {
+        const rect = items[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
         }
       }
-      return insertionIndex;
+      return items.length;
     }
 
     function updateMilestoneTaskDragPreview(dragState) {
@@ -11808,14 +12040,27 @@
 
     function reorderMilestoneTaskInMilestone(taskId, milestoneId, targetIndex) {
       const milestoneTasks = getMilestoneTasks(milestoneId);
-      const sourceIndex = milestoneTasks.findIndex((task) => task.id === taskId);
+      const visibleTasks = milestoneTasks.filter((task) => !task.isDone);
+      const sourceIndex = visibleTasks.findIndex((task) => task.id === taskId);
       if (sourceIndex < 0) {
         return;
       }
-      const nextMilestoneTasks = [...milestoneTasks];
-      const [moved] = nextMilestoneTasks.splice(sourceIndex, 1);
-      const safeIndex = Math.max(0, Math.min(targetIndex, nextMilestoneTasks.length));
-      nextMilestoneTasks.splice(safeIndex, 0, moved);
+
+      const nextVisibleTasks = [...visibleTasks];
+      const [moved] = nextVisibleTasks.splice(sourceIndex, 1);
+      const safeIndex = Math.max(0, Math.min(targetIndex, nextVisibleTasks.length));
+      nextVisibleTasks.splice(safeIndex, 0, moved);
+
+      let visibleIndex = 0;
+      const nextMilestoneTasks = milestoneTasks.map((task) => {
+        if (task.isDone) {
+          return task;
+        }
+        const nextTask = nextVisibleTasks[visibleIndex];
+        visibleIndex += 1;
+        return nextTask || task;
+      });
+
       const iterator = nextMilestoneTasks[Symbol.iterator]();
       state.milestoneTasks = state.milestoneTasks.map((task) =>
         task.milestoneId === milestoneId ? iterator.next().value : task
@@ -11950,6 +12195,7 @@
               : elements.blockModalBackdrop;
       backdrop.classList.add("open");
       backdrop.setAttribute("aria-hidden", "false");
+      syncFloatingActionsVisibility();
       if (type === "phase") {
         window.clearTimeout(phaseModalCloseTimer);
         elements.phaseModalBackdrop.classList.remove("closing");
@@ -12004,6 +12250,7 @@
           elements.phaseSettingsPanel.classList.remove("open");
           setPhaseMenuOpen(false);
           state.ui.editingPhaseId = null;
+          syncFloatingActionsVisibility();
         }, 300);
       } else if (type === "block") {
         if (!options.skipCommit) {
@@ -12014,6 +12261,7 @@
         blockModalCloseTimer = window.setTimeout(() => {
           backdrop.classList.remove("open", "closing");
           backdrop.setAttribute("aria-hidden", "true");
+          syncFloatingActionsVisibility();
         }, 300);
       } else if (type === "task") {
         if (isTaskModalClosing) {
@@ -12029,6 +12277,7 @@
           backdrop.classList.remove("open", "sheet-half", "sheet-full", "closing");
           backdrop.setAttribute("aria-hidden", "true");
           isTaskModalClosing = false;
+          syncFloatingActionsVisibility();
         }, 300);
       } else if (type === "milestone-task") {
         if (!options.skipCommit) {
@@ -12042,10 +12291,12 @@
           setMilestoneTaskMenuOpen(false);
           elements.milestoneTaskForm.reset();
           state.ui.editingMilestoneTaskId = null;
+          syncFloatingActionsVisibility();
         }, 300);
       } else {
         backdrop.classList.remove("open");
         backdrop.setAttribute("aria-hidden", "true");
+        syncFloatingActionsVisibility();
       }
 
       if (type === "phase-read") {
@@ -12116,6 +12367,52 @@
 
     function getMilestonesForPhase(phaseId) {
       return state.milestones.filter((milestone) => milestone.phaseId === phaseId);
+    }
+
+    function parseMilestoneDeadline(deadlineAt) {
+      if (typeof deadlineAt !== "string" || !deadlineAt.trim()) {
+        return null;
+      }
+      const parsed = new Date(deadlineAt);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    function formatDurationShort(ms) {
+      const totalMinutes = Math.max(0, Math.round(ms / 60000));
+      if (totalMinutes < 60) {
+        return `${totalMinutes}m`;
+      }
+      const totalHours = Math.round(totalMinutes / 60);
+      if (totalHours < 24) {
+        return `${totalHours}h`;
+      }
+      const totalDays = Math.round(totalHours / 24);
+      return `${totalDays}d`;
+    }
+
+    function getMilestoneDeadlineMeta(deadlineAt) {
+      const deadline = parseMilestoneDeadline(deadlineAt);
+      if (!deadline) {
+        return null;
+      }
+      const now = new Date();
+      const diffMs = deadline.getTime() - now.getTime();
+      if (diffMs < 0) {
+        return {
+          state: "overdue",
+          label: `${formatDurationShort(Math.abs(diffMs))} overdue`
+        };
+      }
+      if (diffMs <= 6 * 60 * 60 * 1000) {
+        return {
+          state: "soon",
+          label: `${formatDurationShort(diffMs)} left`
+        };
+      }
+      return {
+        state: "upcoming",
+        label: `${formatDurationShort(diffMs)} left`
+      };
     }
 
     function getMilestoneTasks(milestoneId) {
@@ -12772,6 +13069,9 @@
               title: typeof milestone?.title === "string" && milestone.title.trim() ? milestone.title.trim() : `Milestone ${index + 1}`,
               goalTarget: Math.max(0, Math.floor(Number(milestone?.goalTarget || 0))),
               goalProgress: Math.max(0, Math.floor(Number(milestone?.goalProgress || 0))),
+              deadlineAt: typeof milestone?.deadlineAt === "string" && !Number.isNaN(new Date(milestone.deadlineAt).getTime())
+                ? milestone.deadlineAt
+                : "",
               isCollapsed: typeof milestone?.isCollapsed === "boolean" ? milestone.isCollapsed : true
             }))
             .filter((milestone) => milestone.phaseId && milestone.title)
