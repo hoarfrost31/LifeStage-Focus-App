@@ -316,14 +316,8 @@
     }
 
     :root {
-      --floating-action-right: 18px;
-      --floating-action-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-    }
-
-    @supports (width: min(1px, 2px)) {
-      :root {
-        --floating-action-right: calc((100vw - min(420px, calc(100vw - 24px))) / 2 + 18px);
-      }
+      --floating-action-right: max(18px, calc((100vw - min(420px, calc(100vw - 24px))) / 2 + 18px));
+      --floating-action-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
     }
 
     .danger-button {
@@ -552,7 +546,7 @@
     }
 
     .floating-action-group {
-      position: absolute;
+      position: fixed;
       right: var(--floating-action-right, 18px);
       bottom: var(--floating-action-bottom, calc(88px + env(safe-area-inset-bottom, 0px)));
       display: flex;
@@ -802,8 +796,8 @@
     }
 
     .task-note-icon {
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -813,8 +807,8 @@
     }
 
     .task-note-icon svg {
-      width: 12px;
-      height: 12px;
+      width: 15px;
+      height: 15px;
       display: block;
     }
 
@@ -2134,8 +2128,8 @@
     }
 
     .today-note-icon {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -2144,8 +2138,24 @@
     }
 
     .today-note-icon svg {
-      width: 12px;
-      height: 12px;
+      width: 15px;
+      height: 15px;
+      display: block;
+    }
+
+    .milestone-note-icon {
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(248, 250, 252, 0.78);
+      flex-shrink: 0;
+    }
+
+    .milestone-note-icon svg {
+      width: 15px;
+      height: 15px;
       display: block;
     }
 
@@ -2240,7 +2250,7 @@
     }
 
     .timeline-actions {
-      position: absolute;
+      position: fixed;
       right: var(--floating-action-right, 18px);
       bottom: var(--floating-action-bottom, calc(88px + env(safe-area-inset-bottom, 0px)));
       display: flex;
@@ -2261,7 +2271,7 @@
     }
 
     .phases-actions {
-      position: absolute;
+      position: fixed;
       right: var(--floating-action-right, 18px);
       bottom: var(--floating-action-bottom, calc(88px + env(safe-area-inset-bottom, 0px)));
     }
@@ -3497,6 +3507,7 @@
       cursor: grab;
       background: rgba(255, 255, 255, 0.06);
       color: rgba(255, 255, 255, 0.7);
+      touch-action: none;
     }
 
     .milestone-drag-handle svg {
@@ -3595,9 +3606,9 @@
       margin-top: 16px;
       padding: 14px;
       border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 28px rgba(0, 0, 0, 0.24);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--panel-soft), var(--panel));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--elevation-card);
       display: grid;
       gap: 10px;
     }
@@ -3610,7 +3621,7 @@
       font-size: 0.78rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--muted);
     }
 
     .cloud-inspector-meta {
@@ -3624,7 +3635,7 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 6px 12px;
       font-size: 0.78rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(248, 250, 252, 0.74);
     }
 
     .cloud-inspector-backups {
@@ -3642,10 +3653,10 @@
       gap: 10px;
       padding: 8px 10px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
       font-size: 0.76rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(248, 250, 252, 0.72);
     }
 
     .cloud-backup-meta {
@@ -3687,6 +3698,8 @@
       justify-content: center;
       padding: 16px;
       z-index: 30;
+      background: rgba(0, 0, 0, 0.58);
+      backdrop-filter: blur(9px);
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
@@ -3703,10 +3716,10 @@
       width: min(calc(100vw - 32px), 420px);
       max-height: calc(100vh - 32px);
       overflow: auto;
-      background: linear-gradient(180deg, rgba(24, 30, 44, 0.92), rgba(10, 14, 24, 0.95));
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(180deg, var(--panel-soft), var(--panel));
+      border: 1px solid var(--border);
       border-radius: 24px;
-      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(20px);
       transform: translateY(16px) scale(0.97);
       opacity: 0;
@@ -3742,8 +3755,8 @@
 
     .theme-option {
       border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.035));
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), var(--panel));
       padding: 12px 14px;
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -3754,14 +3767,18 @@
     }
 
     .theme-option:hover {
-      border-color: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.2);
       box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22);
       transform: translateY(-1px);
     }
 
     .theme-option.active {
-      border-color: rgba(255, 255, 255, 0.24);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.05));
+      border-color: rgba(255, 255, 255, 0.28);
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.09),
+        rgba(255, 255, 255, 0.05)
+      );
       box-shadow: 0 16px 26px rgba(0, 0, 0, 0.26);
     }
 
@@ -3776,21 +3793,25 @@
 
     .settings-modal .ghost-button {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .settings-modal .primary-button {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.22),
+        rgba(255, 255, 255, 0.14)
+      );
+      border: 1px solid rgba(255, 255, 255, 0.18);
       color: var(--text);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
-    .settings-modal .primary-button {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.15));
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      color: var(--text);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
     .settings-modal .ghost-button:hover,
     .settings-modal .primary-button:hover {
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.22);
     }
 
     .cloud-backup-actions .micro-button {
@@ -3829,7 +3850,7 @@
 
     .theme-status {
       font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
@@ -4014,6 +4035,7 @@
 
     .milestone-task-title[data-drag-milestone-task-handle] {
       cursor: grab;
+      touch-action: none;
     }
 
     .milestone-task-actions {
@@ -5810,7 +5832,13 @@
         openSettingsModal();
       });
     });
-      elements.addTaskButton.addEventListener("click", () => openTaskModal(null, null, null, getDefaultTaskListForCompose()));
+      elements.addTaskButton.addEventListener("click", () => {
+        if (state.ui.activeTab === "tasks" && state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW) {
+          handleAddTaskList();
+          return;
+        }
+        openTaskModal(null, null, null, getDefaultTaskListForCompose());
+      });
       elements.addLinkedTaskButton.addEventListener("click", handleAddLinkedTask);
       elements.tasksList.addEventListener("click", handleTaskListClick);
       elements.tasksList.addEventListener("pointerdown", handleTaskDragStart);
@@ -6031,6 +6059,10 @@
       elements.phasesCard.classList.toggle("panel-hidden", visibleTab !== "phases");
       elements.timelineCard.classList.toggle("panel-hidden", visibleTab !== "timeline");
       elements.addTaskButton.style.display = visibleTab === "tasks" ? "block" : "none";
+      elements.addTaskButton.setAttribute(
+        "aria-label",
+        visibleTab === "tasks" && state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW ? "Add list" : "Add task"
+      );
       elements.addPhaseButton.style.display = visibleTab === "phases" ? "block" : "none";
       const settingsVisible = state.ui.settingsOpen || state.ui.settingsClosing;
       elements.settingsBackdrop?.classList.toggle("open", settingsVisible);
@@ -6243,6 +6275,7 @@
 
       elements.phaseDetailBody.innerHTML = milestones.map((milestone) => {
         const tasks = getMilestoneTasks(milestone.id);
+        const visibleTasks = tasks.filter((task) => !task.isDone);
         const goalTarget = Math.max(0, Math.floor(Number(milestone.goalTarget || 0)));
         const goalProgress = Math.max(0, Math.floor(Number(milestone.goalProgress || 0)));
         const safeGoalProgress = goalTarget ? Math.min(goalProgress, goalTarget) : 0;
@@ -6259,17 +6292,29 @@
         const isCollapsed = Boolean(milestone.isCollapsed);
         const tasksMarkup = isGoal
           ? `<div class="milestone-empty">Goal mode · log progress below.</div>`
-          : (tasks.length
-            ? `${tasks.map((task) => `
+          : (visibleTasks.length
+            ? `${visibleTasks.map((task) => {
+              const isNote = Boolean(task.isNote);
+              const toggleMarkup = isNote
+                ? `<span class="milestone-note-icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 2.9h6.7L13 5.2v7.9a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5V4.4A1.5 1.5 0 0 1 4 2.9z" stroke="currentColor" stroke-width="1.2"/>
+                      <path d="M10.7 2.9v2.3H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                      <path d="M5.1 7.1h5.1M5.1 9.3h5.1M5.1 11.4h3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+                    </svg>
+                  </span>`
+                : `<button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>`;
+              return `
               <div class="milestone-task ${task.isDone ? "done" : ""}" data-open-milestone-task="${task.id}" data-milestone-task-id="${task.id}" data-milestone-id="${milestone.id}">
-                <button class="milestone-task-toggle" type="button" data-toggle-milestone-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
-                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="m3.5 8.3 2.6 2.6 6.4-6.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
+                ${toggleMarkup}
                 <div class="milestone-task-title" data-drag-milestone-task-handle="${task.id}">${escapeHtml(task.title)}</div>
               </div>
-            `).join("")}
+            `;
+            }).join("")}
             <button class="milestone-task-add-inline" type="button" data-add-milestone-task-inline="${milestone.id}">+ Add task</button>`
             : `<div class="milestone-empty" data-add-milestone-task-inline="${milestone.id}">+ Add task</div>`);
         const safeTasksMarkup = tasksMarkup.replace(/\u00C2\u00B7/g, "-");
@@ -6394,8 +6439,9 @@
             const toggleMarkup = isNote
               ? `<span class="today-note-icon" aria-hidden="true">
                   <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 3.5h6.8L13 5.7v6.8a1.4 1.4 0 0 1-1.4 1.4H4A1.4 1.4 0 0 1 2.6 12.5V4.9A1.4 1.4 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.2"/>
-                    <path d="M10.8 3.5v2.2H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    <path d="M4 2.9h6.7L13 5.2v7.9a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5V4.4A1.5 1.5 0 0 1 4 2.9z" stroke="currentColor" stroke-width="1.2"/>
+                    <path d="M10.7 2.9v2.3H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                    <path d="M5.1 7.1h5.1M5.1 9.3h5.1M5.1 11.4h3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
                   </svg>
                 </span>`
               : `<button class="today-task-toggle" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
@@ -7289,15 +7335,6 @@
           `).join("")
         : `<div class="saved-timeline-empty">No custom lists yet.</div>`;
 
-      const addListRowMarkup = `
-        <button class="task-list-overview-item" type="button" data-add-task-list-inline>
-          <span class="task-list-overview-main">
-            <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon("list")}</span>
-            <span>+ Add List</span>
-          </span>
-        </button>
-      `;
-
       const completedMarkup = `
         <button class="task-list-overview-item" type="button" data-task-filter="${COMPLETED_LIST_ID}">
           <span class="task-list-overview-main">
@@ -7316,7 +7353,6 @@
           <div class="task-list-overview-section">
             <div class="task-list-overview-title">Custom Lists</div>
             ${customMarkup}
-            ${addListRowMarkup}
           </div>
           <div class="task-list-overview-section">
             <div class="task-list-overview-title">Completed</div>
@@ -7367,8 +7403,9 @@
       const toggleMarkup = isNote
         ? `<span class="task-note-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 3.5h6.8L13 5.7v6.8a1.4 1.4 0 0 1-1.4 1.4H4A1.4 1.4 0 0 1 2.6 12.5V4.9A1.4 1.4 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.2"/>
-              <path d="M10.8 3.5v2.2H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M4 2.9h6.7L13 5.2v7.9a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5V4.4A1.5 1.5 0 0 1 4 2.9z" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M10.7 2.9v2.3H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M5.1 7.1h5.1M5.1 9.3h5.1M5.1 11.4h3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
             </svg>
           </span>`
         : `<button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
@@ -7473,8 +7510,9 @@
       const toggleMarkup = isNote
         ? `<span class="task-note-icon" aria-hidden="true">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 3.5h6.8L13 5.7v6.8a1.4 1.4 0 0 1-1.4 1.4H4A1.4 1.4 0 0 1 2.6 12.5V4.9A1.4 1.4 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.2"/>
-              <path d="M10.8 3.5v2.2H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M4 2.9h6.7L13 5.2v7.9a1.5 1.5 0 0 1-1.5 1.5H4a1.5 1.5 0 0 1-1.5-1.5V4.4A1.5 1.5 0 0 1 4 2.9z" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M10.7 2.9v2.3H13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M5.1 7.1h5.1M5.1 9.3h5.1M5.1 11.4h3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
             </svg>
           </span>`
         : `<button class="task-toggle ${task.isDone ? "done" : ""}" type="button" data-toggle-task="${task.id}" aria-label="${task.isDone ? "Mark task incomplete" : "Mark task complete"}">
@@ -7587,15 +7625,6 @@
           : `list:${toggleMenuButton.dataset.toggleTaskListOverviewMenu}`;
         state.ui.openTaskOverviewMenuId = state.ui.openTaskOverviewMenuId === menuId ? "" : menuId;
         render();
-        return;
-      }
-
-      const addListButton = event.target.closest("[data-add-task-list-inline]");
-      if (addListButton) {
-        event.preventDefault();
-        event.stopPropagation();
-        closeTaskListOverviewMenu();
-        handleAddTaskList();
         return;
       }
 
@@ -9025,6 +9054,16 @@
       }
       renderTaskScheduleSummary();
       updateTaskMenuNoteLabel();
+      if (state.ui.taskModalKind === "milestone" && state.ui.taskModalMode === "edit" && state.ui.editingMilestoneTaskId) {
+        state.milestoneTasks = state.milestoneTasks.map((task) =>
+          task.id === state.ui.editingMilestoneTaskId
+            ? { ...task, isNote: nextIsNote, isDone: nextIsNote ? false : task.isDone }
+            : task
+        );
+        persistState({ immediate: true });
+        render();
+        return;
+      }
       if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
         state.tasks = state.tasks.map((task) =>
           task.id === state.ui.editingTaskId
@@ -9148,11 +9187,14 @@
       }
       const title = elements.taskTitleInput.value.trim();
       const notes = normalizeTaskEditorHtml(elements.taskNotesEditor.innerHTML);
+      const isNote = elements.taskIsNote.value === "true";
       if (!title && !notes) {
         return;
       }
       state.milestoneTasks = state.milestoneTasks.map((task) =>
-        task.id === taskId ? { ...task, title: title || "Untitled task", notes } : task
+        task.id === taskId
+          ? { ...task, title: title || "Untitled task", notes, isNote, isDone: isNote ? false : task.isDone }
+          : task
       );
       persistState({ immediate: true });
       render();
@@ -10294,6 +10336,14 @@
       const payload = pendingTaskUndo;
       pendingTaskUndo = null;
       hideTaskUndoToast();
+      if (payload.kind === "milestone-task") {
+        state.milestoneTasks = state.milestoneTasks.map((task) =>
+          task.id === payload.id ? { ...task, isDone: false } : task
+        );
+        persistState({ immediate: true });
+        render();
+        return;
+      }
       state.tasks = state.tasks.map((task) => {
         if (task.id !== payload.id) {
           return task;
@@ -11235,11 +11285,19 @@
         toggleTaskButton.classList.add("is-pressed");
         setTimeout(() => toggleTaskButton.classList.remove("is-pressed"), 180);
         const taskId = toggleTaskButton.dataset.toggleMilestoneTask;
+        const existingTask = state.milestoneTasks.find((task) => task.id === taskId);
+        if (!existingTask) {
+          return;
+        }
+        const nextIsDone = !existingTask.isDone;
         state.milestoneTasks = state.milestoneTasks.map((task) =>
-          task.id === taskId ? { ...task, isDone: !task.isDone } : task
+          task.id === taskId ? { ...task, isDone: nextIsDone } : task
         );
         persistState({ immediate: true });
         render();
+        if (nextIsDone) {
+          showTaskUndoToast({ kind: "milestone-task", id: taskId });
+        }
         return;
       }
 
@@ -11290,7 +11348,8 @@
         milestoneId,
         title: value,
         notes: "",
-        isDone: false
+        isDone: false,
+        isNote: false
       });
       state.ui.milestoneComposerOpenId = "";
       persistState({ immediate: true });
@@ -11307,6 +11366,7 @@
       state.ui.editingMilestoneTaskId = taskId;
       state.ui.editingTaskId = null;
       state.ui.taskModalParentId = null;
+      elements.taskIsNote.value = task?.isNote ? "true" : "false";
       elements.taskTitleInput.value = task.title || "";
       elements.taskNotes.value = task.notes || "";
       syncTaskNotesFieldToEditor();
@@ -11319,6 +11379,7 @@
       elements.taskMenuDeleteButton.style.display = "";
       setTaskFormattingTrayOpen(false);
       setTaskMenuOpen(false);
+      updateTaskMenuNoteLabel();
       closeInlineSubtaskComposer();
       renderTaskSubtasks();
       setTaskModalSheetState("full");
@@ -11394,15 +11455,39 @@
       if (!card) {
         return;
       }
+      event.preventDefault();
       activeMilestoneDrag = {
         milestoneId: handle.dataset.dragMilestoneHandle,
         pointerId: event.pointerId,
+        startX: event.clientX,
         startY: event.clientY,
         deltaY: 0,
         moved: false,
-        card
+        activated: false,
+        hasPointerCapture: false,
+        card,
+        list: null,
+        itemOrder: [],
+        reducedOrder: [],
+        gapOffset: 0,
+        sourceIndex: 0,
+        targetIndex: 0,
+        scrollLocked: false,
+        originalScrollOverflow: "",
+        activationTimer: window.setTimeout(() => {
+          if (activeMilestoneDrag && activeMilestoneDrag.pointerId === event.pointerId) {
+            activeMilestoneDrag.activated = true;
+            if (!activeMilestoneDrag.hasPointerCapture) {
+              activeMilestoneDrag.card.setPointerCapture(event.pointerId);
+              activeMilestoneDrag.hasPointerCapture = true;
+            }
+            activeMilestoneDrag.scrollLocked = true;
+            activeMilestoneDrag.originalScrollOverflow = elements.phaseDetail.style.overflowY || "";
+            elements.phaseDetail.style.overflowY = "hidden";
+            initializeMilestoneDragList(activeMilestoneDrag);
+          }
+        }, DRAG_HOLD_DELAY_MS)
       };
-      card.setPointerCapture(event.pointerId);
     }
 
     function handleMilestoneDragMove(event) {
@@ -11410,12 +11495,25 @@
         return;
       }
       activeMilestoneDrag.deltaY = event.clientY - activeMilestoneDrag.startY;
+      if (!activeMilestoneDrag.activated) {
+        const deltaX = event.clientX - activeMilestoneDrag.startX;
+        if (Math.abs(deltaX) > 8 || Math.abs(activeMilestoneDrag.deltaY) > 8) {
+          window.clearTimeout(activeMilestoneDrag.activationTimer);
+          if (activeMilestoneDrag.hasPointerCapture) {
+            activeMilestoneDrag.card.releasePointerCapture(event.pointerId);
+          }
+          activeMilestoneDrag = null;
+        }
+        return;
+      }
       if (!activeMilestoneDrag.moved && Math.abs(activeMilestoneDrag.deltaY) < 8) {
         return;
       }
       activeMilestoneDrag.moved = true;
       activeMilestoneDrag.card.classList.add("dragging");
       activeMilestoneDrag.card.style.transform = `translateY(${activeMilestoneDrag.deltaY}px)`;
+      activeMilestoneDrag.targetIndex = getMilestoneDragTargetIndex(event.clientY, activeMilestoneDrag);
+      updateMilestoneDragPreview(activeMilestoneDrag);
       event.preventDefault();
     }
 
@@ -11423,15 +11521,82 @@
       if (!activeMilestoneDrag || activeMilestoneDrag.pointerId !== event.pointerId) {
         return;
       }
+      window.clearTimeout(activeMilestoneDrag.activationTimer);
       const { milestoneId, card, moved } = activeMilestoneDrag;
       card.style.transform = "";
       card.classList.remove("dragging");
-      card.releasePointerCapture(event.pointerId);
+      clearMilestoneDragPreview(activeMilestoneDrag);
+      if (activeMilestoneDrag.hasPointerCapture) {
+        card.releasePointerCapture(event.pointerId);
+      }
+      if (activeMilestoneDrag.scrollLocked) {
+        elements.phaseDetail.style.overflowY = activeMilestoneDrag.originalScrollOverflow;
+      }
       if (moved) {
-        const targetIndex = getMilestoneDropIndex(event.clientY, milestoneId);
+        suppressClickUntil = Date.now() + 300;
+        const targetIndex = Number.isInteger(activeMilestoneDrag.targetIndex)
+          ? activeMilestoneDrag.targetIndex
+          : getMilestoneDropIndex(event.clientY, milestoneId);
         reorderMilestoneInPhase(milestoneId, targetIndex);
       }
       activeMilestoneDrag = null;
+    }
+
+    function initializeMilestoneDragList(dragState) {
+      const list = [...elements.phaseDetailBody.querySelectorAll(".milestone-card")];
+      const sourceIndex = list.findIndex((item) => item.dataset.milestoneId === dragState.milestoneId);
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => ({
+        id: item.dataset.milestoneId,
+        midpoint: item.getBoundingClientRect().top + (item.getBoundingClientRect().height / 2)
+      }));
+      dragState.reducedOrder = list
+        .filter((item) => item.dataset.milestoneId !== dragState.milestoneId)
+        .map((item) => item.dataset.milestoneId);
+      dragState.gapOffset = dragState.card.getBoundingClientRect().height + 10;
+      dragState.sourceIndex = sourceIndex >= 0 ? sourceIndex : dragState.reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+    }
+
+    function getMilestoneDragTargetIndex(clientY, dragState) {
+      if (!dragState.reducedOrder.length) {
+        return dragState.sourceIndex;
+      }
+      let insertionIndex = 0;
+      for (const entry of dragState.itemOrder) {
+        if (entry.id === dragState.milestoneId) {
+          continue;
+        }
+        if (clientY > entry.midpoint) {
+          insertionIndex += 1;
+        }
+      }
+      return insertionIndex;
+    }
+
+    function updateMilestoneDragPreview(dragState) {
+      clearMilestoneDragPreview(dragState);
+      if (!dragState.moved) {
+        return;
+      }
+      const items = dragState.list.filter((item) => item.dataset.milestoneId !== dragState.milestoneId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
+    }
+
+    function clearMilestoneDragPreview(dragState) {
+      const list = dragState?.list || elements.phaseDetailBody.querySelectorAll(".milestone-card");
+      [...list].forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
     }
 
     function getMilestoneDropIndex(clientY, sourceMilestoneId) {
@@ -12622,7 +12787,8 @@
               milestoneId: typeof task?.milestoneId === "string" && validMilestoneIds.has(task.milestoneId) ? task.milestoneId : "",
               title: typeof task?.title === "string" && task.title.trim() ? task.title.trim() : `Task ${index + 1}`,
               notes: typeof task?.notes === "string" ? task.notes : "",
-              isDone: Boolean(task?.isDone)
+              isDone: Boolean(task?.isDone),
+              isNote: Boolean(task?.isNote)
             }))
             .filter((task) => task.milestoneId && task.title)
         : [];
