@@ -2077,15 +2077,14 @@
       flex-direction: column;
       gap: 6px;
       overflow: hidden;
-      height: auto;
+      max-height: 1200px;
       opacity: 1;
       transform: translateY(0);
-      transition: height 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.24s ease;
-      will-change: height, opacity, transform;
+      transition: max-height 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease, transform 0.18s ease;
     }
 
     .today-block.is-collapsed .today-block-tasks {
-      height: 0;
+      max-height: 0;
       opacity: 0;
       transform: translateY(-4px);
       pointer-events: none;
@@ -3991,15 +3990,14 @@
       flex-direction: column;
       gap: 10px;
       overflow: hidden;
-      height: auto;
+      max-height: 1200px;
       opacity: 1;
       transform: translateY(0);
-      transition: height 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease, transform 0.24s ease;
-      will-change: height, opacity, transform;
+      transition: max-height 0.24s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.18s ease, transform 0.18s ease;
     }
 
     .milestone-card.is-collapsed .milestone-body {
-      height: 0;
+      max-height: 0;
       opacity: 0;
       transform: translateY(-4px);
       pointer-events: none;
@@ -6199,61 +6197,6 @@
       elements.floatingActionsLayer.classList.toggle("overlay-blocked", hasOverlayOpen);
     }
 
-    function animateSectionToggle(container, sectionSelector, collapsedClass, shouldCollapse) {
-      if (!container) {
-        return;
-      }
-      const section = container.querySelector(sectionSelector);
-      if (!section) {
-        container.classList.toggle(collapsedClass, shouldCollapse);
-        return;
-      }
-
-      if (section._collapseCleanup) {
-        section._collapseCleanup();
-      }
-
-      const durationMs = 340;
-      let done = false;
-      const finish = () => {
-        if (done) {
-          return;
-        }
-        done = true;
-        section.removeEventListener("transitionend", onEnd);
-        window.clearTimeout(timer);
-        section.style.overflow = "";
-        section.style.height = shouldCollapse ? "0px" : "auto";
-        section.style.willChange = "";
-        section._collapseCleanup = null;
-      };
-      const onEnd = (event) => {
-        if (event.target === section && event.propertyName === "height") {
-          finish();
-        }
-      };
-
-      section.style.overflow = "hidden";
-      section.style.willChange = "height, opacity, transform";
-
-      if (shouldCollapse) {
-        const startHeight = section.scrollHeight;
-        section.style.height = `${startHeight}px`;
-        section.getBoundingClientRect();
-        container.classList.add(collapsedClass);
-        section.style.height = "0px";
-      } else {
-        container.classList.remove(collapsedClass);
-        section.style.height = "0px";
-        section.getBoundingClientRect();
-        section.style.height = `${section.scrollHeight}px`;
-      }
-
-      section.addEventListener("transitionend", onEnd);
-      const timer = window.setTimeout(finish, durationMs + 80);
-      section._collapseCleanup = finish;
-    }
-
     function renderPhaseTabControls() {
       const activeTabId = getActivePhaseTabId();
       const activeTab = state.phaseTabs.find((tab) => tab.id === activeTabId) || state.phaseTabs[0] || null;
@@ -6650,7 +6593,7 @@
           [blockId]: nextCollapsed
         };
         const blockCard = elements.todayList.querySelector(`.today-block[data-block-id="${blockId}"]`);
-        animateSectionToggle(blockCard, ".today-block-tasks", "is-collapsed", nextCollapsed);
+        blockCard?.classList.toggle("is-collapsed", nextCollapsed);
         toggleBlockButton.setAttribute("aria-label", nextCollapsed ? "Expand block" : "Collapse block");
         persistState();
         return;
@@ -11297,7 +11240,7 @@
         });
         const card = elements.phaseDetailBody.querySelector(`.milestone-card[data-milestone-id="${milestoneId}"]`);
         const button = elements.phaseDetailBody.querySelector(`[data-toggle-milestone-collapse="${milestoneId}"]`);
-        animateSectionToggle(card, ".milestone-body", "is-collapsed", nextCollapsed);
+        card?.classList.toggle("is-collapsed", nextCollapsed);
         button?.setAttribute("aria-label", nextCollapsed ? "Expand milestone" : "Collapse milestone");
         persistState();
         return;
