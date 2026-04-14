@@ -1972,6 +1972,13 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: rgba(255, 255, 255, 0.58);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .today-block-controls {
+      margin-left: auto;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -2000,6 +2007,26 @@
       padding: 0;
       flex-shrink: 0;
       transition: transform 0.2s ease;
+    }
+
+    .today-block-menu-button {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.74);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .today-block-menu-button svg {
+      width: 11px;
+      height: 11px;
+      display: block;
     }
 
     .today-block-toggle svg {
@@ -2845,6 +2872,10 @@
     #block-modal-backdrop.active .modal {
       transform: translateY(0);
       opacity: 1;
+    }
+
+    #block-modal-backdrop.dragging .modal {
+      transition: none;
     }
 
     #block-modal-backdrop.closing .modal {
@@ -5559,7 +5590,7 @@
         activeTheme: "default",
         todayCollapsedByBlock: {},
         milestoneComposerOpenId: "",
-        milestoneDeadlineFilter: MILESTONE_FILTER_THIS_WEEK,
+        milestoneDeadlineFilterByPhaseId: {},
         editingMilestoneTaskId: null,
         cloudInspectorSnapshot: null,
         cloudInspectorBackups: [],
@@ -5599,6 +5630,7 @@
     let settingsCloseTimer = null;
     let settingsBlurTimer = null;
     let activeTaskSheetDrag = null;
+    let activeBlockSheetDrag = null;
     let appDialogState = null;
     let isTaskModalClosing = false;
     let activeHeaderDropdownDrag = null;
@@ -5670,6 +5702,8 @@
       phaseReadModalBackdrop: document.getElementById("phase-read-modal-backdrop"),
       blockModalBackdrop: document.getElementById("block-modal-backdrop"),
       blockModalSheet: document.querySelector("#block-modal-backdrop .modal"),
+      blockModalHeader: document.querySelector("#block-modal-backdrop .modal-header"),
+      blockEditZone: document.querySelector("#block-modal-backdrop .block-notes-stack"),
       taskModalBackdrop: document.getElementById("task-modal-backdrop"),
       taskModalSheet: document.querySelector("#task-modal-backdrop .modal"),
       taskModalHeader: document.getElementById("task-modal-header"),
@@ -5802,6 +5836,9 @@
 
     async function initialize() {
       hydrateState();
+      if (ensureDailyRecurringBlockTasks() || refreshDailyBlockRecurringCompletionState()) {
+        persistState({ immediate: true });
+      }
       initializeFirebase();
       populateColorOptions();
       bindEvents();
@@ -5811,6 +5848,10 @@
       registerServiceWorker();
       render();
       await hydrateFromCloud();
+      if (ensureDailyRecurringBlockTasks() || refreshDailyBlockRecurringCompletionState()) {
+        persistState({ immediate: true });
+        render();
+      }
       scheduleNowUpdater();
     }
 
@@ -6032,6 +6073,14 @@
       elements.blockFormatForwardButton.addEventListener("click", handleBlockFormatForwardAction);
       elements.blockUndoButton.addEventListener("click", handleBlockUndo);
       elements.blockRedoButton.addEventListener("click", handleBlockRedo);
+      elements.blockModalHeader.addEventListener("touchstart", handleBlockSheetTouchStart, { passive: true });
+      elements.blockModalHeader.addEventListener("touchmove", handleBlockSheetTouchMove, { passive: false });
+      elements.blockModalHeader.addEventListener("touchend", handleBlockSheetTouchEnd);
+      elements.blockModalHeader.addEventListener("touchcancel", handleBlockSheetTouchEnd);
+      elements.blockEditZone.addEventListener("touchstart", handleBlockSheetTouchStart, { passive: true });
+      elements.blockEditZone.addEventListener("touchmove", handleBlockSheetTouchMove, { passive: false });
+      elements.blockEditZone.addEventListener("touchend", handleBlockSheetTouchEnd);
+      elements.blockEditZone.addEventListener("touchcancel", handleBlockSheetTouchEnd);
       elements.taskNotesEditor.addEventListener("input", handleTaskNotesEditorInput);
       elements.taskTitleInput.addEventListener("click", handleTaskEditActivator);
       elements.taskNotesEditor.addEventListener("click", handleTaskEditActivator);
@@ -6403,9 +6452,10 @@
         return;
       }
 
-      const filteredMilestones = milestones.filter((milestone) => doesMilestoneMatchDeadlineFilter(milestone, state.ui.milestoneDeadlineFilter));
+      const activeFilter = getMilestoneDeadlineFilterForPhase(phase.id);
+      const filteredMilestones = milestones.filter((milestone) => doesMilestoneMatchDeadlineFilter(milestone, activeFilter));
       if (!filteredMilestones.length) {
-        elements.phaseDetailBody.innerHTML = `<div class="milestone-empty">No milestones for ${escapeHtml(getMilestoneFilterLabel(state.ui.milestoneDeadlineFilter).toLowerCase())}.</div>`;
+        elements.phaseDetailBody.innerHTML = `<div class="milestone-empty">No milestones for ${escapeHtml(getMilestoneFilterLabel(activeFilter).toLowerCase())}.</div>`;
         return;
       }
 
@@ -6532,7 +6582,8 @@
       if (!elements.phaseDetailFilterRow) {
         return;
       }
-      const activeFilter = normalizeMilestoneDeadlineFilter(state.ui.milestoneDeadlineFilter);
+      const phaseId = state.ui.phaseDetailId;
+      const activeFilter = getMilestoneDeadlineFilterForPhase(phaseId);
       elements.phaseDetailFilterRow.innerHTML = MILESTONE_DEADLINE_FILTERS.map((filter) => `
         <button
           class="phase-detail-filter-chip ${filter.id === activeFilter ? "active" : ""}"
@@ -6550,11 +6601,24 @@
       if (!button) {
         return;
       }
-      const nextFilter = normalizeMilestoneDeadlineFilter(button.dataset.setMilestoneFilter);
-      if (nextFilter === state.ui.milestoneDeadlineFilter) {
+      const phaseId = state.ui.phaseDetailId;
+      if (!phaseId) {
         return;
       }
-      state.ui.milestoneDeadlineFilter = nextFilter;
+      const nextFilter = normalizeMilestoneDeadlineFilter(button.dataset.setMilestoneFilter);
+      const currentFilter = getMilestoneDeadlineFilterForPhase(phaseId);
+      if (nextFilter === currentFilter) {
+        return;
+      }
+      state.phases = state.phases.map((phase) =>
+        phase.id === phaseId
+          ? { ...phase, milestoneDeadlineFilter: nextFilter }
+          : phase
+      );
+      state.ui.milestoneDeadlineFilterByPhaseId = {
+        ...state.ui.milestoneDeadlineFilterByPhaseId,
+        [phaseId]: nextFilter
+      };
       persistState();
       renderPhaseDetail();
     }
@@ -6633,16 +6697,25 @@
           <button class="today-task-add-inline" type="button" data-add-task-inline="${block.id}">+ Add task</button>`
           : `<div class="today-task-empty" data-add-task-inline="${block.id}">+ Add task</div>`;
         return `
-          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""} ${isComplete ? "is-complete" : ""}" data-block-id="${block.id}" data-edit-block="${block.id}">
+          <div class="today-block ${tone} ${isActive ? "is-active" : ""} ${isCollapsed ? "is-collapsed" : ""} ${isComplete ? "is-complete" : ""}" data-block-id="${block.id}">
             <div class="today-block-time">
               <span class="today-block-indicator" aria-hidden="true"></span>
               ${escapeHtml(formatBlockTimeRange(block.startTime, block.endTime, overnight))}
               ${isActive ? `<span class="today-block-now">Now</span>` : ""}
-              <button class="today-block-toggle" type="button" data-toggle-today-block="${block.id}" aria-label="${isCollapsed ? "Expand block" : "Collapse block"}">
-                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="m6 3.5 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
+              <span class="today-block-controls">
+                <button class="today-block-toggle" type="button" data-toggle-today-block="${block.id}" aria-label="${isCollapsed ? "Expand block" : "Collapse block"}">
+                  <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m6 3.5 4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <button class="today-block-menu-button" type="button" data-edit-today-block="${block.id}" aria-label="Edit block">
+                  <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8" cy="3.2" r="1.2"/>
+                    <circle cx="8" cy="8" r="1.2"/>
+                    <circle cx="8" cy="12.8" r="1.2"/>
+                  </svg>
+                </button>
+              </span>
             </div>
             <div class="today-block-title">${escapeHtml(block.title)}</div>
             ${tasks.length && !isComplete ? `<div class="today-block-meta">${completedCount}/${tasks.length} tasks completed</div>` : ""}
@@ -6671,16 +6744,16 @@
       const toggleBlockButton = event.target.closest("[data-toggle-today-block]");
       if (toggleBlockButton) {
         const blockId = toggleBlockButton.dataset.toggleTodayBlock;
-        const current = state.ui.todayCollapsedByBlock?.[blockId];
-        const nextCollapsed = !current;
-        state.ui.todayCollapsedByBlock = {
-          ...state.ui.todayCollapsedByBlock,
-          [blockId]: nextCollapsed
-        };
-        const blockCard = elements.todayList.querySelector(`.today-block[data-block-id="${blockId}"]`);
-        blockCard?.classList.toggle("is-collapsed", nextCollapsed);
-        toggleBlockButton.setAttribute("aria-label", nextCollapsed ? "Expand block" : "Collapse block");
-        persistState();
+        toggleTodayBlockCollapsed(blockId);
+        return;
+      }
+
+      const editBlockButton = event.target.closest("[data-edit-today-block]");
+      if (editBlockButton) {
+        const blockId = editBlockButton.dataset.editTodayBlock;
+        if (blockId) {
+          openBlockModal(blockId);
+        }
         return;
       }
 
@@ -6711,11 +6784,11 @@
         return;
       }
 
-      const blockCard = event.target.closest("[data-edit-block]");
+      const blockCard = event.target.closest(".today-block[data-block-id]");
       if (blockCard && !event.target.closest(".today-task-composer") && !event.target.closest("[data-task-input]")) {
-        const blockId = blockCard.dataset.editBlock;
+        const blockId = blockCard.dataset.blockId;
         if (blockId) {
-          openBlockModal(blockId);
+          toggleTodayBlockCollapsed(blockId);
         }
         return;
       }
@@ -7018,8 +7091,8 @@
         blockId,
         parentTaskId: null,
         listId: TODAYS_EVENTS_LIST_ID,
-        dueDateTime: "",
-        repeatRule: null,
+        dueDateTime: getLocalDateKey(),
+        repeatRule: { interval: 1, unit: "day" },
         isDone: false,
         isCollapsed: false
       });
@@ -7033,6 +7106,20 @@
         return stored;
       }
       return !isActive;
+    }
+
+    function toggleTodayBlockCollapsed(blockId) {
+      const current = state.ui.todayCollapsedByBlock?.[blockId];
+      const nextCollapsed = !current;
+      state.ui.todayCollapsedByBlock = {
+        ...state.ui.todayCollapsedByBlock,
+        [blockId]: nextCollapsed
+      };
+      const blockCard = elements.todayList.querySelector(`.today-block[data-block-id="${blockId}"]`);
+      blockCard?.classList.toggle("is-collapsed", nextCollapsed);
+      const toggleButton = blockCard?.querySelector(`[data-toggle-today-block="${blockId}"]`);
+      toggleButton?.setAttribute("aria-label", nextCollapsed ? "Expand block" : "Collapse block");
+      persistState();
     }
 
     function isTimeWithinBlock(now, block) {
@@ -9317,8 +9404,10 @@
         : null;
       const resolvedListId = blockId ? TODAYS_EVENTS_LIST_ID : listId;
       const resolvedSectionId = blockId ? null : sectionId;
-      const dueDateTime = elements.taskDueDateTime.value || "";
-      const repeatRule = readTaskRepeatRuleFromFields();
+      const fieldDueDateTime = elements.taskDueDateTime.value || "";
+      const fieldRepeatRule = readTaskRepeatRuleFromFields();
+      const dueDateTime = blockId ? (fieldDueDateTime || getLocalDateKey()) : fieldDueDateTime;
+      const repeatRule = blockId ? { interval: 1, unit: "day" } : fieldRepeatRule;
       const isNote = elements.taskIsNote.value === "true";
       return {
         id: elements.taskId.value || crypto.randomUUID(),
@@ -9398,6 +9487,96 @@
       } else {
         commitTaskModalChanges();
       }
+    }
+
+    function isBlockModalOpen() {
+      return elements.blockModalBackdrop.classList.contains("open");
+    }
+
+    function handleBlockSheetTouchStart(event) {
+      if (!isBlockModalOpen() || !event.touches.length || activeBlockSheetDrag) {
+        return;
+      }
+
+      const touchTarget = event.target;
+      if (
+        touchTarget.closest(".task-context-menu")
+        || touchTarget.closest(".task-modal-bottom-bar")
+        || touchTarget.closest(".task-rich-toolbar")
+      ) {
+        return;
+      }
+
+      const scrollContainer = getBlockSheetSwipeScrollContainer(touchTarget);
+      activeBlockSheetDrag = {
+        startY: event.touches[0].clientY,
+        startX: event.touches[0].clientX,
+        deltaY: 0,
+        engaged: false,
+        source: elements.blockModalHeader.contains(touchTarget) ? "header" : "content",
+        scrollContainer,
+        startScrollTop: scrollContainer ? scrollContainer.scrollTop : 0
+      };
+    }
+
+    function handleBlockSheetTouchMove(event) {
+      if (!activeBlockSheetDrag || !event.touches.length) {
+        return;
+      }
+
+      const deltaY = event.touches[0].clientY - activeBlockSheetDrag.startY;
+      const deltaX = event.touches[0].clientX - activeBlockSheetDrag.startX;
+      activeBlockSheetDrag.deltaY = deltaY;
+      if (!activeBlockSheetDrag.engaged) {
+        if (Math.abs(deltaY) < 8) {
+          return;
+        }
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          activeBlockSheetDrag = null;
+          return;
+        }
+      }
+
+      const canDragDown = deltaY > 0 && canStartBlockSheetPullDown(activeBlockSheetDrag);
+      if (!canDragDown) {
+        if (deltaY > 0 && activeBlockSheetDrag.source === "content" && activeBlockSheetDrag.scrollContainer) {
+          activeBlockSheetDrag = null;
+        }
+        return;
+      }
+
+      activeBlockSheetDrag.engaged = true;
+      elements.blockModalBackdrop.classList.add("dragging");
+      elements.blockModalSheet.style.transform = `translateY(${Math.max(0, deltaY)}px)`;
+      event.preventDefault();
+    }
+
+    function handleBlockSheetTouchEnd() {
+      if (!activeBlockSheetDrag) {
+        return;
+      }
+
+      const deltaY = activeBlockSheetDrag.deltaY;
+      activeBlockSheetDrag = null;
+      elements.blockModalBackdrop.classList.remove("dragging");
+      elements.blockModalSheet.style.transform = "";
+      if (deltaY >= 70) {
+        closeModal("block");
+      }
+    }
+
+    function getBlockSheetSwipeScrollContainer(target) {
+      if (!(target instanceof Element)) {
+        return null;
+      }
+      return target.closest(".block-notes-stack");
+    }
+
+    function canStartBlockSheetPullDown(dragState) {
+      if (!dragState?.scrollContainer) {
+        return true;
+      }
+      return dragState.startScrollTop <= 0 && dragState.scrollContainer.scrollTop <= 0;
     }
 
     function handleTaskSheetTouchStart(event) {
@@ -10434,6 +10613,18 @@
         const repeatRule = normalizeRepeatRule(task.repeatRule);
         const willComplete = !task.isDone;
 
+        if (repeatRule && willComplete && task.blockId) {
+          const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
+          if (!nextOccurrence) {
+            return task;
+          }
+          return {
+            ...task,
+            dueDateTime: nextOccurrence.raw,
+            isDone: true
+          };
+        }
+
         if (repeatRule && willComplete) {
           const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
           if (!nextOccurrence) {
@@ -10472,6 +10663,15 @@
         const restoredSectionId = isValidSectionAssignment(task.previousSectionId || null, restoredListId)
           ? task.previousSectionId
           : null;
+
+        if (task.blockId && repeatRule) {
+          const parsedDue = parseTaskDueDateTime(task.dueDateTime);
+          return {
+            ...task,
+            isDone: false,
+            dueDateTime: buildTaskDueDateTime(getLocalDateKey(), parsedDue?.timeValue || "")
+          };
+        }
 
         return {
           ...task,
@@ -10554,6 +10754,7 @@
           dueDateTime: payload.dueDateTime || "",
           repeatRule: payload.repeatRule || null,
           isDone: false,
+          isNote: typeof payload.isNote === "boolean" ? payload.isNote : Boolean(task.isNote),
           previousListId: payload.previousListId || null,
           previousSectionId: payload.previousSectionId || null
         };
@@ -12237,6 +12438,9 @@
         });
       } else if (type === "block") {
         window.clearTimeout(blockModalCloseTimer);
+        activeBlockSheetDrag = null;
+        elements.blockModalSheet.style.transform = "";
+        elements.blockModalBackdrop.classList.remove("dragging");
         elements.blockModalBackdrop.classList.remove("closing");
         requestAnimationFrame(() => {
           elements.blockModalBackdrop.classList.add("active");
@@ -12289,6 +12493,9 @@
         if (!options.skipCommit) {
           commitBlockModalChanges();
         }
+        activeBlockSheetDrag = null;
+        elements.blockModalSheet.style.transform = "";
+        elements.blockModalBackdrop.classList.remove("dragging");
         elements.blockModalBackdrop.classList.add("closing");
         elements.blockModalBackdrop.classList.remove("active");
         blockModalCloseTimer = window.setTimeout(() => {
@@ -12377,6 +12584,11 @@
     function scheduleNowUpdater() {
       setInterval(() => {
         state.ui.now = new Date();
+        if (refreshDailyBlockRecurringCompletionState()) {
+          persistState({ immediate: true });
+          render();
+          return;
+        }
         renderTimeline();
       }, 60000);
     }
@@ -12414,6 +12626,22 @@
       return MILESTONE_DEADLINE_FILTERS.some((filter) => filter.id === value)
         ? value
         : MILESTONE_FILTER_ALL;
+    }
+
+    function getMilestoneDeadlineFilterForPhase(phaseId) {
+      if (!phaseId) {
+        return MILESTONE_FILTER_ALL;
+      }
+      const phase = getPhaseById(phaseId);
+      const phaseScopedFilter = normalizeMilestoneDeadlineFilter(phase?.milestoneDeadlineFilter);
+      if (phaseScopedFilter !== MILESTONE_FILTER_ALL || phase?.milestoneDeadlineFilter === MILESTONE_FILTER_ALL) {
+        return phaseScopedFilter;
+      }
+      const map = state.ui.milestoneDeadlineFilterByPhaseId;
+      if (!map || typeof map !== "object") {
+        return MILESTONE_FILTER_ALL;
+      }
+      return normalizeMilestoneDeadlineFilter(map[phaseId]);
     }
 
     function getMilestoneFilterLabel(filterId) {
@@ -12957,7 +13185,8 @@
         name: phase.name,
         color: phase.color,
         isActive: Boolean(phase.isActive),
-        details: phase.details || ""
+        details: phase.details || "",
+        milestoneDeadlineFilter: normalizeMilestoneDeadlineFilter(phase.milestoneDeadlineFilter)
       }));
     }
 
@@ -12991,7 +13220,10 @@
         repeatRule: normalizeRepeatRule(task.repeatRule),
         parentTaskId: task.parentTaskId || null,
         isDone: Boolean(task.isDone),
-        isCollapsed: Boolean(task.isCollapsed)
+        isCollapsed: Boolean(task.isCollapsed),
+        isNote: Boolean(task.isNote),
+        previousListId: typeof task.previousListId === "string" && task.previousListId ? task.previousListId : null,
+        previousSectionId: typeof task.previousSectionId === "string" && task.previousSectionId ? task.previousSectionId : null
       }));
     }
 
@@ -13054,7 +13286,8 @@
             name: typeof phase?.name === "string" && phase.name.trim() ? phase.name.trim() : `Phase ${index + 1}`,
             color: typeof phase?.color === "string" && phase.color ? phase.color : COLOR_OPTIONS[index % COLOR_OPTIONS.length].value,
             isActive: Boolean(phase?.isActive),
-            details: typeof phase?.details === "string" ? phase.details : ""
+            details: typeof phase?.details === "string" ? phase.details : "",
+            milestoneDeadlineFilter: normalizeMilestoneDeadlineFilter(phase?.milestoneDeadlineFilter)
           }))
         : [];
     }
@@ -13112,6 +13345,75 @@
           ? task.previousSectionId
           : null
       }));
+    }
+
+    function ensureDailyRecurringBlockTasks() {
+      let hasChanges = false;
+      const todayDateKey = getLocalDateKey();
+
+      state.tasks = state.tasks.map((task) => {
+        if (!task.blockId) {
+          return task;
+        }
+
+        const normalizedRule = normalizeRepeatRule(task.repeatRule);
+        const hasDailyRule = Boolean(normalizedRule && normalizedRule.unit === "day" && normalizedRule.interval === 1);
+        const parsedDue = parseTaskDueDateTime(task.dueDateTime);
+        const nextDueDateTime = parsedDue
+          ? buildTaskDueDateTime(parsedDue.dateKey, parsedDue.timeValue || "")
+          : buildTaskDueDateTime(todayDateKey, "");
+
+        if (
+          task.listId !== TODAYS_EVENTS_LIST_ID
+          || !hasDailyRule
+          || !parsedDue
+          || task.dueDateTime !== nextDueDateTime
+          || task.sectionId
+        ) {
+          hasChanges = true;
+          return {
+            ...task,
+            listId: TODAYS_EVENTS_LIST_ID,
+            sectionId: null,
+            dueDateTime: nextDueDateTime,
+            repeatRule: hasDailyRule ? normalizedRule : { interval: 1, unit: "day" }
+          };
+        }
+
+        return task;
+      });
+
+      return hasChanges;
+    }
+
+    function refreshDailyBlockRecurringCompletionState() {
+      let hasChanges = false;
+      const todayDateKey = getLocalDateKey();
+
+      state.tasks = state.tasks.map((task) => {
+        if (!task.blockId || !task.isDone) {
+          return task;
+        }
+
+        const repeatRule = normalizeRepeatRule(task.repeatRule);
+        if (!repeatRule || repeatRule.unit !== "day") {
+          return task;
+        }
+
+        const parsedDue = parseTaskDueDateTime(task.dueDateTime);
+        if (!parsedDue || parsedDue.dateKey > todayDateKey) {
+          return task;
+        }
+
+        hasChanges = true;
+        return {
+          ...task,
+          isDone: false,
+          dueDateTime: buildTaskDueDateTime(todayDateKey, parsedDue.timeValue || "")
+        };
+      });
+
+      return hasChanges;
     }
 
     function normalizeSavedTaskLists(taskLists) {
@@ -13361,7 +13663,7 @@
           activeTimelineId: state.ui.activeTimelineId,
           activeTheme: state.ui.activeTheme,
           todayCollapsedByBlock: state.ui.todayCollapsedByBlock,
-          milestoneDeadlineFilter: state.ui.milestoneDeadlineFilter,
+          milestoneDeadlineFilterByPhaseId: state.ui.milestoneDeadlineFilterByPhaseId,
           lastNonSettingsTab: state.ui.lastNonSettingsTab,
           lastTaskListFilter: state.ui.lastTaskListFilter,
           lastTabTapped: state.ui.lastTabTapped
@@ -13387,7 +13689,11 @@
       state.phaseTabs = savedPhaseTabs;
       state.phases = normalizeSavedPhases(savedPhases, state.phaseTabs).map((phase) => ({
         ...phase,
-        details: typeof phase.details === "string" ? phase.details.trim() : ""
+        details: typeof phase.details === "string" ? phase.details.trim() : "",
+        milestoneDeadlineFilter: normalizeMilestoneDeadlineFilter(
+          phase.milestoneDeadlineFilter
+          || parsed?.ui?.milestoneDeadlineFilterByPhaseId?.[phase.id]
+        )
       }));
       state.taskLists = savedTaskLists;
       state.sections = savedSections;
@@ -13448,7 +13754,12 @@
       state.ui.todayCollapsedByBlock = parsed?.ui?.todayCollapsedByBlock && typeof parsed.ui.todayCollapsedByBlock === "object"
         ? parsed.ui.todayCollapsedByBlock
         : {};
-      state.ui.milestoneDeadlineFilter = normalizeMilestoneDeadlineFilter(parsed?.ui?.milestoneDeadlineFilter);
+      const savedFilterMap = parsed?.ui?.milestoneDeadlineFilterByPhaseId;
+      state.ui.milestoneDeadlineFilterByPhaseId = savedFilterMap && typeof savedFilterMap === "object"
+        ? Object.fromEntries(
+            Object.entries(savedFilterMap).map(([phaseId, filterId]) => [phaseId, normalizeMilestoneDeadlineFilter(filterId)])
+          )
+        : {};
       state.ui.openHeaderDropdown = "";
       state.ui.milestoneComposerOpenId = "";
       state.ui.editingMilestoneTaskId = null;
