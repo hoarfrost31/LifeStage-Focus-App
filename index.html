@@ -3428,6 +3428,39 @@
       gap: 10px;
     }
 
+    .phase-detail-filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .phase-detail-filter-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .phase-detail-filter-chip {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 6px 11px;
+      font: inherit;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .phase-detail-filter-chip.active {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
     .phase-detail-actions {
       display: inline-flex;
       align-items: center;
@@ -4811,6 +4844,7 @@
           <h3 class="phase-detail-title" id="phase-detail-title"></h3>
           <button class="ghost-button micro-button" id="phase-detail-back" type="button">Back</button>
         </div>
+        <div class="phase-detail-filter-row" id="phase-detail-filter-row"></div>
         <div class="phase-detail-body" id="phase-detail-body"></div>
       </div>
     </section>
@@ -5450,6 +5484,16 @@
     const TASK_VIEW_OVERVIEW = "task-overview";
     const TASK_VIEW_TODAY = "today";
     const TASK_VIEW_NEXT_7_DAYS = "next-7-days";
+    const MILESTONE_FILTER_TODAY = "today";
+    const MILESTONE_FILTER_THIS_WEEK = "this-week";
+    const MILESTONE_FILTER_THIS_MONTH = "this-month";
+    const MILESTONE_FILTER_NEXT_MONTH = "next-month";
+    const MILESTONE_DEADLINE_FILTERS = [
+      { id: MILESTONE_FILTER_TODAY, label: "Today" },
+      { id: MILESTONE_FILTER_THIS_WEEK, label: "This Week" },
+      { id: MILESTONE_FILTER_THIS_MONTH, label: "This Month" },
+      { id: MILESTONE_FILTER_NEXT_MONTH, label: "Next Month" }
+    ];
     const THEMES = [
       { id: "default", name: "Default", description: "Balanced, calm focus", swatch: "linear-gradient(135deg, #1b1b1b, #0d0d0d)" },
       { id: "sage", name: "Sage", description: "Natural, grounded energy", swatch: "linear-gradient(135deg, #1d2b25, #111a16)" },
@@ -5515,6 +5559,7 @@
         activeTheme: "default",
         todayCollapsedByBlock: {},
         milestoneComposerOpenId: "",
+        milestoneDeadlineFilter: MILESTONE_FILTER_THIS_WEEK,
         editingMilestoneTaskId: null,
         cloudInspectorSnapshot: null,
         cloudInspectorBackups: [],
@@ -5597,6 +5642,7 @@
       addPhaseTabButton: document.getElementById("add-phase-tab-button"),
       phaseDetail: document.getElementById("phase-detail"),
       phaseDetailTitle: document.getElementById("phase-detail-title"),
+      phaseDetailFilterRow: document.getElementById("phase-detail-filter-row"),
       phaseDetailBody: document.getElementById("phase-detail-body"),
       phaseDetailBack: document.getElementById("phase-detail-back"),
       themesList: document.getElementById("themes-list"),
@@ -5949,6 +5995,7 @@
       elements.addPhaseTabButton.addEventListener("click", handleAddPhaseTab);
       elements.addPhaseButton.addEventListener("click", handlePhaseFloatingAction);
       elements.phaseDetailBack.addEventListener("click", closePhaseDetail);
+      elements.phaseDetailFilterRow.addEventListener("click", handlePhaseDetailFilterClick);
       elements.phaseDetailBody.addEventListener("click", handlePhaseDetailBodyClick);
       elements.phaseColor.addEventListener("change", updatePhaseColorPreview);
       elements.phaseActiveToggleButton.addEventListener("click", handlePhaseActiveToggle);
@@ -6349,13 +6396,20 @@
       }
 
       elements.phaseDetailTitle.textContent = phase.name;
+      renderPhaseDetailFilters();
       const milestones = getMilestonesForPhase(phase.id);
       if (!milestones.length) {
         elements.phaseDetailBody.innerHTML = `<div class="milestone-empty">No milestones yet. Add one to start tracking progress.</div>`;
         return;
       }
 
-      elements.phaseDetailBody.innerHTML = milestones.map((milestone) => {
+      const filteredMilestones = milestones.filter((milestone) => doesMilestoneMatchDeadlineFilter(milestone, state.ui.milestoneDeadlineFilter));
+      if (!filteredMilestones.length) {
+        elements.phaseDetailBody.innerHTML = `<div class="milestone-empty">No milestones for ${escapeHtml(getMilestoneFilterLabel(state.ui.milestoneDeadlineFilter).toLowerCase())}.</div>`;
+        return;
+      }
+
+      elements.phaseDetailBody.innerHTML = filteredMilestones.map((milestone) => {
         const tasks = getMilestoneTasks(milestone.id);
         const visibleTasks = tasks.filter((task) => !task.isDone);
         const goalTarget = Math.max(0, Math.floor(Number(milestone.goalTarget || 0)));
@@ -6472,6 +6526,37 @@
           </div>
         `;
       }).join("");
+    }
+
+    function renderPhaseDetailFilters() {
+      if (!elements.phaseDetailFilterRow) {
+        return;
+      }
+      const activeFilter = normalizeMilestoneDeadlineFilter(state.ui.milestoneDeadlineFilter);
+      elements.phaseDetailFilterRow.innerHTML = MILESTONE_DEADLINE_FILTERS.map((filter) => `
+        <button
+          class="phase-detail-filter-chip ${filter.id === activeFilter ? "active" : ""}"
+          type="button"
+          data-set-milestone-filter="${filter.id}"
+          aria-pressed="${filter.id === activeFilter ? "true" : "false"}"
+        >
+          ${escapeHtml(filter.label)}
+        </button>
+      `).join("");
+    }
+
+    function handlePhaseDetailFilterClick(event) {
+      const button = event.target.closest("[data-set-milestone-filter]");
+      if (!button) {
+        return;
+      }
+      const nextFilter = normalizeMilestoneDeadlineFilter(button.dataset.setMilestoneFilter);
+      if (nextFilter === state.ui.milestoneDeadlineFilter) {
+        return;
+      }
+      state.ui.milestoneDeadlineFilter = nextFilter;
+      persistState();
+      renderPhaseDetail();
     }
 
     function renderThemes() {
@@ -10346,8 +10431,14 @@
         if (task.isNote) {
           return task;
         }
-        const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
-        if (nextOccurrence) {
+        const repeatRule = normalizeRepeatRule(task.repeatRule);
+        const willComplete = !task.isDone;
+
+        if (repeatRule && willComplete) {
+          const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
+          if (!nextOccurrence) {
+            return task;
+          }
           return {
             ...task,
             dueDateTime: nextOccurrence.raw,
@@ -10355,7 +10446,6 @@
           };
         }
 
-        const willComplete = !task.isDone;
         if (willComplete) {
           undoPayload = {
             id: task.id,
@@ -12320,6 +12410,83 @@
       return Number.isNaN(parsed.getTime()) ? null : parsed;
     }
 
+    function normalizeMilestoneDeadlineFilter(value) {
+      return MILESTONE_DEADLINE_FILTERS.some((filter) => filter.id === value)
+        ? value
+        : MILESTONE_FILTER_THIS_WEEK;
+    }
+
+    function getMilestoneFilterLabel(filterId) {
+      return MILESTONE_DEADLINE_FILTERS.find((filter) => filter.id === filterId)?.label || "This Week";
+    }
+
+    function startOfDay(date) {
+      const next = new Date(date);
+      next.setHours(0, 0, 0, 0);
+      return next;
+    }
+
+    function endOfDay(date) {
+      const next = new Date(date);
+      next.setHours(23, 59, 59, 999);
+      return next;
+    }
+
+    function getStartOfWeek(date) {
+      const dayStart = startOfDay(date);
+      const day = dayStart.getDay();
+      const mondayOffset = day === 0 ? -6 : 1 - day;
+      dayStart.setDate(dayStart.getDate() + mondayOffset);
+      return dayStart;
+    }
+
+    function getEndOfWeek(date) {
+      const weekStart = getStartOfWeek(date);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      return endOfDay(weekEnd);
+    }
+
+    function getStartOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+    }
+
+    function getEndOfMonth(date) {
+      return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+    }
+
+    function doesMilestoneMatchDeadlineFilter(milestone, filterId) {
+      const deadline = parseMilestoneDeadline(milestone?.deadlineAt);
+      if (!deadline) {
+        return false;
+      }
+      const normalizedFilter = normalizeMilestoneDeadlineFilter(filterId);
+      const now = new Date();
+
+      if (normalizedFilter === MILESTONE_FILTER_TODAY) {
+        const start = startOfDay(now);
+        const end = endOfDay(now);
+        return deadline >= start && deadline <= end;
+      }
+
+      if (normalizedFilter === MILESTONE_FILTER_THIS_WEEK) {
+        const start = getStartOfWeek(now);
+        const end = getEndOfWeek(now);
+        return deadline >= start && deadline <= end;
+      }
+
+      if (normalizedFilter === MILESTONE_FILTER_THIS_MONTH) {
+        const start = getStartOfMonth(now);
+        const end = getEndOfMonth(now);
+        return deadline >= start && deadline <= end;
+      }
+
+      const nextMonthSeed = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const start = getStartOfMonth(nextMonthSeed);
+      const end = getEndOfMonth(nextMonthSeed);
+      return deadline >= start && deadline <= end;
+    }
+
     function formatDurationShort(ms) {
       const totalMinutes = Math.max(0, Math.round(ms / 60000));
       if (totalMinutes < 60) {
@@ -12605,35 +12772,13 @@
       }
 
       const repeatRule = normalizeRepeatRule(task?.repeatRule);
-      if (!repeatRule) {
-        return {
-          ...parsed,
-          repeatRule: null
-        };
-      }
-
-      const referenceDate = options.referenceDate instanceof Date
-        ? new Date(options.referenceDate)
-        : new Date();
-      if (options.floorToDay !== false) {
-        referenceDate.setHours(0, 0, 0, 0);
-      }
-
-      let occurrenceDate = new Date(parsed.date);
-      let guard = 0;
-      while (occurrenceDate < referenceDate && guard < 512) {
-        occurrenceDate = addRepeatIntervalToDate(occurrenceDate, repeatRule);
-        guard += 1;
-      }
-
-      const nextDateKey = getLocalDateKey(occurrenceDate);
       return {
-        raw: buildTaskDueDateTime(nextDateKey, parsed.timeValue),
-        dateKey: nextDateKey,
+        raw: parsed.raw,
+        dateKey: parsed.dateKey,
         timeValue: parsed.timeValue,
         hasTime: parsed.hasTime,
-        date: occurrenceDate,
-        repeatRule
+        date: parsed.date,
+        repeatRule: repeatRule || null
       };
     }
 
@@ -13217,6 +13362,7 @@
           activeTimelineId: state.ui.activeTimelineId,
           activeTheme: state.ui.activeTheme,
           todayCollapsedByBlock: state.ui.todayCollapsedByBlock,
+          milestoneDeadlineFilter: state.ui.milestoneDeadlineFilter,
           lastNonSettingsTab: state.ui.lastNonSettingsTab,
           lastTaskListFilter: state.ui.lastTaskListFilter,
           lastTabTapped: state.ui.lastTabTapped
@@ -13303,6 +13449,7 @@
       state.ui.todayCollapsedByBlock = parsed?.ui?.todayCollapsedByBlock && typeof parsed.ui.todayCollapsedByBlock === "object"
         ? parsed.ui.todayCollapsedByBlock
         : {};
+      state.ui.milestoneDeadlineFilter = normalizeMilestoneDeadlineFilter(parsed?.ui?.milestoneDeadlineFilter);
       state.ui.openHeaderDropdown = "";
       state.ui.milestoneComposerOpenId = "";
       state.ui.editingMilestoneTaskId = null;
