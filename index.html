@@ -5484,15 +5484,15 @@
     const TASK_VIEW_OVERVIEW = "task-overview";
     const TASK_VIEW_TODAY = "today";
     const TASK_VIEW_NEXT_7_DAYS = "next-7-days";
+    const MILESTONE_FILTER_ALL = "all";
     const MILESTONE_FILTER_TODAY = "today";
     const MILESTONE_FILTER_THIS_WEEK = "this-week";
     const MILESTONE_FILTER_THIS_MONTH = "this-month";
-    const MILESTONE_FILTER_NEXT_MONTH = "next-month";
     const MILESTONE_DEADLINE_FILTERS = [
+      { id: MILESTONE_FILTER_ALL, label: "All" },
       { id: MILESTONE_FILTER_TODAY, label: "Today" },
       { id: MILESTONE_FILTER_THIS_WEEK, label: "This Week" },
-      { id: MILESTONE_FILTER_THIS_MONTH, label: "This Month" },
-      { id: MILESTONE_FILTER_NEXT_MONTH, label: "Next Month" }
+      { id: MILESTONE_FILTER_THIS_MONTH, label: "This Month" }
     ];
     const THEMES = [
       { id: "default", name: "Default", description: "Balanced, calm focus", swatch: "linear-gradient(135deg, #1b1b1b, #0d0d0d)" },
@@ -12413,7 +12413,7 @@
     function normalizeMilestoneDeadlineFilter(value) {
       return MILESTONE_DEADLINE_FILTERS.some((filter) => filter.id === value)
         ? value
-        : MILESTONE_FILTER_THIS_WEEK;
+        : MILESTONE_FILTER_ALL;
     }
 
     function getMilestoneFilterLabel(filterId) {
@@ -12456,11 +12456,14 @@
     }
 
     function doesMilestoneMatchDeadlineFilter(milestone, filterId) {
+      const normalizedFilter = normalizeMilestoneDeadlineFilter(filterId);
+      if (normalizedFilter === MILESTONE_FILTER_ALL) {
+        return true;
+      }
       const deadline = parseMilestoneDeadline(milestone?.deadlineAt);
       if (!deadline) {
         return false;
       }
-      const normalizedFilter = normalizeMilestoneDeadlineFilter(filterId);
       const now = new Date();
 
       if (normalizedFilter === MILESTONE_FILTER_TODAY) {
@@ -12480,11 +12483,7 @@
         const end = getEndOfMonth(now);
         return deadline >= start && deadline <= end;
       }
-
-      const nextMonthSeed = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-      const start = getStartOfMonth(nextMonthSeed);
-      const end = getEndOfMonth(nextMonthSeed);
-      return deadline >= start && deadline <= end;
+      return false;
     }
 
     function formatDurationShort(ms) {
