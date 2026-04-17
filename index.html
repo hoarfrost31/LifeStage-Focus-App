@@ -5589,6 +5589,7 @@
         isCompactTimeline: false,
         activeTheme: "default",
         todayCollapsedByBlock: {},
+        lastBlockTaskResetDateKey: "",
         milestoneComposerOpenId: "",
         milestoneDeadlineFilterByPhaseId: {},
         editingMilestoneTaskId: null,
@@ -5601,7 +5602,6 @@
         syncError: "",
         lastSyncedAt: null,
         lastNonSettingsTab: "timeline",
-        lastTabTapped: "",
         lastTaskListFilter: INBOX_LIST_ID,
         openTaskOverviewMenuId: "",
         settingsOpen: false,
@@ -5836,7 +5836,7 @@
 
     async function initialize() {
       hydrateState();
-      if (ensureDailyRecurringBlockTasks() || refreshDailyBlockRecurringCompletionState()) {
+      if (normalizeBlockOwnedTasks() || resetBlockTasksForNewDay()) {
         persistState({ immediate: true });
       }
       initializeFirebase();
@@ -5848,7 +5848,7 @@
       registerServiceWorker();
       render();
       await hydrateFromCloud();
-      if (ensureDailyRecurringBlockTasks() || refreshDailyBlockRecurringCompletionState()) {
+      if (normalizeBlockOwnedTasks() || resetBlockTasksForNewDay()) {
         persistState({ immediate: true });
         render();
       }
@@ -5957,24 +5957,11 @@
       if (state.ui.settingsOpen) {
         closeSettingsModal();
       }
-      if (state.ui.activeTab === "tasks") {
-        if (state.ui.activeTaskListFilter !== TASK_VIEW_OVERVIEW) {
-          state.ui.activeTaskListFilter = TASK_VIEW_OVERVIEW;
-          render();
-        }
-        return;
-      }
       setActiveTab("tasks");
     });
     elements.tabPhases.addEventListener("click", () => {
       if (state.ui.settingsOpen) {
         closeSettingsModal();
-      }
-      if (state.ui.activeTab === "phases" && state.ui.phaseDetailOpen) {
-        state.ui.phaseDetailOpen = false;
-        state.ui.phaseDetailId = null;
-        render();
-        return;
       }
       setActiveTab("phases");
     });
@@ -7090,9 +7077,9 @@
         notes: "",
         blockId,
         parentTaskId: null,
-        listId: TODAYS_EVENTS_LIST_ID,
-        dueDateTime: getLocalDateKey(),
-        repeatRule: { interval: 1, unit: "day" },
+        listId: INBOX_LIST_ID,
+        dueDateTime: "",
+        repeatRule: null,
         isDone: false,
         isCollapsed: false
       });
@@ -7203,14 +7190,11 @@
       const listOptions = state.taskLists
         .filter((list) => list.id !== COMPLETED_LIST_ID)
         .map((list) => `<option value="${list.id}">${escapeHtml(list.name)}</option>`);
-      if (editingTask?.blockId || nextValue === TODAYS_EVENTS_LIST_ID) {
-        listOptions.push(`<option value="${TODAYS_EVENTS_LIST_ID}">Todays Events</option>`);
-      }
       if (editingTask?.listId === COMPLETED_LIST_ID) {
         listOptions.push(`<option value="${COMPLETED_LIST_ID}">Completed</option>`);
       }
       elements.taskListSelect.innerHTML = listOptions.join("");
-      elements.taskListSelect.value = nextValue;
+      elements.taskListSelect.value = nextValue === TODAYS_EVENTS_LIST_ID ? INBOX_LIST_ID : nextValue;
     }
 
     function renderTaskSectionOptions(listId = null, selectedSectionId = null) {
@@ -7235,8 +7219,7 @@
       const staticItems = [
         { id: TASK_VIEW_TODAY, label: "Today", icon: "today", count: getTasksForFilter(TASK_VIEW_TODAY).length },
         { id: TASK_VIEW_NEXT_7_DAYS, label: "Next 7 Days", icon: "next", count: getTasksForFilter(TASK_VIEW_NEXT_7_DAYS).length },
-        { id: INBOX_LIST_ID, label: "Inbox", icon: "inbox", count: getTasksForFilter(INBOX_LIST_ID).length },
-        { id: TODAYS_EVENTS_LIST_ID, label: "Todays Events", icon: "events", count: getTasksForFilter(TODAYS_EVENTS_LIST_ID).length }
+        { id: INBOX_LIST_ID, label: "Inbox", icon: "inbox", count: getTasksForFilter(INBOX_LIST_ID).length }
       ];
 
       elements.taskDrawerNav.innerHTML = staticItems.map((item) => `
@@ -7557,8 +7540,7 @@
       const staticLists = [
         { id: TASK_VIEW_TODAY, label: "Today", icon: "today", count: getTasksForFilter(TASK_VIEW_TODAY).length },
         { id: TASK_VIEW_NEXT_7_DAYS, label: "Next 7 Days", icon: "next", count: getTasksForFilter(TASK_VIEW_NEXT_7_DAYS).length },
-        { id: INBOX_LIST_ID, label: "Inbox", icon: "inbox", count: getTasksForFilter(INBOX_LIST_ID).length },
-        { id: TODAYS_EVENTS_LIST_ID, label: "Todays Events", icon: "events", count: getTasksForFilter(TODAYS_EVENTS_LIST_ID).length }
+        { id: INBOX_LIST_ID, label: "Inbox", icon: "inbox", count: getTasksForFilter(INBOX_LIST_ID).length }
       ];
 
       const customLists = state.taskLists.filter(
@@ -7714,15 +7696,15 @@
 
     function getTasksForFilter(filterId) {
       if (filterId === TASK_VIEW_TODAY) {
-        return sortTasksForScheduleView(state.tasks.filter((task) => isTaskDueToday(task) || isTaskOverdue(task)));
+        return sortTasksForScheduleView(state.tasks.filter((task) => !task.blockId && (isTaskDueToday(task) || isTaskOverdue(task))));
       }
 
       if (filterId === TASK_VIEW_NEXT_7_DAYS) {
-        return sortTasksForScheduleView(state.tasks.filter((task) => isTaskDueWithinNextDays(task, 7)));
+        return sortTasksForScheduleView(state.tasks.filter((task) => !task.blockId && isTaskDueWithinNextDays(task, 7)));
       }
 
       const normalizedListId = normalizeTaskListId(filterId);
-      return state.tasks.filter((task) => normalizeTaskListId(task.listId) === normalizedListId);
+      return state.tasks.filter((task) => !task.blockId && normalizeTaskListId(task.listId) === normalizedListId);
     }
 
     function getTaskFilterLabel(filterId) {
@@ -7731,9 +7713,6 @@
       }
       if (filterId === TASK_VIEW_NEXT_7_DAYS) {
         return "Next 7 Days";
-      }
-      if (filterId === TODAYS_EVENTS_LIST_ID) {
-        return "Todays Events";
       }
       if (filterId === COMPLETED_LIST_ID) {
         return "Completed";
@@ -8424,6 +8403,9 @@
     function setActiveTab(tab) {
       if (state.ui.settingsOpen) {
         closeSettingsModal();
+      }
+      if (state.ui.activeTab === tab) {
+        return;
       }
       if (tab !== "settings" && state.ui.activeTab !== "settings") {
         state.ui.lastNonSettingsTab = tab;
@@ -9402,12 +9384,12 @@
       const sectionId = isValidSectionAssignment(elements.taskSectionSelect.value || null, listId)
         ? (elements.taskSectionSelect.value || null)
         : null;
-      const resolvedListId = blockId ? TODAYS_EVENTS_LIST_ID : listId;
+      const resolvedListId = blockId ? INBOX_LIST_ID : listId;
       const resolvedSectionId = blockId ? null : sectionId;
       const fieldDueDateTime = elements.taskDueDateTime.value || "";
       const fieldRepeatRule = readTaskRepeatRuleFromFields();
-      const dueDateTime = blockId ? (fieldDueDateTime || getLocalDateKey()) : fieldDueDateTime;
-      const repeatRule = blockId ? { interval: 1, unit: "day" } : fieldRepeatRule;
+      const dueDateTime = blockId ? "" : fieldDueDateTime;
+      const repeatRule = blockId ? null : fieldRepeatRule;
       const isNote = elements.taskIsNote.value === "true";
       return {
         id: elements.taskId.value || crypto.randomUUID(),
@@ -10587,8 +10569,10 @@
         if (task.id === state.ui.editingTaskId || descendantIds.has(task.id)) {
           const updatedTask = { ...task, blockId: nextBlockId };
           if (nextBlockId) {
-            updatedTask.listId = TODAYS_EVENTS_LIST_ID;
+            updatedTask.listId = INBOX_LIST_ID;
             updatedTask.sectionId = null;
+            updatedTask.dueDateTime = "";
+            updatedTask.repeatRule = null;
           } else if (task.listId === TODAYS_EVENTS_LIST_ID) {
             updatedTask.listId = INBOX_LIST_ID;
             updatedTask.sectionId = null;
@@ -10610,20 +10594,8 @@
         if (task.isNote) {
           return task;
         }
-        const repeatRule = normalizeRepeatRule(task.repeatRule);
+        const repeatRule = task.blockId ? null : normalizeRepeatRule(task.repeatRule);
         const willComplete = !task.isDone;
-
-        if (repeatRule && willComplete && task.blockId) {
-          const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
-          if (!nextOccurrence) {
-            return task;
-          }
-          return {
-            ...task,
-            dueDateTime: nextOccurrence.raw,
-            isDone: true
-          };
-        }
 
         if (repeatRule && willComplete) {
           const nextOccurrence = getNextTaskOccurrenceAfterCurrent(task);
@@ -10634,6 +10606,13 @@
             ...task,
             dueDateTime: nextOccurrence.raw,
             isDone: false
+          };
+        }
+
+        if (willComplete && task.blockId) {
+          return {
+            ...task,
+            isDone: true
           };
         }
 
@@ -10664,12 +10643,10 @@
           ? task.previousSectionId
           : null;
 
-        if (task.blockId && repeatRule) {
-          const parsedDue = parseTaskDueDateTime(task.dueDateTime);
+        if (task.blockId) {
           return {
             ...task,
-            isDone: false,
-            dueDateTime: buildTaskDueDateTime(getLocalDateKey(), parsedDue?.timeValue || "")
+            isDone: false
           };
         }
 
@@ -12584,7 +12561,7 @@
     function scheduleNowUpdater() {
       setInterval(() => {
         state.ui.now = new Date();
-        if (refreshDailyBlockRecurringCompletionState()) {
+        if (resetBlockTasksForNewDay()) {
           persistState({ immediate: true });
           render();
           return;
@@ -13088,9 +13065,6 @@
       if (normalizedListId === COMPLETED_LIST_ID) {
         return { id: COMPLETED_LIST_ID, name: "Completed" };
       }
-      if (normalizedListId === TODAYS_EVENTS_LIST_ID) {
-        return { id: TODAYS_EVENTS_LIST_ID, name: "Todays Events" };
-      }
       return state.taskLists.find((list) => list.id === normalizedListId) || null;
     }
 
@@ -13111,7 +13085,7 @@
       if (typeof listId !== "string" || !listId) {
         return INBOX_LIST_ID;
       }
-      if ([INBOX_LIST_ID, COMPLETED_LIST_ID, TODAYS_EVENTS_LIST_ID].includes(listId)) {
+      if ([INBOX_LIST_ID, COMPLETED_LIST_ID].includes(listId)) {
         return listId;
       }
       return taskLists.some((list) => list.id === listId) ? listId : INBOX_LIST_ID;
@@ -13334,10 +13308,12 @@
       const validTaskIds = new Set(normalizedTasks.map((task) => task.id));
       return normalizedTasks.map((task) => ({
         ...task,
-        listId: task.blockId ? TODAYS_EVENTS_LIST_ID : normalizeTaskListId(task.listId, taskLists),
-        sectionId: sections.some((section) => section.id === task.sectionId && section.listId === normalizeTaskListId(task.blockId ? TODAYS_EVENTS_LIST_ID : task.listId, taskLists))
+        listId: task.blockId ? INBOX_LIST_ID : normalizeTaskListId(task.listId, taskLists),
+        sectionId: !task.blockId && sections.some((section) => section.id === task.sectionId && section.listId === normalizeTaskListId(task.listId, taskLists))
           ? task.sectionId
           : null,
+        dueDateTime: task.blockId ? "" : task.dueDateTime,
+        repeatRule: task.blockId ? null : task.repeatRule,
         parentTaskId: task.parentTaskId && validTaskIds.has(task.parentTaskId) ? task.parentTaskId : null,
         previousListId: task.previousListId ? normalizeTaskListId(task.previousListId, taskLists) : null,
         previousSectionId: task.previousSectionId && task.previousListId
@@ -13347,36 +13323,27 @@
       }));
     }
 
-    function ensureDailyRecurringBlockTasks() {
+    function normalizeBlockOwnedTasks() {
       let hasChanges = false;
-      const todayDateKey = getLocalDateKey();
 
       state.tasks = state.tasks.map((task) => {
         if (!task.blockId) {
           return task;
         }
 
-        const normalizedRule = normalizeRepeatRule(task.repeatRule);
-        const hasDailyRule = Boolean(normalizedRule && normalizedRule.unit === "day" && normalizedRule.interval === 1);
-        const parsedDue = parseTaskDueDateTime(task.dueDateTime);
-        const nextDueDateTime = parsedDue
-          ? buildTaskDueDateTime(parsedDue.dateKey, parsedDue.timeValue || "")
-          : buildTaskDueDateTime(todayDateKey, "");
-
         if (
-          task.listId !== TODAYS_EVENTS_LIST_ID
-          || !hasDailyRule
-          || !parsedDue
-          || task.dueDateTime !== nextDueDateTime
+          task.listId !== INBOX_LIST_ID
+          || task.dueDateTime
+          || task.repeatRule
           || task.sectionId
         ) {
           hasChanges = true;
           return {
             ...task,
-            listId: TODAYS_EVENTS_LIST_ID,
+            listId: INBOX_LIST_ID,
             sectionId: null,
-            dueDateTime: nextDueDateTime,
-            repeatRule: hasDailyRule ? normalizedRule : { interval: 1, unit: "day" }
+            dueDateTime: "",
+            repeatRule: null
           };
         }
 
@@ -13386,34 +13353,33 @@
       return hasChanges;
     }
 
-    function refreshDailyBlockRecurringCompletionState() {
-      let hasChanges = false;
+    function resetBlockTasksForNewDay() {
       const todayDateKey = getLocalDateKey();
+      const lastResetDateKey = typeof state.ui.lastBlockTaskResetDateKey === "string"
+        ? state.ui.lastBlockTaskResetDateKey
+        : "";
+      if (!lastResetDateKey) {
+        state.ui.lastBlockTaskResetDateKey = todayDateKey;
+        return true;
+      }
+      if (lastResetDateKey === todayDateKey) {
+        return false;
+      }
 
       state.tasks = state.tasks.map((task) => {
-        if (!task.blockId || !task.isDone) {
+        if (!task.blockId) {
           return task;
         }
-
-        const repeatRule = normalizeRepeatRule(task.repeatRule);
-        if (!repeatRule || repeatRule.unit !== "day") {
+        if (!task.isDone) {
           return task;
         }
-
-        const parsedDue = parseTaskDueDateTime(task.dueDateTime);
-        if (!parsedDue || parsedDue.dateKey > todayDateKey) {
-          return task;
-        }
-
-        hasChanges = true;
         return {
           ...task,
-          isDone: false,
-          dueDateTime: buildTaskDueDateTime(todayDateKey, parsedDue.timeValue || "")
+          isDone: false
         };
       });
-
-      return hasChanges;
+      state.ui.lastBlockTaskResetDateKey = todayDateKey;
+      return true;
     }
 
     function normalizeSavedTaskLists(taskLists) {
@@ -13660,13 +13626,15 @@
           activeTab: state.ui.activeTab,
           activeTaskListFilter: state.ui.activeTaskListFilter,
           activePhaseTabId: state.ui.activePhaseTabId,
+          phaseDetailOpen: state.ui.phaseDetailOpen,
+          phaseDetailId: state.ui.phaseDetailId,
           activeTimelineId: state.ui.activeTimelineId,
           activeTheme: state.ui.activeTheme,
           todayCollapsedByBlock: state.ui.todayCollapsedByBlock,
+          lastBlockTaskResetDateKey: state.ui.lastBlockTaskResetDateKey,
           milestoneDeadlineFilterByPhaseId: state.ui.milestoneDeadlineFilterByPhaseId,
           lastNonSettingsTab: state.ui.lastNonSettingsTab,
-          lastTaskListFilter: state.ui.lastTaskListFilter,
-          lastTabTapped: state.ui.lastTabTapped
+          lastTaskListFilter: state.ui.lastTaskListFilter
         },
         updatedAt: new Date().toISOString()
       };
@@ -13741,19 +13709,27 @@
       state.ui.lastNonSettingsTab = ["tasks", "phases", "timeline"].includes(parsed?.ui?.lastNonSettingsTab)
         ? parsed.ui.lastNonSettingsTab
         : (state.ui.activeTab === "settings" ? "timeline" : state.ui.activeTab);
-      state.ui.lastTabTapped = ["tasks", "phases", "timeline", "settings"].includes(parsed?.ui?.lastTabTapped)
-        ? parsed.ui.lastTabTapped
-        : "";
       state.ui.lastTaskListFilter = normalizeTaskListId(parsed?.ui?.lastTaskListFilter) || INBOX_LIST_ID;
       state.ui.activeTaskListFilter = [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS, TASK_VIEW_OVERVIEW].includes(parsed?.ui?.activeTaskListFilter)
         ? parsed.ui.activeTaskListFilter
         : normalizeTaskListId(parsed?.ui?.activeTaskListFilter);
+      if (state.ui.activeTaskListFilter === TODAYS_EVENTS_LIST_ID) {
+        state.ui.activeTaskListFilter = TASK_VIEW_OVERVIEW;
+      }
       state.ui.activePhaseTabId = normalizePhaseTabId(parsed?.ui?.activePhaseTabId, state.phaseTabs);
+      state.ui.phaseDetailOpen = Boolean(parsed?.ui?.phaseDetailOpen);
+      state.ui.phaseDetailId = state.ui.phaseDetailOpen && typeof parsed?.ui?.phaseDetailId === "string" && state.phases.some((phase) => phase.id === parsed.ui.phaseDetailId)
+        ? parsed.ui.phaseDetailId
+        : null;
+      state.ui.phaseDetailOpen = Boolean(state.ui.phaseDetailId);
       state.ui.activeTimelineId = typeof parsed?.ui?.activeTimelineId === "string" ? parsed.ui.activeTimelineId : "";
       state.ui.activeTheme = typeof parsed?.ui?.activeTheme === "string" ? parsed.ui.activeTheme : "default";
       state.ui.todayCollapsedByBlock = parsed?.ui?.todayCollapsedByBlock && typeof parsed.ui.todayCollapsedByBlock === "object"
         ? parsed.ui.todayCollapsedByBlock
         : {};
+      state.ui.lastBlockTaskResetDateKey = typeof parsed?.ui?.lastBlockTaskResetDateKey === "string"
+        ? parsed.ui.lastBlockTaskResetDateKey
+        : "";
       const savedFilterMap = parsed?.ui?.milestoneDeadlineFilterByPhaseId;
       state.ui.milestoneDeadlineFilterByPhaseId = savedFilterMap && typeof savedFilterMap === "object"
         ? Object.fromEntries(
