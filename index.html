@@ -11,8 +11,13 @@
   <script>
     window.APP_ASSET_VERSION = "2026-04-05-11";
     window.APP_ASSET_SUFFIX = `?v=${window.APP_ASSET_VERSION}`;
+    if (window.location.protocol !== "file:") {
+      const manifestLink = document.createElement("link");
+      manifestLink.rel = "manifest";
+      manifestLink.href = `./manifest.webmanifest${window.APP_ASSET_SUFFIX}`;
+      document.head.appendChild(manifestLink);
+    }
   </script>
-  <link rel="manifest" href="./manifest.webmanifest?v=2026-04-05-11">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png?v=2026-04-05-11">
   <link rel="apple-touch-icon" href="./icons/icon-192.png?v=2026-04-05-11">
   <title>LifeStage Focus App</title>
@@ -2698,6 +2703,12 @@
       display: block;
     }
 
+    .header-icon-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .mode-toggle {
       border: 0;
       border-radius: 999px;
@@ -2786,6 +2797,10 @@
       max-width: 380px;
       border-radius: 24px;
       padding: 20px;
+    }
+
+    #app-dialog-backdrop {
+      z-index: 80;
     }
 
     .app-dialog-message {
@@ -3837,13 +3852,182 @@
     }
 
     body.settings-open .app-shell,
-    body.settings-open .bottom-nav-card {
+    body.settings-open .bottom-nav-card,
+    body.notes-open .app-shell,
+    body.notes-open .bottom-nav-card,
+    body.pomodoro-open .app-shell,
+    body.pomodoro-open .bottom-nav-card {
       filter: blur(8px);
       pointer-events: none;
     }
 
-    body.settings-open {
+    body.settings-open,
+    body.notes-open,
+    body.pomodoro-open {
       overflow: hidden;
+    }
+
+    .notes-backdrop {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(2, 6, 23, 0.7);
+      backdrop-filter: blur(14px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 60;
+    }
+
+    .notes-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .notes-modal {
+      width: min(calc(100vw - 32px), 420px);
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      background: linear-gradient(180deg, var(--panel-soft), var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      padding: 16px;
+      transform: translateY(18px) scale(0.97);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    }
+
+    .notes-modal .section-header {
+      margin-bottom: 14px;
+    }
+
+    .notes-backdrop.open .notes-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .notes-editor {
+      min-height: 308px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      scrollbar-width: none;
+    }
+
+    .notes-editor::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .pomodoro-backdrop {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(2, 6, 23, 0.7);
+      backdrop-filter: blur(14px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 60;
+    }
+
+    .pomodoro-backdrop.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .pomodoro-modal {
+      width: min(calc(100vw - 32px), 420px);
+      max-height: calc(100vh - 32px);
+      overflow: auto;
+      background: linear-gradient(180deg, var(--panel-soft), var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      padding: 16px;
+      transform: translateY(18px) scale(0.97);
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+    }
+
+    .pomodoro-backdrop.open .pomodoro-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    .pomodoro-modal .section-header {
+      margin-bottom: 16px;
+    }
+
+    .pomodoro-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .pomodoro-phase-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pomodoro-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pomodoro-phase-button,
+    .pomodoro-action-button {
+      min-height: 42px;
+      border-radius: 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .pomodoro-phase-button.active {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: var(--text);
+    }
+
+    .pomodoro-display {
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      padding: 18px 16px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .pomodoro-status {
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .pomodoro-time {
+      font-size: clamp(2.4rem, 10vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pomodoro-cycle {
+      font-size: 0.82rem;
+      color: var(--muted);
     }
 
     .theme-option {
@@ -4884,6 +5068,13 @@
       <div class="section-header compact-header">
         <div class="header-actions">
           <div class="today-header-label" id="today-header-label">Today</div>
+          <button class="settings-gear notes-button" id="home-notes-button" type="button" aria-label="Open life stage notes">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="8" r="5.7" stroke="currentColor" stroke-width="1.1"/>
+              <path d="M8 7.1v3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="8" cy="4.9" r=".8" fill="currentColor"/>
+            </svg>
+          </button>
           <div class="timeline-header-picker">
             <div class="phase-tab-controls">
               <div class="custom-dropdown-stack">
@@ -4910,12 +5101,22 @@
           </div>
           <span id="active-phase-label" class="sr-only">No active phases</span>
         </div>
-        <button class="settings-gear settings-gear-button" type="button" aria-label="Open settings">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6.9 1.6h2.2l.3 1.4c.4.1.8.3 1.1.6l1.3-.6 1.1 2-1.1.9c.1.4.2.7.2 1.1s-.1.8-.2 1.1l1.1.9-1.1 2-1.3-.6c-.3.3-.7.5-1.1.6l-.3 1.4H6.9l-.3-1.4c-.4-.1-.8-.3-1.1-.6l-1.3.6-1.1-2 1.1-.9c-.1-.4-.2-.7-.2-1.1s.1-.8.2-1.1l-1.1-.9 1.1-2 1.3.6c.3-.3.7-.5 1.1-.6l.3-1.4Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.1"/>
-          </svg>
-        </button>
+        <div class="header-icon-actions">
+          <button class="settings-gear" id="pomodoro-button" type="button" aria-label="Open pomodoro timer">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5.6 2.2h4.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M8 4.2v1.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="8" cy="9" r="5" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M8 9 10.2 7.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="settings-gear settings-gear-button" type="button" aria-label="Open settings">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6.9 1.6h2.2l.3 1.4c.4.1.8.3 1.1.6l1.3-.6 1.1 2-1.1.9c.1.4.2.7.2 1.1s-.1.8-.2 1.1l1.1.9-1.1 2-1.3-.6c-.3.3-.7.5-1.1.6l-.3 1.4H6.9l-.3-1.4c-.4-.1-.8-.3-1.1-.6l-1.3.6-1.1-2 1.1-.9c-.1-.4-.2-.7-.2-1.1s.1-.8.2-1.1l-1.1-.9 1.1-2 1.3.6c.3-.3.7-.5 1.1-.6l.3-1.4Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.1"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="timeline-scroll" id="timeline-scroll">
         <div class="timeline" id="timeline"></div>
@@ -4994,10 +5195,48 @@
           <div class="cloud-inspector-counts" id="cloud-inspector-counts"></div>
           <div class="cloud-inspector-backups" id="cloud-inspector-backups"></div>
           <div class="cloud-inspector-actions">
-            <button class="ghost-button" id="cloud-inspector-refresh" type="button">Refresh</button>
-            <button class="ghost-button" id="cloud-inspector-backup" type="button">Backup Now</button>
             <button class="primary-button" id="cloud-inspector-restore" type="button">Restore From Cloud</button>
+            <button class="ghost-button" id="cloud-inspector-backup" type="button">Backup Now</button>
           </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="notes-backdrop" id="home-notes-backdrop" aria-hidden="true">
+    <section class="modal notes-modal" aria-label="Life stage notes">
+      <div class="section-header compact-header">
+        <div class="header-actions">
+          <span class="phase-badge">LifeStage Notes</span>
+        </div>
+        <button class="close-button" id="home-notes-close-button" type="button" aria-label="Close notes">&times;</button>
+      </div>
+      <textarea class="notes-editor" id="home-notes-editor" maxlength="4000" placeholder="Write reminders, decisions, boundaries, or anything you want visible for this life stage..."></textarea>
+    </section>
+  </div>
+
+  <div class="pomodoro-backdrop" id="pomodoro-backdrop" aria-hidden="true">
+    <section class="modal pomodoro-modal" aria-label="Pomodoro timer">
+      <div class="section-header compact-header">
+        <div class="header-actions">
+          <span class="phase-badge">Pomodoro</span>
+        </div>
+        <button class="close-button" id="pomodoro-close-button" type="button" aria-label="Close pomodoro">&times;</button>
+      </div>
+      <div class="pomodoro-shell">
+        <div class="pomodoro-phase-row">
+          <button class="ghost-button pomodoro-phase-button" id="pomodoro-focus-button" type="button">Focus 25m</button>
+          <button class="ghost-button pomodoro-phase-button" id="pomodoro-break-button" type="button">Break 5m</button>
+        </div>
+        <div class="pomodoro-display">
+          <div class="pomodoro-status" id="pomodoro-status-label">Ready to focus</div>
+          <div class="pomodoro-time" id="pomodoro-time-display">25:00</div>
+          <div class="pomodoro-cycle" id="pomodoro-cycle-label">Focus sessions completed: 0</div>
+        </div>
+        <div class="pomodoro-actions">
+          <button class="primary-button pomodoro-action-button" id="pomodoro-start-button" type="button">Start</button>
+          <button class="ghost-button pomodoro-action-button" id="pomodoro-pause-button" type="button">Pause</button>
+          <button class="ghost-button pomodoro-action-button" id="pomodoro-stop-button" type="button">Stop</button>
         </div>
       </div>
     </section>
@@ -5515,6 +5754,8 @@
     const TASK_VIEW_OVERVIEW = "task-overview";
     const TASK_VIEW_TODAY = "today";
     const TASK_VIEW_NEXT_7_DAYS = "next-7-days";
+    const POMODORO_FOCUS_SECONDS = 25 * 60;
+    const POMODORO_BREAK_SECONDS = 5 * 60;
     const MILESTONE_FILTER_ALL = "all";
     const MILESTONE_FILTER_TODAY = "today";
     const MILESTONE_FILTER_THIS_WEEK = "this-week";
@@ -5561,6 +5802,14 @@
       milestones: [],
       milestoneTasks: [],
       savedTimelines: [],
+      homeNotes: "",
+      pomodoro: {
+        phase: "focus",
+        status: "idle",
+        remainingSeconds: POMODORO_FOCUS_SECONDS,
+        endsAt: null,
+        completedFocusSessions: 0
+      },
       ui: {
         activeTab: "timeline",
         activeTaskListFilter: TASK_VIEW_OVERVIEW,
@@ -5606,7 +5855,9 @@
         openTaskOverviewMenuId: "",
         settingsOpen: false,
         settingsClosing: false,
-        settingsBlurHold: false
+        settingsBlurHold: false,
+        homeNotesOpen: false,
+        pomodoroOpen: false
       }
     };
 
@@ -5629,6 +5880,7 @@
     let taskMenuSheetCloseTimer = null;
     let settingsCloseTimer = null;
     let settingsBlurTimer = null;
+    let pomodoroInterval = null;
     let activeTaskSheetDrag = null;
     let activeBlockSheetDrag = null;
     let appDialogState = null;
@@ -5660,11 +5912,26 @@
       tabPhases: document.getElementById("tab-phases"),
       tabTimeline: document.getElementById("tab-timeline"),
       settingsButtons: document.querySelectorAll(".timeline-card .settings-gear-button"),
+      pomodoroButton: document.getElementById("pomodoro-button"),
+      homeNotesButton: document.getElementById("home-notes-button"),
       tasksCard: document.querySelector(".tasks-card"),
       phasesCard: document.querySelector(".phases-card"),
       themesCard: document.getElementById("themes-card"),
       settingsBackdrop: document.getElementById("settings-backdrop"),
       settingsCloseButton: document.getElementById("settings-close-button"),
+      homeNotesBackdrop: document.getElementById("home-notes-backdrop"),
+      homeNotesCloseButton: document.getElementById("home-notes-close-button"),
+      homeNotesEditor: document.getElementById("home-notes-editor"),
+      pomodoroBackdrop: document.getElementById("pomodoro-backdrop"),
+      pomodoroCloseButton: document.getElementById("pomodoro-close-button"),
+      pomodoroFocusButton: document.getElementById("pomodoro-focus-button"),
+      pomodoroBreakButton: document.getElementById("pomodoro-break-button"),
+      pomodoroStatusLabel: document.getElementById("pomodoro-status-label"),
+      pomodoroTimeDisplay: document.getElementById("pomodoro-time-display"),
+      pomodoroCycleLabel: document.getElementById("pomodoro-cycle-label"),
+      pomodoroStartButton: document.getElementById("pomodoro-start-button"),
+      pomodoroPauseButton: document.getElementById("pomodoro-pause-button"),
+      pomodoroStopButton: document.getElementById("pomodoro-stop-button"),
       timelineCard: document.querySelector(".timeline-card"),
       phaseTabDropdown: document.getElementById("phase-tab-dropdown"),
       phaseTabDropdownTrigger: document.getElementById("phase-tab-dropdown-trigger"),
@@ -5957,17 +6224,35 @@
       if (state.ui.settingsOpen) {
         closeSettingsModal();
       }
+      if (state.ui.homeNotesOpen) {
+        closeHomeNotesModal();
+      }
+      if (state.ui.pomodoroOpen) {
+        closePomodoroModal();
+      }
       setActiveTab("tasks");
     });
     elements.tabPhases.addEventListener("click", () => {
       if (state.ui.settingsOpen) {
         closeSettingsModal();
       }
+      if (state.ui.homeNotesOpen) {
+        closeHomeNotesModal();
+      }
+      if (state.ui.pomodoroOpen) {
+        closePomodoroModal();
+      }
       setActiveTab("phases");
     });
     elements.tabTimeline.addEventListener("click", () => {
       if (state.ui.settingsOpen) {
         closeSettingsModal();
+      }
+      if (state.ui.homeNotesOpen) {
+        closeHomeNotesModal();
+      }
+      if (state.ui.pomodoroOpen) {
+        closePomodoroModal();
       }
       setActiveTab("timeline");
     });
@@ -5977,6 +6262,8 @@
         openSettingsModal();
       });
     });
+    elements.homeNotesButton?.addEventListener("click", openHomeNotesModal);
+    elements.pomodoroButton?.addEventListener("click", openPomodoroModal);
       elements.addTaskButton.addEventListener("click", () => {
         if (state.ui.activeTab === "tasks" && state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW) {
           handleAddTaskList();
@@ -5991,10 +6278,9 @@
       elements.tasksList.addEventListener("pointerup", handleTaskDragEnd);
       elements.tasksList.addEventListener("pointercancel", handleTaskDragEnd);
       elements.themesList.addEventListener("click", handleThemesListClick);
-      elements.cloudInspectorRefresh.addEventListener("click", handleCloudInspectorRefresh);
-    elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
-    elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
-    elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
+      elements.cloudInspectorBackup.addEventListener("click", handleCloudInspectorBackup);
+      elements.cloudInspectorRestore.addEventListener("click", handleCloudInspectorRestore);
+      elements.cloudInspectorBackups.addEventListener("click", handleCloudInspectorBackupsClick);
     elements.settingsBackdrop?.addEventListener("click", (event) => {
       if (event.target === elements.settingsBackdrop) {
         closeSettingsModal();
@@ -6003,6 +6289,24 @@
     elements.settingsCloseButton?.addEventListener("click", () => {
       closeSettingsModal();
     });
+    elements.homeNotesBackdrop?.addEventListener("click", (event) => {
+      if (event.target === elements.homeNotesBackdrop) {
+        closeHomeNotesModal();
+      }
+    });
+    elements.homeNotesCloseButton?.addEventListener("click", closeHomeNotesModal);
+    elements.homeNotesEditor?.addEventListener("input", handleHomeNotesInput);
+    elements.pomodoroBackdrop?.addEventListener("click", (event) => {
+      if (event.target === elements.pomodoroBackdrop) {
+        closePomodoroModal();
+      }
+    });
+    elements.pomodoroCloseButton?.addEventListener("click", closePomodoroModal);
+    elements.pomodoroFocusButton?.addEventListener("click", () => setPomodoroPhase("focus"));
+    elements.pomodoroBreakButton?.addEventListener("click", () => setPomodoroPhase("break"));
+    elements.pomodoroStartButton?.addEventListener("click", startPomodoro);
+    elements.pomodoroPauseButton?.addEventListener("click", pausePomodoro);
+    elements.pomodoroStopButton?.addEventListener("click", stopPomodoro);
       elements.todayList.addEventListener("click", handleTodayListClick);
       elements.todayList.addEventListener("keydown", handleTodayListKeydown);
       elements.todayList.addEventListener("pointerdown", handleTodayTaskDragStart);
@@ -6222,13 +6526,20 @@
       elements.settingsBackdrop?.classList.toggle("open", settingsVisible);
       elements.settingsBackdrop?.classList.toggle("closing", state.ui.settingsClosing);
       elements.settingsBackdrop?.setAttribute("aria-hidden", String(!settingsVisible));
+      elements.homeNotesBackdrop?.classList.toggle("open", state.ui.homeNotesOpen);
+      elements.homeNotesBackdrop?.setAttribute("aria-hidden", String(!state.ui.homeNotesOpen));
+      elements.pomodoroBackdrop?.classList.toggle("open", state.ui.pomodoroOpen);
+      elements.pomodoroBackdrop?.setAttribute("aria-hidden", String(!state.ui.pomodoroOpen));
       document.body.classList.toggle("settings-open", state.ui.settingsOpen || state.ui.settingsBlurHold);
+      document.body.classList.toggle("notes-open", state.ui.homeNotesOpen);
+      document.body.classList.toggle("pomodoro-open", state.ui.pomodoroOpen);
       elements.addPhaseButton.setAttribute(
         "aria-label",
         state.ui.phaseDetailOpen ? "Add milestone" : "Add phase"
       );
       document.body.dataset.theme = state.ui.activeTheme || "default";
       updateSystemBarsTheme();
+      renderPomodoro();
       const phaseHeaderHidden = visibleTab === "phases" && state.ui.phaseDetailOpen;
       document.querySelector(".phase-tabs-header")?.classList.toggle("hidden", phaseHeaderHidden);
       elements.phaseDetail.querySelector(".phase-detail-title-row")?.classList.toggle("tight", phaseHeaderHidden);
@@ -7447,12 +7758,19 @@
         interval: state.ui.scheduleDraft.repeatInterval,
         unit: state.ui.scheduleDraft.repeatUnit
       });
-      elements.taskDueDateTime.value = nextValue;
-      writeTaskRepeatRuleToFields(nextRepeatRule);
+      const editingTask = state.ui.editingTaskId ? getTaskById(state.ui.editingTaskId) : null;
+      const parentTask = editingTask?.parentTaskId ? getTaskById(editingTask.parentTaskId) : null;
+      const effectiveBlockId = elements.taskBlockSelect.value || editingTask?.blockId || parentTask?.blockId || null;
+      const resolvedValue = effectiveBlockId ? "" : nextValue;
+      const resolvedRepeatRule = effectiveBlockId ? null : nextRepeatRule;
+      elements.taskDueDateTime.value = resolvedValue;
+      writeTaskRepeatRuleToFields(resolvedRepeatRule);
       renderTaskScheduleSummary();
       if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
         state.tasks = state.tasks.map((task) =>
-          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: nextValue, repeatRule: nextRepeatRule } : task
+          task.id === state.ui.editingTaskId
+            ? { ...task, blockId: effectiveBlockId, dueDateTime: resolvedValue, repeatRule: resolvedRepeatRule }
+            : task
         );
         persistState({ immediate: true });
         render();
@@ -7477,8 +7795,13 @@
       writeTaskRepeatRuleToFields(null);
       renderTaskScheduleSummary();
       if (state.ui.taskModalMode === "edit" && state.ui.editingTaskId) {
+        const editingTask = getTaskById(state.ui.editingTaskId);
+        const parentTask = editingTask?.parentTaskId ? getTaskById(editingTask.parentTaskId) : null;
+        const effectiveBlockId = elements.taskBlockSelect.value || editingTask?.blockId || parentTask?.blockId || null;
         state.tasks = state.tasks.map((task) =>
-          task.id === state.ui.editingTaskId ? { ...task, dueDateTime: "", repeatRule: null } : task
+          task.id === state.ui.editingTaskId
+            ? { ...task, blockId: effectiveBlockId, dueDateTime: "", repeatRule: null }
+            : task
         );
         persistState({ immediate: true });
         render();
@@ -7831,6 +8154,178 @@
         settingsCloseTimer = null;
         render();
       }, 300);
+    }
+
+    function openHomeNotesModal() {
+      state.ui.homeNotesOpen = true;
+      render();
+      if (elements.homeNotesEditor) {
+        elements.homeNotesEditor.value = state.homeNotes || "";
+        elements.homeNotesEditor.focus();
+        elements.homeNotesEditor.setSelectionRange(elements.homeNotesEditor.value.length, elements.homeNotesEditor.value.length);
+      }
+    }
+
+    function closeHomeNotesModal() {
+      if (!state.ui.homeNotesOpen) {
+        return;
+      }
+      state.ui.homeNotesOpen = false;
+      render();
+    }
+
+    function handleHomeNotesInput(event) {
+      state.homeNotes = typeof event.target.value === "string" ? event.target.value : "";
+      persistState();
+    }
+
+    function getPomodoroPhaseDuration(phase) {
+      return phase === "break" ? POMODORO_BREAK_SECONDS : POMODORO_FOCUS_SECONDS;
+    }
+
+    function formatPomodoroTime(totalSeconds) {
+      const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+      const minutes = Math.floor(safeSeconds / 60);
+      const seconds = safeSeconds % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function syncPomodoroStateFromClock() {
+      if (state.pomodoro.status !== "running" || !state.pomodoro.endsAt) {
+        return false;
+      }
+
+      const remainingSeconds = Math.max(0, Math.ceil((state.pomodoro.endsAt - Date.now()) / 1000));
+      if (remainingSeconds > 0) {
+        if (remainingSeconds !== state.pomodoro.remainingSeconds) {
+          state.pomodoro.remainingSeconds = remainingSeconds;
+          return true;
+        }
+        return false;
+      }
+
+      if (state.pomodoro.phase === "focus") {
+        state.pomodoro.completedFocusSessions += 1;
+      }
+
+      const nextPhase = state.pomodoro.phase === "focus" ? "break" : "focus";
+      state.pomodoro.phase = nextPhase;
+      state.pomodoro.status = "idle";
+      state.pomodoro.endsAt = null;
+      state.pomodoro.remainingSeconds = getPomodoroPhaseDuration(nextPhase);
+      persistState();
+      return true;
+    }
+
+    function ensurePomodoroTicker() {
+      if (pomodoroInterval) {
+        return;
+      }
+      pomodoroInterval = window.setInterval(() => {
+        if (!syncPomodoroStateFromClock()) {
+          if (state.pomodoro.status !== "running" && pomodoroInterval) {
+            window.clearInterval(pomodoroInterval);
+            pomodoroInterval = null;
+          }
+          return;
+        }
+        render();
+      }, 1000);
+    }
+
+    function openPomodoroModal() {
+      state.ui.pomodoroOpen = true;
+      render();
+    }
+
+    function closePomodoroModal() {
+      if (!state.ui.pomodoroOpen) {
+        return;
+      }
+      state.ui.pomodoroOpen = false;
+      render();
+    }
+
+    function setPomodoroPhase(phase) {
+      syncPomodoroStateFromClock();
+      state.pomodoro.phase = phase === "break" ? "break" : "focus";
+      state.pomodoro.status = "idle";
+      state.pomodoro.endsAt = null;
+      state.pomodoro.remainingSeconds = getPomodoroPhaseDuration(state.pomodoro.phase);
+      if (pomodoroInterval) {
+        window.clearInterval(pomodoroInterval);
+        pomodoroInterval = null;
+      }
+      persistState();
+      render();
+    }
+
+    function startPomodoro() {
+      syncPomodoroStateFromClock();
+      if (state.pomodoro.status === "running") {
+        return;
+      }
+      state.pomodoro.status = "running";
+      state.pomodoro.endsAt = Date.now() + (state.pomodoro.remainingSeconds * 1000);
+      ensurePomodoroTicker();
+      persistState();
+      render();
+    }
+
+    function pausePomodoro() {
+      if (state.pomodoro.status !== "running") {
+        return;
+      }
+      syncPomodoroStateFromClock();
+      state.pomodoro.status = "paused";
+      state.pomodoro.endsAt = null;
+      if (pomodoroInterval) {
+        window.clearInterval(pomodoroInterval);
+        pomodoroInterval = null;
+      }
+      persistState();
+      render();
+    }
+
+    function stopPomodoro() {
+      state.pomodoro.phase = "focus";
+      state.pomodoro.status = "idle";
+      state.pomodoro.endsAt = null;
+      state.pomodoro.remainingSeconds = POMODORO_FOCUS_SECONDS;
+      if (pomodoroInterval) {
+        window.clearInterval(pomodoroInterval);
+        pomodoroInterval = null;
+      }
+      persistState();
+      render();
+    }
+
+    function renderPomodoro() {
+      syncPomodoroStateFromClock();
+      const isFocus = state.pomodoro.phase === "focus";
+      const statusLabel = state.pomodoro.status === "running"
+        ? (isFocus ? "Focus in progress" : "Break in progress")
+        : state.pomodoro.status === "paused"
+          ? (isFocus ? "Focus paused" : "Break paused")
+          : (isFocus ? "Ready to focus" : "Ready for break");
+      elements.pomodoroFocusButton?.classList.toggle("active", isFocus);
+      elements.pomodoroBreakButton?.classList.toggle("active", !isFocus);
+      if (elements.pomodoroStatusLabel) {
+        elements.pomodoroStatusLabel.textContent = statusLabel;
+      }
+      if (elements.pomodoroTimeDisplay) {
+        elements.pomodoroTimeDisplay.textContent = formatPomodoroTime(state.pomodoro.remainingSeconds);
+      }
+      if (elements.pomodoroCycleLabel) {
+        elements.pomodoroCycleLabel.textContent = `Focus sessions completed: ${state.pomodoro.completedFocusSessions}`;
+      }
+      if (elements.pomodoroStartButton) {
+        elements.pomodoroStartButton.textContent = state.pomodoro.status === "paused" ? "Resume" : "Start";
+        elements.pomodoroStartButton.disabled = state.pomodoro.status === "running";
+      }
+      if (elements.pomodoroPauseButton) {
+        elements.pomodoroPauseButton.disabled = state.pomodoro.status !== "running";
+      }
     }
 
     function handleTaskDrawerClick(event) {
@@ -8323,18 +8818,24 @@
         setCloudInspectorStatus(isFirebaseConfigured() ? "Firebase not ready" : "Firebase not set");
         return;
       }
-      setCloudInspectorStatus("Backing up");
-      void (async () => {
-        const payload = buildPersistedState();
-        try {
-          await createCloudBackup(payload);
-          await fetchCloudBackups();
-          setCloudInspectorStatus("Backup saved");
-        } catch (error) {
-          console.error("Cloud backup failed", error);
-          setCloudInspectorStatus("Backup failed");
+      openAppDialog({
+        mode: "confirm",
+        title: "Backup Now",
+        message: "Create a cloud backup of your current local data?",
+        confirmLabel: "Backup",
+        onConfirm: async () => {
+          setCloudInspectorStatus("Backing up");
+          const payload = buildPersistedState();
+          try {
+            await createCloudBackup(payload);
+            await fetchCloudBackups();
+            setCloudInspectorStatus("Backup saved");
+          } catch (error) {
+            console.error("Cloud backup failed", error);
+            setCloudInspectorStatus("Backup failed");
+          }
         }
-      })();
+      });
     }
 
     function handleCloudInspectorRestore() {
@@ -9378,8 +9879,10 @@
     function buildTaskFromModalDraft() {
       const title = elements.taskTitleInput.value.trim();
       const notes = normalizeTaskEditorHtml(elements.taskNotesEditor.innerHTML);
-      const blockId = elements.taskBlockSelect.value || null;
       const parentTaskId = elements.taskParentId.value || null;
+      const parentTask = parentTaskId ? getTaskById(parentTaskId) : null;
+      const selectedBlockId = elements.taskBlockSelect.value || null;
+      const blockId = selectedBlockId || parentTask?.blockId || null;
       const listId = normalizeTaskListId(elements.taskListSelect.value || null);
       const sectionId = isValidSectionAssignment(elements.taskSectionSelect.value || null, listId)
         ? (elements.taskSectionSelect.value || null)
@@ -12360,6 +12863,7 @@
       const task = taskId ? getTaskById(taskId) : null;
       const resolvedParentTaskId = task ? (task.parentTaskId || null) : parentTaskId;
       const parentTask = resolvedParentTaskId ? getTaskById(resolvedParentTaskId) : null;
+      const resolvedBlockId = task?.blockId || parentTask?.blockId || blockId || "";
 
       state.ui.taskModalKind = "task";
       state.ui.taskModalMode = task ? "edit" : "create";
@@ -12374,7 +12878,7 @@
       writeTaskRepeatRuleToFields(task ? task.repeatRule : null);
       syncTaskNotesFieldToEditor();
       renderTaskBlockOptions();
-      elements.taskBlockSelect.value = task ? (task.blockId || "") : (blockId || "");
+      elements.taskBlockSelect.value = resolvedBlockId;
       renderTaskListOptions();
       elements.taskListSelect.value = normalizeTaskListId(task ? task.listId : (parentTask?.listId || listId || getDefaultTaskListForCompose()));
       renderTaskSectionOptions(
@@ -12561,6 +13065,7 @@
     function scheduleNowUpdater() {
       setInterval(() => {
         state.ui.now = new Date();
+        syncPomodoroStateFromClock();
         if (resetBlockTasksForNewDay()) {
           persistState({ immediate: true });
           render();
@@ -13621,6 +14126,14 @@
         milestones: state.milestones,
         milestoneTasks: state.milestoneTasks,
         savedTimelines: state.savedTimelines,
+        homeNotes: state.homeNotes,
+        pomodoro: {
+          phase: state.pomodoro.phase,
+          status: state.pomodoro.status,
+          remainingSeconds: state.pomodoro.remainingSeconds,
+          endsAt: state.pomodoro.endsAt,
+          completedFocusSessions: state.pomodoro.completedFocusSessions
+        },
         ui: {
           isCompactTimeline: state.ui.isCompactTimeline,
           activeTab: state.ui.activeTab,
@@ -13653,6 +14166,7 @@
       const savedMilestones = normalizeSavedMilestones(parsed?.milestones, savedPhases);
       const savedMilestoneTasks = normalizeSavedMilestoneTasks(parsed?.milestoneTasks, savedMilestones);
       const savedTimelines = Array.isArray(parsed?.savedTimelines) ? parsed.savedTimelines : [];
+      const savedPomodoro = parsed?.pomodoro && typeof parsed.pomodoro === "object" ? parsed.pomodoro : null;
 
       state.phaseTabs = savedPhaseTabs;
       state.phases = normalizeSavedPhases(savedPhases, state.phaseTabs).map((phase) => ({
@@ -13667,6 +14181,22 @@
       state.sections = savedSections;
       state.milestones = savedMilestones;
       state.milestoneTasks = savedMilestoneTasks;
+      state.homeNotes = typeof parsed?.homeNotes === "string" ? parsed.homeNotes : "";
+      state.pomodoro.phase = savedPomodoro?.phase === "break" ? "break" : "focus";
+      state.pomodoro.status = ["idle", "running", "paused"].includes(savedPomodoro?.status)
+        ? savedPomodoro.status
+        : "idle";
+      state.pomodoro.remainingSeconds = Number.isFinite(savedPomodoro?.remainingSeconds)
+        ? Math.max(0, Math.floor(savedPomodoro.remainingSeconds))
+        : getPomodoroPhaseDuration(state.pomodoro.phase);
+      state.pomodoro.endsAt = typeof savedPomodoro?.endsAt === "number" ? savedPomodoro.endsAt : null;
+      state.pomodoro.completedFocusSessions = Number.isFinite(savedPomodoro?.completedFocusSessions)
+        ? Math.max(0, Math.floor(savedPomodoro.completedFocusSessions))
+        : 0;
+      syncPomodoroStateFromClock();
+      if (state.pomodoro.status === "running") {
+        ensurePomodoroTicker();
+      }
 
       const fallbackPhaseId = getActivePhases()[0]?.id || state.phases[0]?.id || "";
 
@@ -14242,7 +14772,7 @@
     }
 
     function registerServiceWorker() {
-      if (!("serviceWorker" in navigator)) {
+      if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) {
         return;
       }
 
