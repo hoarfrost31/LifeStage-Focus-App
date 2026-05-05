@@ -8981,6 +8981,7 @@
       const blocks = Array.isArray(payload?.blocks) ? payload.blocks.length : 0;
       const tasks = Array.isArray(payload?.tasks) ? payload.tasks.length : 0;
       const taskLists = Array.isArray(payload?.taskLists) ? payload.taskLists.length : 0;
+      const taskListGroups = Array.isArray(payload?.taskListGroups) ? payload.taskListGroups.length : 0;
       const milestones = Array.isArray(payload?.milestones) ? payload.milestones.length : 0;
       const milestoneTasks = Array.isArray(payload?.milestoneTasks) ? payload.milestoneTasks.length : 0;
       const savedTimelines = Array.isArray(payload?.savedTimelines) ? payload.savedTimelines.length : 0;
@@ -8989,6 +8990,7 @@
         blocks,
         tasks,
         taskLists,
+        taskListGroups,
         milestones,
         milestoneTasks,
         savedTimelines
@@ -9017,6 +9019,7 @@
         <div>Blocks: ${counts.blocks ?? 0}</div>
         <div>Tasks: ${counts.tasks ?? 0}</div>
         <div>Task lists: ${counts.taskLists ?? 0}</div>
+        <div>Task list groups: ${counts.taskListGroups ?? 0}</div>
         <div>Milestones: ${counts.milestones ?? 0}</div>
         <div>Milestone tasks: ${counts.milestoneTasks ?? 0}</div>
         <div>Saved timelines: ${counts.savedTimelines ?? 0}</div>
@@ -15371,8 +15374,8 @@
       return true;
     }
 
-    function normalizeSavedTaskListGroups(taskListGroups) {
-      return Array.isArray(taskListGroups)
+    function normalizeSavedTaskListGroups(taskListGroups, taskLists = []) {
+      const normalizedGroups = Array.isArray(taskListGroups)
         ? taskListGroups
             .map((group) => ({
               id: typeof group?.id === "string" && group.id ? group.id : crypto.randomUUID(),
@@ -15380,6 +15383,21 @@
             }))
             .filter((group) => group.name)
         : [];
+      const knownGroupIds = new Set(normalizedGroups.map((group) => group.id));
+      const inferredGroupIds = Array.isArray(taskLists)
+        ? [...new Set(
+            taskLists
+              .map((list) => (typeof list?.groupId === "string" && list.groupId ? list.groupId : ""))
+              .filter(Boolean)
+          )].filter((groupId) => !knownGroupIds.has(groupId))
+        : [];
+      return [
+        ...normalizedGroups,
+        ...inferredGroupIds.map((groupId, index) => ({
+          id: groupId,
+          name: `Group ${index + 1}`
+        }))
+      ];
     }
 
     function normalizeSavedTaskLists(taskLists, taskListGroups = state.taskListGroups) {
@@ -15660,7 +15678,7 @@
         allowInference: !hasExplicitPhaseTabs
       });
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
-      const savedTaskListGroups = normalizeSavedTaskListGroups(parsed?.taskListGroups);
+      const savedTaskListGroups = normalizeSavedTaskListGroups(parsed?.taskListGroups, parsed?.taskLists);
       const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists, savedTaskListGroups);
       const savedSections = normalizeSavedSections(parsed?.sections, savedTaskLists);
       const savedTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
@@ -15987,6 +16005,7 @@
       const milestones = Array.isArray(payload.milestones) ? payload.milestones : [];
       const milestoneTasks = Array.isArray(payload.milestoneTasks) ? payload.milestoneTasks : [];
       const taskLists = Array.isArray(payload.taskLists) ? payload.taskLists : [];
+      const taskListGroups = Array.isArray(payload.taskListGroups) ? payload.taskListGroups : [];
       const sections = Array.isArray(payload.sections) ? payload.sections : [];
 
       return (
@@ -15996,6 +16015,7 @@
         || milestones.length > 0
         || milestoneTasks.length > 0
         || taskLists.length > 0
+        || taskListGroups.length > 0
         || sections.length > 0
       );
     }
