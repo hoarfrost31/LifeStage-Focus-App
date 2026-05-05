@@ -634,7 +634,8 @@
       text-align: left;
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
-      transition: background 0.16s ease, transform 0.16s ease;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease, background 0.16s ease, opacity 0.18s ease;
+      will-change: transform;
     }
 
     .task-list-overview-item:hover,
@@ -659,6 +660,69 @@
     .task-list-overview-item.custom {
       position: relative;
       padding-right: 52px;
+    }
+
+    .task-list-overview-item.custom.nested {
+      margin-left: 14px;
+      width: calc(100% - 14px);
+    }
+
+    .task-list-overview-item.custom.drag-ready,
+    .task-list-overview-item.group-row.drag-ready {
+      border-color: rgba(248, 250, 252, 0.4);
+      box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.3), 0 12px 24px rgba(0, 0, 0, 0.18);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .task-list-overview-item.custom.dragging,
+    .task-list-overview-item.group-row.dragging {
+      opacity: 0.92;
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+      z-index: 3;
+      position: relative;
+      pointer-events: none;
+    }
+
+    .task-list-overview-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-list-overview-group.drop-target {
+      border-radius: 18px;
+      box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.14);
+    }
+
+    .task-list-overview-item.group-row {
+      position: relative;
+      padding-right: 96px;
+    }
+
+    .task-list-overview-group-main {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .task-list-overview-group-count {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+      margin-right: 28px;
+    }
+
+    .task-list-overview-group-items {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-list-overview-group.collapsed .task-list-overview-group-items {
+      display: none;
     }
 
     .task-list-overview-count {
@@ -786,6 +850,11 @@
       z-index: 3;
       position: relative;
       pointer-events: none;
+    }
+
+    .task-item.drag-ready {
+      outline: 1px solid rgba(248, 250, 252, 0.45);
+      box-shadow: 0 0 0 1px rgba(248, 250, 252, 0.28);
     }
 
     .task-toggle {
@@ -1045,6 +1114,10 @@
     }
 
     .task-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       margin-top: 6px;
       padding: 0 2px 8px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1052,6 +1125,41 @@
       font-size: 0.82rem;
       font-weight: 700;
       letter-spacing: 0.02em;
+    }
+
+    .task-section-toggle {
+      width: 26px;
+      height: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.76);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+
+    .task-section-toggle svg {
+      width: 11px;
+      height: 11px;
+      display: block;
+      transition: transform 0.2s ease;
+    }
+
+    .task-section-group.collapsed .task-section-toggle svg {
+      transform: rotate(-90deg);
+    }
+
+    .task-section-items {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .task-section-group.collapsed .task-section-items {
+      display: none;
     }
 
     .tasks-empty {
@@ -2756,6 +2864,65 @@
     .install-button.visible {
       display: inline-flex;
       align-items: center;
+    }
+
+    .pwa-update-prompt {
+      position: fixed;
+      left: 50%;
+      bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      transform: translate(-50%, 16px);
+      width: min(calc(100vw - 28px), 360px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(14, 14, 18, 0.94);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(18px);
+      z-index: 45;
+      opacity: 1;
+      transition: opacity 0.24s ease, transform 0.24s ease;
+    }
+
+    .pwa-update-prompt.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 28px);
+    }
+
+    .pwa-update-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .pwa-update-copy strong {
+      font-size: 0.84rem;
+      color: var(--text);
+    }
+
+    .pwa-update-copy span {
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .pwa-update-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 14px;
+      min-height: 38px;
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 0 0 auto;
     }
 
     .modal-backdrop {
@@ -5338,6 +5505,23 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="task-list-options-backdrop" aria-hidden="true">
+    <section class="modal app-dialog" aria-labelledby="task-list-options-title">
+      <div class="modal-header">
+        <div>
+          <h3 id="task-list-options-title">Task List</h3>
+          <p class="app-dialog-message" id="task-list-options-message"></p>
+        </div>
+        <button class="close-button" id="task-list-options-close-button" type="button" aria-label="Close task list options">&times;</button>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost-button" id="task-list-options-cancel-button" type="button">Cancel</button>
+        <button class="ghost-button" id="task-list-options-rename-button" type="button">Rename</button>
+        <button class="primary-button danger" id="task-list-options-delete-button" type="button">Delete</button>
+      </div>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="milestone-task-modal-backdrop" aria-hidden="true">
     <section class="modal" aria-labelledby="milestone-task-modal-title">
       <div class="modal-header">
@@ -5727,6 +5911,7 @@
     const HOURS_IN_DAY = 24;
     const MINUTES_IN_DAY = 24 * 60;
     const DRAG_HOLD_DELAY_MS = 220;
+    const TASK_LIST_GROUP_HOLD_DELAY_MS = 720;
     const STORAGE_KEY = "lifestage-focus-state-v1";
     const LEGACY_DEVICE_ID_KEY = "lifestage-focus-device-id-v1";
     const FIREBASE_COLLECTION = "lifestageFocusStates";
@@ -5797,6 +5982,7 @@
         { id: INBOX_LIST_ID, name: "Inbox" },
         { id: COMPLETED_LIST_ID, name: "Completed" }
       ],
+      taskListGroups: [],
       sections: [],
       tasks: [],
       milestones: [],
@@ -5852,7 +6038,12 @@
         lastSyncedAt: null,
         lastNonSettingsTab: "timeline",
         lastTaskListFilter: INBOX_LIST_ID,
+        collapsedTaskSections: {},
         openTaskOverviewMenuId: "",
+        taskListOptionsType: "",
+        taskListOptionsListId: "",
+        taskListOptionsGroupId: "",
+        collapsedTaskListGroups: {},
         settingsOpen: false,
         settingsClosing: false,
         settingsBlurHold: false,
@@ -5865,6 +6056,9 @@
     let firestoreDb = null;
     let deferredInstallPrompt = null;
     let sharedDocUnsubscribe = null;
+    let activeServiceWorkerRegistration = null;
+    let hasRefreshedForServiceWorkerUpdate = false;
+    let activeTaskListDrag = null;
     let activeTaskDrag = null;
     let activeLinkedTaskDrag = null;
     let activeBlockDrag = null;
@@ -6006,6 +6200,12 @@
       appDialogCloseButton: document.getElementById("app-dialog-close-button"),
       appDialogCancelButton: document.getElementById("app-dialog-cancel-button"),
       appDialogConfirmButton: document.getElementById("app-dialog-confirm-button"),
+      taskListOptionsBackdrop: document.getElementById("task-list-options-backdrop"),
+      taskListOptionsMessage: document.getElementById("task-list-options-message"),
+      taskListOptionsCloseButton: document.getElementById("task-list-options-close-button"),
+      taskListOptionsCancelButton: document.getElementById("task-list-options-cancel-button"),
+      taskListOptionsRenameButton: document.getElementById("task-list-options-rename-button"),
+      taskListOptionsDeleteButton: document.getElementById("task-list-options-delete-button"),
       milestoneTaskModalBackdrop: document.getElementById("milestone-task-modal-backdrop"),
       milestoneTaskForm: document.getElementById("milestone-task-form"),
       milestoneTaskTitleInput: document.getElementById("milestone-task-title-input"),
@@ -6179,6 +6379,67 @@
       syncFloatingActionsVisibility();
     }
 
+    function openTaskListOptionsModal(targetId, targetType = "list") {
+      if (targetType === "group") {
+        const group = getTaskListGroupById(targetId);
+        if (!group) {
+          return;
+        }
+        state.ui.taskListOptionsType = "group";
+        state.ui.taskListOptionsGroupId = group.id;
+        state.ui.taskListOptionsListId = "";
+        elements.taskListOptionsMessage.textContent = group.name;
+      } else {
+        const list = getTaskListById(targetId);
+        if (!list || [INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id)) {
+          return;
+        }
+        state.ui.taskListOptionsType = "list";
+        state.ui.taskListOptionsListId = list.id;
+        state.ui.taskListOptionsGroupId = "";
+        elements.taskListOptionsMessage.textContent = list.name;
+      }
+      elements.taskListOptionsBackdrop.classList.add("open");
+      elements.taskListOptionsBackdrop.setAttribute("aria-hidden", "false");
+      syncFloatingActionsVisibility();
+      requestAnimationFrame(() => {
+        elements.taskListOptionsRenameButton?.focus();
+      });
+    }
+
+    function closeTaskListOptionsModal() {
+      state.ui.taskListOptionsType = "";
+      state.ui.taskListOptionsListId = "";
+      state.ui.taskListOptionsGroupId = "";
+      elements.taskListOptionsBackdrop.classList.remove("open");
+      elements.taskListOptionsBackdrop.setAttribute("aria-hidden", "true");
+      syncFloatingActionsVisibility();
+    }
+
+    function handleTaskListOptionsRename() {
+      const targetType = state.ui.taskListOptionsType;
+      const listId = state.ui.taskListOptionsListId;
+      const groupId = state.ui.taskListOptionsGroupId;
+      closeTaskListOptionsModal();
+      if (targetType === "group" && groupId) {
+        handleRenameTaskListGroup(groupId);
+      } else if (listId) {
+        handleRenameTaskList(listId);
+      }
+    }
+
+    function handleTaskListOptionsDelete() {
+      const targetType = state.ui.taskListOptionsType;
+      const listId = state.ui.taskListOptionsListId;
+      const groupId = state.ui.taskListOptionsGroupId;
+      closeTaskListOptionsModal();
+      if (targetType === "group" && groupId) {
+        handleDeleteTaskListGroup(groupId);
+      } else if (listId) {
+        handleDeleteTaskList(listId);
+      }
+    }
+
     function confirmAppDialog() {
       if (!appDialogState?.onConfirm) {
         closeAppDialog();
@@ -6341,6 +6602,15 @@
       elements.appDialogConfirmButton.addEventListener("click", confirmAppDialog);
       elements.appDialogBackdrop.addEventListener("click", handleAppDialogBackdropClick);
       elements.appDialogInput.addEventListener("keydown", handleAppDialogInputKeydown);
+      elements.taskListOptionsCloseButton.addEventListener("click", closeTaskListOptionsModal);
+      elements.taskListOptionsCancelButton.addEventListener("click", closeTaskListOptionsModal);
+      elements.taskListOptionsRenameButton.addEventListener("click", handleTaskListOptionsRename);
+      elements.taskListOptionsDeleteButton.addEventListener("click", handleTaskListOptionsDelete);
+      elements.taskListOptionsBackdrop.addEventListener("click", (event) => {
+        if (event.target === elements.taskListOptionsBackdrop) {
+          closeTaskListOptionsModal();
+        }
+      });
       elements.milestoneTaskMenuButton.addEventListener("click", handleMilestoneTaskMenuToggle);
       elements.milestoneTaskMenuCloseButton.addEventListener("click", () => setMilestoneTaskMenuOpen(false));
       elements.milestoneTaskMenuDeleteButton.addEventListener("click", handleMilestoneTaskDelete);
@@ -7830,6 +8100,9 @@
       if (type === "completed") {
         return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.6" y="3" width="10.8" height="10.2" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="m4.4 8.2 2.2 2.2 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       }
+      if (type === "group") {
+        return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.6" y="3.1" width="5.1" height="4.1" rx="1.2" stroke="currentColor" stroke-width="1.1"/><rect x="8.3" y="3.1" width="5.1" height="4.1" rx="1.2" stroke="currentColor" stroke-width="1.1"/><rect x="5.45" y="8.6" width="5.1" height="4.1" rx="1.2" stroke="currentColor" stroke-width="1.1"/><path d="M8 7.4v1.1M5.7 10.65H4.6M11.4 10.65h-1.1" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>`;
+      }
       return `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2.8" y="3" width="10.4" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5.2 6.1h5.6M5.2 8.2h5.6M5.2 10.3h3.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`;
     }
 
@@ -7866,10 +8139,6 @@
         { id: INBOX_LIST_ID, label: "Inbox", icon: "inbox", count: getTasksForFilter(INBOX_LIST_ID).length }
       ];
 
-      const customLists = state.taskLists.filter(
-        (list) => list.id !== INBOX_LIST_ID && list.id !== COMPLETED_LIST_ID
-      );
-
       const staticMarkup = staticLists.map((item) => `
         <button class="task-list-overview-item" type="button" data-task-filter="${item.id}">
           <span class="task-list-overview-main">
@@ -7880,29 +8149,7 @@
         </button>
       `).join("");
 
-      const customMarkup = customLists.length
-        ? customLists.map((list) => `
-            <div class="task-list-overview-item custom" data-task-filter="${list.id}">
-              <span class="task-list-overview-main">
-                <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon("list")}</span>
-                <span>${escapeHtml(list.name)}</span>
-              </span>
-              <span class="task-list-overview-count">${getTasksForFilter(list.id).length}</span>
-              <span class="task-list-overview-menu-button" data-toggle-task-list-overview-menu="${list.id}" role="button" aria-label="List options">
-                <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="8" cy="3.2" r="1.2"/>
-                  <circle cx="8" cy="8" r="1.2"/>
-                  <circle cx="8" cy="12.8" r="1.2"/>
-                </svg>
-              </span>
-              <div class="task-list-overview-menu ${state.ui.openTaskOverviewMenuId === `list:${list.id}` ? "open" : ""}" data-task-list-overview-menu="${list.id}">
-                <button type="button" data-open-task-list="${list.id}">Open</button>
-                <button type="button" data-edit-task-list="${list.id}">Rename</button>
-                <button class="danger" type="button" data-delete-task-list="${list.id}">Delete</button>
-              </div>
-            </div>
-          `).join("")
-        : `<div class="saved-timeline-empty">No custom lists yet.</div>`;
+      const customMarkup = renderTaskListOverviewCustomEntries() || `<div class="saved-timeline-empty">No custom lists yet.</div>`;
 
       const completedMarkup = `
         <button class="task-list-overview-item" type="button" data-task-filter="${COMPLETED_LIST_ID}">
@@ -7931,17 +8178,72 @@
       `;
     }
 
+    function renderTaskListOverviewCustomEntries() {
+      return getTaskListOverviewEntries().map((entry) =>
+        entry.type === "group"
+          ? renderTaskListOverviewGroup(entry.group, entry.lists)
+          : renderTaskListOverviewCustomItem(entry.list)
+      ).join("");
+    }
+
+    function renderTaskListOverviewCustomItem(list, options = {}) {
+      const nestedClass = options.nested ? " nested" : "";
+      return `
+        <div class="task-list-overview-item custom${nestedClass}" data-task-filter="${list.id}" data-custom-task-list-id="${list.id}" data-task-list-entry-id="list:${list.id}">
+          <span class="task-list-overview-main">
+            <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon("list")}</span>
+            <span>${escapeHtml(list.name)}</span>
+          </span>
+          <span class="task-list-overview-count">${getTasksForFilter(list.id).length}</span>
+          <span class="task-list-overview-menu-button" data-toggle-task-list-overview-menu="${list.id}" role="button" aria-label="List options">
+            <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="8" cy="3.2" r="1.2"/>
+              <circle cx="8" cy="8" r="1.2"/>
+              <circle cx="8" cy="12.8" r="1.2"/>
+            </svg>
+          </span>
+        </div>
+      `;
+    }
+
+    function renderTaskListOverviewGroup(group, lists) {
+      const isCollapsed = Boolean(state.ui.collapsedTaskListGroups?.[group.id]);
+      return `
+        <div class="task-list-overview-group ${isCollapsed ? "collapsed" : ""}" data-task-list-group-id="${group.id}">
+          <div class="task-list-overview-item group-row" data-toggle-task-list-group="${group.id}" data-task-list-group-drag-id="${group.id}" data-task-list-entry-id="group:${group.id}">
+            <span class="task-list-overview-group-main">
+              <span class="task-drawer-icon" aria-hidden="true">${getTaskDrawerIcon("group")}</span>
+              <span>${escapeHtml(group.name)}</span>
+            </span>
+            <span class="task-list-overview-group-count">${lists.length} list${lists.length === 1 ? "" : "s"}</span>
+            <button class="task-list-overview-menu-button" data-toggle-task-list-overview-menu="${group.id}" data-task-list-options-type="group" type="button" aria-label="Group options">
+              <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8" cy="3.2" r="1.2"/>
+                <circle cx="8" cy="8" r="1.2"/>
+                <circle cx="8" cy="12.8" r="1.2"/>
+              </svg>
+            </button>
+          </div>
+          <div class="task-list-overview-group-items">
+            ${lists.map((list) => renderTaskListOverviewCustomItem(list, { nested: true })).join("")}
+          </div>
+        </div>
+      `;
+    }
+
     function renderSectionTaskGroups(tasks, listId) {
       const sections = getSectionsForList(listId);
       const groups = [];
       const uncategorizedTasks = tasks.filter((task) => !isValidSectionAssignment(task.sectionId, listId));
       groups.push({
+        id: "uncategorized",
         label: "Uncategorized",
         tasks: uncategorizedTasks
       });
 
       sections.forEach((section) => {
         groups.push({
+          id: section.id,
           label: section.name,
           tasks: tasks.filter((task) => task.sectionId === section.id)
         });
@@ -7949,12 +8251,26 @@
 
       return groups
         .filter((group) => group.tasks.length)
-        .map((group) => `
-          <div class="task-section-group">
-            <div class="task-section-header">${escapeHtml(group.label)}</div>
-            ${group.tasks.map((task) => renderTaskItem(task)).join("")}
+        .map((group) => {
+          const sectionKey = getTaskSectionCollapseKey(listId, group.id);
+          const isCollapsed = Boolean(state.ui.collapsedTaskSections?.[sectionKey]);
+          const escapedLabel = escapeHtml(group.label);
+          return `
+          <div class="task-section-group ${isCollapsed ? "collapsed" : ""}">
+            <div class="task-section-header">
+              <span>${escapedLabel}</span>
+              <button class="task-section-toggle" type="button" data-toggle-task-section="${escapeHtml(sectionKey)}" aria-label="${isCollapsed ? `Expand ${escapedLabel}` : `Collapse ${escapedLabel}`}">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="m4.2 6.2 3.8 3.8 3.8-3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="task-section-items">
+              ${group.tasks.map((task) => renderTaskItem(task)).join("")}
+            </div>
           </div>
-        `)
+        `;
+        })
         .join("");
     }
 
@@ -8050,19 +8366,35 @@
         if (!parsedDue?.dateKey) {
           return;
         }
-        const label = getRelativeDateLabel(parsedDue.dateKey);
-        if (!groups.has(label)) {
-          groups.set(label, []);
+        if (!groups.has(parsedDue.dateKey)) {
+          groups.set(parsedDue.dateKey, {
+            label: getRelativeDateLabel(parsedDue.dateKey),
+            tasks: []
+          });
         }
-        groups.get(label).push(task);
+        groups.get(parsedDue.dateKey).tasks.push(task);
       });
 
-      return [...groups.entries()].map(([label, groupedTasks]) => `
-        <div class="task-group">
-          <div class="task-group-label">${escapeHtml(label)}</div>
-          ${groupedTasks.map((task) => renderScheduledTaskItem(task)).join("")}
+      return [...groups.entries()].map(([dateKey, group]) => {
+        const sectionKey = getTaskSectionCollapseKey(state.ui.activeTaskListFilter, dateKey);
+        const isCollapsed = Boolean(state.ui.collapsedTaskSections?.[sectionKey]);
+        const escapedLabel = escapeHtml(group.label);
+        return `
+        <div class="task-section-group ${isCollapsed ? "collapsed" : ""}">
+          <div class="task-section-header">
+            <span>${escapedLabel}</span>
+            <button class="task-section-toggle" type="button" data-toggle-task-section="${escapeHtml(sectionKey)}" aria-label="${isCollapsed ? `Expand ${escapedLabel}` : `Collapse ${escapedLabel}`}">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="m4.2 6.2 3.8 3.8 3.8-3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="task-section-items">
+            ${group.tasks.map((task) => renderScheduledTaskItem(task)).join("")}
+          </div>
         </div>
-      `).join("");
+      `;
+      }).join("");
     }
 
     function renderScheduledTaskItem(task) {
@@ -8350,7 +8682,18 @@
     }
 
     function handleTaskListOverviewClick(event) {
+      if (Date.now() < suppressClickUntil) {
+        return;
+      }
       if (state.ui.activeTaskListFilter !== TASK_VIEW_OVERVIEW) {
+        return;
+      }
+
+      const toggleGroupButton = event.target.closest("[data-toggle-task-list-group]");
+      if (toggleGroupButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleTaskListGroupCollapsed(toggleGroupButton.dataset.toggleTaskListGroup);
         return;
       }
 
@@ -8358,11 +8701,10 @@
       if (toggleMenuButton) {
         event.preventDefault();
         event.stopPropagation();
-        const menuId = toggleMenuButton.dataset.toggleTaskListOverviewMenu === "custom-header"
-          ? "custom-header"
-          : `list:${toggleMenuButton.dataset.toggleTaskListOverviewMenu}`;
-        state.ui.openTaskOverviewMenuId = state.ui.openTaskOverviewMenuId === menuId ? "" : menuId;
-        render();
+        openTaskListOptionsModal(
+          toggleMenuButton.dataset.toggleTaskListOverviewMenu,
+          toggleMenuButton.dataset.taskListOptionsType || "list"
+        );
         return;
       }
 
@@ -8408,15 +8750,7 @@
       render();
     }
 
-    function closeTaskListOverviewMenu(shouldRender = true) {
-      if (!state.ui.openTaskOverviewMenuId) {
-        return;
-      }
-      state.ui.openTaskOverviewMenuId = "";
-      if (shouldRender) {
-        render();
-      }
-    }
+    function closeTaskListOverviewMenu() {}
 
     function handleAddTaskList() {
       openAppDialog({
@@ -8432,11 +8766,17 @@
             return;
           }
 
-          state.taskLists.push({
+          const completedIndex = state.taskLists.findIndex((list) => list.id === COMPLETED_LIST_ID);
+          const newList = {
             id: crypto.randomUUID(),
             name: trimmedName
-          });
-          state.ui.activeTaskListFilter = state.taskLists[state.taskLists.length - 1].id;
+          };
+          if (completedIndex >= 0) {
+            state.taskLists.splice(completedIndex, 0, newList);
+          } else {
+            state.taskLists.push(newList);
+          }
+          state.ui.activeTaskListFilter = newList.id;
           state.ui.lastTaskListFilter = state.ui.activeTaskListFilter;
           state.ui.activeTab = "tasks";
           state.ui.isTaskDrawerOpen = false;
@@ -8479,6 +8819,33 @@
       });
     }
 
+    function handleRenameTaskListGroup(groupId) {
+      const group = getTaskListGroupById(groupId);
+      if (!group) {
+        return;
+      }
+      openAppDialog({
+        mode: "prompt",
+        title: "Rename Group",
+        message: "Update the group name.",
+        confirmLabel: "Save",
+        cancelLabel: "Cancel",
+        defaultValue: group.name,
+        placeholder: "Group name",
+        onConfirm: (value) => {
+          const trimmedName = String(value || "").trim();
+          if (!trimmedName) {
+            return;
+          }
+          state.taskListGroups = state.taskListGroups.map((item) =>
+            item.id === groupId ? { ...item, name: trimmedName } : item
+          );
+          persistState({ immediate: true });
+          render();
+        }
+      });
+    }
+
     function handleDeleteTaskList(listId) {
       const normalizedListId = normalizeTaskListId(listId);
       if (normalizedListId === INBOX_LIST_ID || normalizedListId === COMPLETED_LIST_ID) {
@@ -8501,6 +8868,7 @@
           state.taskLists = state.taskLists.filter((item) => item.id !== normalizedListId);
           state.sections = state.sections.filter((section) => section.listId !== normalizedListId);
           state.tasks = state.tasks.filter((task) => normalizeTaskListId(task.listId) !== normalizedListId);
+          cleanupTaskListGroupsState();
 
           if (normalizeTaskListId(state.ui.activeTaskListFilter) === normalizedListId) {
             state.ui.activeTaskListFilter = INBOX_LIST_ID;
@@ -8838,6 +9206,29 @@
       });
     }
 
+    function handleDeleteTaskListGroup(groupId) {
+      const group = getTaskListGroupById(groupId);
+      if (!group) {
+        return;
+      }
+      const groupedLists = getTaskListsInGroup(groupId);
+      openAppDialog({
+        mode: "confirm",
+        title: "Delete Group",
+        message: `Delete "${group.name}"? ${groupedLists.length} list${groupedLists.length === 1 ? "" : "s"} will stay and be ungrouped.`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          state.taskListGroups = state.taskListGroups.filter((item) => item.id !== groupId);
+          state.taskLists = state.taskLists.map((list) =>
+            list.groupId === groupId ? { ...list, groupId: "" } : list
+          );
+          cleanupTaskListGroupsState();
+          persistState({ immediate: true });
+          render();
+        }
+      });
+    }
+
     function handleCloudInspectorRestore() {
       if (!firestoreDb) {
         setCloudInspectorStatus(isFirebaseConfigured() ? "Firebase not ready" : "Firebase not set");
@@ -8930,6 +9321,58 @@
       deferredInstallPrompt = null;
       elements.installAppButton.classList.remove("visible");
     });
+
+    function ensurePwaUpdatePrompt() {
+      let prompt = document.getElementById("pwaUpdatePrompt");
+      if (prompt) {
+        return prompt;
+      }
+
+      prompt = document.createElement("div");
+      prompt.id = "pwaUpdatePrompt";
+      prompt.className = "pwa-update-prompt hidden";
+      prompt.innerHTML = `
+        <div class="pwa-update-copy">
+          <strong>Update available</strong>
+          <span>Tap refresh to load the latest version.</span>
+        </div>
+        <button id="pwaUpdateBtn" class="pwa-update-btn" type="button">Refresh</button>
+      `;
+      document.body.appendChild(prompt);
+      return prompt;
+    }
+
+    function showPwaUpdatePrompt(registration = activeServiceWorkerRegistration) {
+      const prompt = ensurePwaUpdatePrompt();
+      const updateButton = document.getElementById("pwaUpdateBtn");
+      prompt.classList.remove("hidden");
+      updateButton.onclick = () => {
+        if (registration?.waiting) {
+          registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          return;
+        }
+        window.location.reload();
+      };
+    }
+
+    function hidePwaUpdatePrompt() {
+      document.getElementById("pwaUpdatePrompt")?.classList.add("hidden");
+    }
+
+    function reloadForServiceWorkerUpdate() {
+      if (hasRefreshedForServiceWorkerUpdate) {
+        return;
+      }
+      hasRefreshedForServiceWorkerUpdate = true;
+      window.location.reload();
+    }
+
+    function checkForServiceWorkerUpdate() {
+      activeServiceWorkerRegistration?.update?.().catch(() => {});
+      if (activeServiceWorkerRegistration?.waiting) {
+        showPwaUpdatePrompt(activeServiceWorkerRegistration);
+      }
+    }
 
     async function handleInstallApp() {
       if (!deferredInstallPrompt) {
@@ -9701,14 +10144,6 @@
     }
 
     function handleDocumentPointerDown(event) {
-      if (
-        state.ui.openTaskOverviewMenuId &&
-        !event.target.closest(".task-list-overview-menu") &&
-        !event.target.closest("[data-toggle-task-list-overview-menu]")
-      ) {
-        closeTaskListOverviewMenu();
-      }
-
       if (!event.target.closest(".custom-dropdown")) {
         closeHeaderDropdowns();
       }
@@ -10156,6 +10591,10 @@
     }
 
     function handleTaskDragStart(event) {
+      if (state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW) {
+        handleTaskListOverviewDragStart(event);
+        return;
+      }
       if ([TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter)) {
         return;
       }
@@ -10179,19 +10618,26 @@
         activated: false,
         hasPointerCapture: false,
         item,
+        hoverTaskId: null,
         list: null,
         itemOrder: [],
         reducedOrder: [],
         gapOffset: 0,
         sourceIndex: 0,
         targetIndex: 0,
+        scrollLocked: false,
+        originalScrollOverflow: "",
         activationTimer: window.setTimeout(() => {
           if (activeTaskDrag && activeTaskDrag.pointerId === event.pointerId) {
             activeTaskDrag.activated = true;
+            activeTaskDrag.item.classList.add("drag-ready");
             if (!activeTaskDrag.hasPointerCapture) {
               activeTaskDrag.item.setPointerCapture(event.pointerId);
               activeTaskDrag.hasPointerCapture = true;
             }
+            activeTaskDrag.scrollLocked = true;
+            activeTaskDrag.originalScrollOverflow = elements.tasksList.style.overflowY || "";
+            elements.tasksList.style.overflowY = "hidden";
             initializeTaskDragList(activeTaskDrag);
           }
         }, DRAG_HOLD_DELAY_MS)
@@ -10199,6 +10645,10 @@
     }
 
     function handleTaskDragMove(event) {
+      if (state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW) {
+        handleTaskListOverviewDragMove(event);
+        return;
+      }
       if (!activeTaskDrag || activeTaskDrag.pointerId !== event.pointerId) {
         return;
       }
@@ -10221,46 +10671,83 @@
       }
 
       activeTaskDrag.moved = true;
+      activeTaskDrag.item.classList.remove("drag-ready");
       activeTaskDrag.item.classList.add("dragging");
       activeTaskDrag.item.style.transform = `translateY(${activeTaskDrag.deltaY}px)`;
-      activeTaskDrag.targetIndex = getTaskDragTargetIndex(event.clientY, activeTaskDrag);
+      const hoverTaskId = getTaskHoverTargetId(event.clientX, event.clientY, activeTaskDrag);
+      activeTaskDrag.hoverTaskId = hoverTaskId;
+      activeTaskDrag.targetIndex = hoverTaskId
+        ? getTaskTargetIndex(activeTaskDrag.taskId, hoverTaskId, activeTaskDrag)
+        : getTaskDropIndex(event.clientY, activeTaskDrag.taskId, activeTaskDrag);
       updateTaskDragPreview(activeTaskDrag);
       event.preventDefault();
     }
 
     function handleTaskDragEnd(event) {
+      if (state.ui.activeTaskListFilter === TASK_VIEW_OVERVIEW) {
+        handleTaskListOverviewDragEnd(event);
+        return;
+      }
       if (!activeTaskDrag || activeTaskDrag.pointerId !== event.pointerId) {
         return;
       }
 
       window.clearTimeout(activeTaskDrag.activationTimer);
-      const { taskId, item, moved } = activeTaskDrag;
+      const { taskId, item, moved, hoverTaskId } = activeTaskDrag;
       item.style.transform = "";
+      item.classList.remove("drag-ready");
       item.classList.remove("dragging");
-      clearTaskDragPreview(activeTaskDrag);
+      clearTaskDragPreview();
       if (activeTaskDrag.hasPointerCapture) {
         item.releasePointerCapture(event.pointerId);
+      }
+      if (activeTaskDrag.scrollLocked) {
+        elements.tasksList.style.overflowY = activeTaskDrag.originalScrollOverflow;
       }
 
       if (moved) {
         suppressClickUntil = Date.now() + 300;
         const targetIndex = Number.isInteger(activeTaskDrag.targetIndex)
           ? activeTaskDrag.targetIndex
-          : getTaskDropIndex(event.clientY, taskId);
+          : (hoverTaskId
+            ? getTaskTargetIndex(taskId, hoverTaskId, activeTaskDrag)
+            : getTaskDropIndex(event.clientY, taskId, activeTaskDrag));
         reorderTask(taskId, targetIndex);
       }
 
       activeTaskDrag = null;
     }
 
+    function getTaskHoverTargetId(clientX, clientY, dragState) {
+      if (dragState?.hoverTaskId) {
+        const lockedItem = elements.tasksList.querySelector(`.task-item[data-task-id="${dragState.hoverTaskId}"]`);
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverTaskId;
+          }
+        }
+      }
+
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".task-item");
+      if (hoveredItem?.dataset.taskId && hoveredItem.dataset.taskId !== dragState?.taskId) {
+        return hoveredItem.dataset.taskId;
+      }
+
+      return null;
+    }
+
     function initializeTaskDragList(dragState) {
       const list = [...elements.tasksList.querySelectorAll(".task-item")];
       const sourceIndex = list.findIndex((item) => item.dataset.taskId === dragState.taskId);
       dragState.list = list;
-      dragState.itemOrder = list.map((item) => ({
-        id: item.dataset.taskId,
-        midpoint: item.getBoundingClientRect().top + (item.getBoundingClientRect().height / 2)
-      }));
+      dragState.itemOrder = list.map((item) => {
+        const rect = item.getBoundingClientRect();
+        return {
+          id: item.dataset.taskId,
+          midpoint: rect.top + (rect.height / 2)
+        };
+      });
       dragState.reducedOrder = list
         .filter((item) => item.dataset.taskId !== dragState.taskId)
         .map((item) => item.dataset.taskId);
@@ -10269,24 +10756,22 @@
       dragState.targetIndex = dragState.sourceIndex;
     }
 
-    function getTaskDragTargetIndex(clientY, dragState) {
-      if (!dragState.reducedOrder.length) {
-        return dragState.sourceIndex;
-      }
-      let insertionIndex = 0;
-      for (const entry of dragState.itemOrder) {
-        if (entry.id === dragState.taskId) {
-          continue;
+    function getTaskDropIndex(clientY, sourceTaskId, dragState = null) {
+      if (dragState?.itemOrder?.length) {
+        let insertionIndex = 0;
+        for (const entry of dragState.itemOrder) {
+          if (entry.id === sourceTaskId) {
+            continue;
+          }
+          if (clientY > entry.midpoint) {
+            insertionIndex += 1;
+          }
         }
-        if (clientY > entry.midpoint) {
-          insertionIndex += 1;
-        }
+        return insertionIndex;
       }
-      return insertionIndex;
-    }
-
-    function getTaskDropIndex(clientY, sourceTaskId) {
-      const items = [...elements.tasksList.querySelectorAll(".task-item")].filter((item) => item.dataset.taskId !== sourceTaskId);
+      const items = dragState?.list
+        ? dragState.list.filter((item) => item.dataset.taskId !== sourceTaskId)
+        : [...elements.tasksList.querySelectorAll(".task-item")].filter((item) => item.dataset.taskId !== sourceTaskId);
       if (!items.length) {
         return 0;
       }
@@ -10301,13 +10786,32 @@
       return items.length;
     }
 
+    function getTaskTargetIndex(taskId, hoverTaskId, dragState = null) {
+      if (dragState?.itemOrder?.length) {
+        const hoverEntry = dragState.itemOrder.find((entry) => entry.id === hoverTaskId);
+        if (hoverEntry) {
+          return getTaskDropIndex(hoverEntry.midpoint + 1, taskId, dragState);
+        }
+      }
+      const visibleTaskIds = dragState?.list
+        ? dragState.list.map((item) => item.dataset.taskId).filter(Boolean)
+        : [...elements.tasksList.querySelectorAll(".task-item")]
+            .map((item) => item.dataset.taskId)
+            .filter(Boolean);
+      const sourceIndex = visibleTaskIds.findIndex((id) => id === taskId);
+      const hoverIndex = visibleTaskIds.findIndex((id) => id === hoverTaskId);
+      if (sourceIndex < 0 || hoverIndex < 0) {
+        return sourceIndex < 0 ? 0 : sourceIndex;
+      }
+      return hoverIndex;
+    }
+
     function updateTaskDragPreview(dragState) {
-      clearTaskDragPreview(dragState);
-      if (!dragState.moved) {
+      clearTaskDragPreview();
+      if (!dragState?.moved) {
         return;
       }
-
-      const items = dragState.list.filter((item) => item.dataset.taskId !== dragState.taskId);
+      const items = (dragState.list || []).filter((item) => item.dataset.taskId !== dragState.taskId);
       const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
       const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
       const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
@@ -10318,9 +10822,8 @@
       });
     }
 
-    function clearTaskDragPreview(dragState) {
-      const list = dragState?.list || elements.tasksList.querySelectorAll(".task-item");
-      [...list].forEach((item) => {
+    function clearTaskDragPreview() {
+      elements.tasksList.querySelectorAll(".task-item").forEach((item) => {
         if (!item.classList.contains("dragging")) {
           item.style.transform = "";
         }
@@ -10702,6 +11205,12 @@
 
     function handleTaskListClick(event) {
       if (Date.now() < suppressClickUntil) {
+        return;
+      }
+
+      const sectionToggleButton = event.target.closest("[data-toggle-task-section]");
+      if (sectionToggleButton) {
+        toggleTaskSectionCollapsed(sectionToggleButton.dataset.toggleTaskSection);
         return;
       }
 
@@ -13573,6 +14082,81 @@
       return state.taskLists.find((list) => list.id === normalizedListId) || null;
     }
 
+    function getTaskListGroupById(groupId) {
+      return state.taskListGroups.find((group) => group.id === groupId) || null;
+    }
+
+    function getTaskListsInGroup(groupId) {
+      return state.taskLists.filter((list) => list.groupId === groupId);
+    }
+
+    function getTaskListOverviewEntries() {
+      const customLists = state.taskLists.filter(
+        (list) => list.id !== INBOX_LIST_ID && list.id !== COMPLETED_LIST_ID
+      );
+      const renderedGroupIds = new Set();
+      return customLists.reduce((entries, list) => {
+        const group = list.groupId ? getTaskListGroupById(list.groupId) : null;
+        if (group) {
+          if (!renderedGroupIds.has(group.id)) {
+            renderedGroupIds.add(group.id);
+            entries.push({
+              type: "group",
+              group,
+              lists: customLists.filter((item) => item.groupId === group.id)
+            });
+          }
+          return entries;
+        }
+        entries.push({ type: "list", list });
+        return entries;
+      }, []);
+    }
+
+    function toggleTaskListGroupCollapsed(groupId, forceExpanded = null) {
+      if (!groupId) {
+        return;
+      }
+      const currentValue = Boolean(state.ui.collapsedTaskListGroups?.[groupId]);
+      const nextValue = forceExpanded === true ? false : !currentValue;
+      state.ui.collapsedTaskListGroups = {
+        ...state.ui.collapsedTaskListGroups,
+        [groupId]: nextValue
+      };
+      persistState();
+      render();
+    }
+
+    function cleanupTaskListGroupsState() {
+      const memberCounts = state.taskLists.reduce((counts, list) => {
+        if (list.groupId) {
+          counts.set(list.groupId, (counts.get(list.groupId) || 0) + 1);
+        }
+        return counts;
+      }, new Map());
+      const validGroupIds = new Set(
+        state.taskListGroups
+          .filter((group) => memberCounts.get(group.id) >= 2)
+          .map((group) => group.id)
+      );
+      const nextGroups = state.taskListGroups.filter((group) => validGroupIds.has(group.id));
+      const nextLists = state.taskLists.map((list) =>
+        list.groupId && !validGroupIds.has(list.groupId)
+          ? { ...list, groupId: "" }
+          : list
+      );
+      const nextCollapsedState = Object.fromEntries(
+        Object.entries(state.ui.collapsedTaskListGroups || {}).filter(([groupId]) => validGroupIds.has(groupId))
+      );
+      const didChange = nextGroups.length !== state.taskListGroups.length
+        || nextLists.some((list, index) => (list.groupId || "") !== (state.taskLists[index]?.groupId || ""))
+        || Object.keys(nextCollapsedState).length !== Object.keys(state.ui.collapsedTaskListGroups || {}).length;
+      state.taskListGroups = nextGroups;
+      state.taskLists = nextLists;
+      state.ui.collapsedTaskListGroups = nextCollapsedState;
+      return didChange;
+    }
+
     function getSectionsForList(listId) {
       const normalizedListId = normalizeTaskListId(listId);
       return state.sections.filter((section) => section.listId === normalizedListId);
@@ -13600,6 +14184,906 @@
       return [TASK_VIEW_TODAY, TASK_VIEW_NEXT_7_DAYS].includes(state.ui.activeTaskListFilter)
         ? INBOX_LIST_ID
         : normalizeTaskListId(state.ui.activeTaskListFilter);
+    }
+
+    function getTaskSectionCollapseKey(listId, sectionId) {
+      return `${normalizeTaskListId(listId)}::${sectionId || "uncategorized"}`;
+    }
+
+    function toggleTaskSectionCollapsed(sectionKey) {
+      if (typeof sectionKey !== "string" || !sectionKey) {
+        return;
+      }
+      const currentValue = Boolean(state.ui.collapsedTaskSections?.[sectionKey]);
+      state.ui.collapsedTaskSections = {
+        ...state.ui.collapsedTaskSections,
+        [sectionKey]: !currentValue
+      };
+      persistState();
+      render();
+    }
+
+    function handleTaskListOverviewDragStart(event) {
+      const groupItem = event.target.closest(".task-list-overview-item.group-row");
+      const listItem = event.target.closest(".task-list-overview-item.custom");
+      const item = groupItem || listItem;
+      if (!item || event.target.closest("[data-toggle-task-list-overview-menu], [data-open-task-list], [data-edit-task-list], [data-delete-task-list]")) {
+        return;
+      }
+      const groupId = item.dataset.taskListGroupDragId || "";
+      const listId = item.dataset.customTaskListId || "";
+      const entryType = groupId ? "group" : "list";
+      const sourceGroupId = listId ? (getTaskListById(listId)?.groupId || "") : "";
+      const isNested = listItem?.classList.contains("nested") || false;
+      if (!groupId && !listId) {
+        return;
+      }
+
+      activeTaskListDrag = {
+        entryType,
+        groupId,
+        listId,
+        sourceGroupId,
+        isNested,
+        escapedToTopLevel: false,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        deltaY: 0,
+        moved: false,
+        activated: false,
+        hasPointerCapture: false,
+        item,
+        hoverListId: null,
+        hoverEntryId: "",
+        hoverGroupId: "",
+        list: null,
+        itemOrder: [],
+        reducedOrder: [],
+        gapOffset: 0,
+        sourceIndex: 0,
+        targetIndex: 0,
+        pendingGroupId: "",
+        groupingIntentKey: "",
+        groupingIntentTimer: null,
+        activationTimer: window.setTimeout(() => {
+          if (activeTaskListDrag && activeTaskListDrag.pointerId === event.pointerId) {
+            activeTaskListDrag.activated = true;
+            activeTaskListDrag.item.classList.add("drag-ready");
+            if (!activeTaskListDrag.hasPointerCapture) {
+              activeTaskListDrag.item.setPointerCapture(event.pointerId);
+              activeTaskListDrag.hasPointerCapture = true;
+            }
+            if (activeTaskListDrag.sourceGroupId) {
+              initializeTaskListOverviewNestedListDrag(activeTaskListDrag);
+            } else {
+              initializeTaskListOverviewTopLevelDrag(activeTaskListDrag);
+            }
+          }
+        }, DRAG_HOLD_DELAY_MS)
+      };
+    }
+
+    function handleTaskListOverviewDragMove(event) {
+      if (!activeTaskListDrag || activeTaskListDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      activeTaskListDrag.deltaY = event.clientY - activeTaskListDrag.startY;
+      if (!activeTaskListDrag.activated) {
+        const deltaX = event.clientX - activeTaskListDrag.startX;
+        if (Math.abs(deltaX) > 8 || Math.abs(activeTaskListDrag.deltaY) > 8) {
+          window.clearTimeout(activeTaskListDrag.activationTimer);
+          activeTaskListDrag.item.classList.remove("drag-ready");
+          if (activeTaskListDrag.hasPointerCapture) {
+            activeTaskListDrag.item.releasePointerCapture(event.pointerId);
+          }
+          activeTaskListDrag = null;
+        }
+        return;
+      }
+
+      if (!activeTaskListDrag.moved && Math.abs(activeTaskListDrag.deltaY) < 8) {
+        return;
+      }
+
+      activeTaskListDrag.moved = true;
+      activeTaskListDrag.item.classList.remove("drag-ready");
+      activeTaskListDrag.item.classList.add("dragging");
+      activeTaskListDrag.item.style.transform = `translateY(${activeTaskListDrag.deltaY}px)`;
+      if (activeTaskListDrag.sourceGroupId) {
+        if (!activeTaskListDrag.escapedToTopLevel && shouldEscapeTaskListGroupDrag(event.clientX, event.clientY, activeTaskListDrag)) {
+          initializeTaskListOverviewTopLevelEscapeDrag(activeTaskListDrag);
+          activeTaskListDrag.escapedToTopLevel = true;
+        }
+        if (!activeTaskListDrag.escapedToTopLevel) {
+          const hoverListId = getTaskListOverviewHoverTargetId(event.clientX, event.clientY, activeTaskListDrag);
+          activeTaskListDrag.hoverListId = hoverListId;
+          activeTaskListDrag.targetIndex = hoverListId
+            ? getTaskListOverviewTargetIndex(activeTaskListDrag.listId, hoverListId, activeTaskListDrag)
+            : getTaskListOverviewDropIndex(event.clientY, activeTaskListDrag.listId, activeTaskListDrag);
+          updateTaskListOverviewDragPreview(activeTaskListDrag);
+          event.preventDefault();
+          return;
+        }
+      }
+      if (activeTaskListDrag.sourceGroupId && activeTaskListDrag.escapedToTopLevel) {
+        const nestedHoverListId = getTaskListOverviewNestedHoverListId(event.clientX, event.clientY, activeTaskListDrag);
+        const nestedHoverGroupId = nestedHoverListId ? (getTaskListById(nestedHoverListId)?.groupId || "") : "";
+        const hoverEntryId = nestedHoverGroupId
+          ? `group:${nestedHoverGroupId}`
+          : getTaskListOverviewTopLevelHoverEntryId(event.clientX, event.clientY, activeTaskListDrag);
+        activeTaskListDrag.hoverEntryId = hoverEntryId;
+        activeTaskListDrag.targetIndex = hoverEntryId
+          ? getTaskListOverviewTopLevelTargetIndex(activeTaskListDrag.dragEntryId, hoverEntryId, activeTaskListDrag)
+          : getTaskListOverviewTopLevelDropIndex(event.clientY, activeTaskListDrag.dragEntryId, activeTaskListDrag);
+        if (nestedHoverGroupId) {
+          activeTaskListDrag.hoverListId = nestedHoverListId;
+          activeTaskListDrag.hoverGroupId = nestedHoverGroupId;
+          queueTaskListGroupingIntent(nestedHoverListId, nestedHoverGroupId);
+        } else if (hoverEntryId.startsWith("group:")) {
+          activeTaskListDrag.hoverListId = null;
+          activeTaskListDrag.hoverGroupId = hoverEntryId.slice(6);
+          queueTaskListGroupingIntent("", activeTaskListDrag.hoverGroupId);
+        } else if (hoverEntryId.startsWith("list:")) {
+          activeTaskListDrag.hoverListId = hoverEntryId.slice(5);
+          activeTaskListDrag.hoverGroupId = "";
+          queueTaskListGroupingIntent(activeTaskListDrag.hoverListId, "");
+        } else {
+          activeTaskListDrag.hoverListId = null;
+          activeTaskListDrag.hoverGroupId = "";
+          queueTaskListGroupingIntent("", "");
+        }
+        updateTaskListOverviewTopLevelDragPreview(activeTaskListDrag);
+      } else {
+        const nestedHoverListId = activeTaskListDrag.entryType === "list"
+          ? getTaskListOverviewNestedHoverListId(event.clientX, event.clientY, activeTaskListDrag)
+          : null;
+        const nestedHoverGroupId = nestedHoverListId ? (getTaskListById(nestedHoverListId)?.groupId || "") : "";
+        const hoverEntryId = nestedHoverGroupId
+          ? `group:${nestedHoverGroupId}`
+          : getTaskListOverviewTopLevelHoverEntryId(event.clientX, event.clientY, activeTaskListDrag);
+        activeTaskListDrag.hoverEntryId = hoverEntryId;
+        activeTaskListDrag.targetIndex = hoverEntryId
+          ? getTaskListOverviewTopLevelTargetIndex(activeTaskListDrag.dragEntryId, hoverEntryId, activeTaskListDrag)
+          : getTaskListOverviewTopLevelDropIndex(event.clientY, activeTaskListDrag.dragEntryId, activeTaskListDrag);
+        if (activeTaskListDrag.entryType === "list") {
+          if (nestedHoverGroupId) {
+            activeTaskListDrag.hoverListId = nestedHoverListId;
+            activeTaskListDrag.hoverGroupId = nestedHoverGroupId;
+            queueTaskListGroupingIntent(nestedHoverListId, nestedHoverGroupId);
+          } else if (hoverEntryId.startsWith("list:")) {
+            activeTaskListDrag.hoverListId = hoverEntryId.slice(5);
+            activeTaskListDrag.hoverGroupId = "";
+            queueTaskListGroupingIntent(activeTaskListDrag.hoverListId, "");
+          } else if (hoverEntryId.startsWith("group:")) {
+            activeTaskListDrag.hoverListId = null;
+            activeTaskListDrag.hoverGroupId = hoverEntryId.slice(6);
+            queueTaskListGroupingIntent("", activeTaskListDrag.hoverGroupId);
+          } else {
+            activeTaskListDrag.hoverListId = null;
+            activeTaskListDrag.hoverGroupId = "";
+            queueTaskListGroupingIntent("", "");
+          }
+        }
+        updateTaskListOverviewTopLevelDragPreview(activeTaskListDrag);
+      }
+      event.preventDefault();
+    }
+
+    function handleTaskListOverviewDragEnd(event) {
+      if (!activeTaskListDrag || activeTaskListDrag.pointerId !== event.pointerId) {
+        return;
+      }
+
+      window.clearTimeout(activeTaskListDrag.activationTimer);
+      window.clearTimeout(activeTaskListDrag.groupingIntentTimer);
+      const { entryType, groupId, listId, sourceGroupId, escapedToTopLevel, item, moved, hoverEntryId, hoverListId, hoverGroupId, pendingGroupId } = activeTaskListDrag;
+      item.style.transform = "";
+      item.classList.remove("drag-ready");
+      item.classList.remove("dragging");
+      if (sourceGroupId && !escapedToTopLevel) {
+        clearTaskListOverviewDragPreview();
+      } else {
+        clearTaskListOverviewTopLevelDragPreview();
+      }
+      if (activeTaskListDrag.hasPointerCapture) {
+        item.releasePointerCapture(event.pointerId);
+      }
+
+      if (moved) {
+        suppressClickUntil = Date.now() + 300;
+        if (sourceGroupId && !escapedToTopLevel) {
+          reorderTaskListWithinGroup(
+            listId,
+            sourceGroupId,
+            Number.isInteger(activeTaskListDrag.targetIndex)
+              ? activeTaskListDrag.targetIndex
+              : getTaskListOverviewDropIndex(event.clientY, listId, activeTaskListDrag)
+          );
+        } else if (sourceGroupId && escapedToTopLevel && pendingGroupId && hoverListId) {
+          const targetHoverList = getTaskListById(hoverListId);
+          if (targetHoverList?.groupId === pendingGroupId) {
+            const hoverItem = elements.tasksList.querySelector(`[data-custom-task-list-id="${hoverListId}"]`);
+            const hoverRect = hoverItem?.getBoundingClientRect();
+            const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+            moveTaskListRelative(listId, hoverListId, placeAfter);
+          } else {
+            moveTaskListToGroupEnd(listId, pendingGroupId);
+          }
+        } else if (sourceGroupId && escapedToTopLevel && pendingGroupId) {
+          moveTaskListToGroupEnd(listId, pendingGroupId);
+        } else if (sourceGroupId && escapedToTopLevel && hoverEntryId.startsWith("group:")) {
+          const hoverItem = elements.tasksList.querySelector(`[data-task-list-entry-id="${hoverEntryId}"]`);
+          const hoverRect = hoverItem?.getBoundingClientRect();
+          const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+          moveTaskListBesideGroup(listId, hoverEntryId.slice(6), placeAfter);
+        } else if (sourceGroupId && escapedToTopLevel && hoverEntryId.startsWith("list:")) {
+          const targetListId = hoverEntryId.slice(5);
+          const hoverItem = elements.tasksList.querySelector(`[data-task-list-entry-id="${hoverEntryId}"]`);
+          const hoverRect = hoverItem?.getBoundingClientRect();
+          const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+          moveTaskListRelative(listId, targetListId, placeAfter);
+        } else if (sourceGroupId && escapedToTopLevel) {
+          moveTaskListToTopLevelEnd(listId);
+        } else if (entryType === "group") {
+          if (hoverEntryId) {
+            const hoverItem = elements.tasksList.querySelector(`[data-task-list-entry-id="${hoverEntryId}"]`);
+            const hoverRect = hoverItem?.getBoundingClientRect();
+            const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+            moveTaskListGroupRelative(groupId, hoverEntryId, placeAfter);
+          } else {
+            moveTaskListGroupToTopLevelEnd(groupId);
+          }
+        } else if (pendingGroupId && hoverListId) {
+          const targetHoverList = getTaskListById(hoverListId);
+          if (targetHoverList?.groupId === pendingGroupId) {
+            const hoverItem = elements.tasksList.querySelector(`[data-custom-task-list-id="${hoverListId}"]`);
+            const hoverRect = hoverItem?.getBoundingClientRect();
+            const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+            moveTaskListRelative(listId, hoverListId, placeAfter);
+          } else {
+            moveTaskListToGroupEnd(listId, pendingGroupId);
+          }
+        } else if (pendingGroupId) {
+          moveTaskListToGroupEnd(listId, pendingGroupId);
+        } else if (hoverEntryId.startsWith("group:")) {
+          const hoverItem = elements.tasksList.querySelector(`[data-task-list-entry-id="${hoverEntryId}"]`);
+          const hoverRect = hoverItem?.getBoundingClientRect();
+          const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+          moveTaskListBesideGroup(listId, hoverEntryId.slice(6), placeAfter);
+        } else if (hoverEntryId.startsWith("list:")) {
+          const targetListId = hoverEntryId.slice(5);
+          const hoverItem = elements.tasksList.querySelector(`[data-task-list-entry-id="${hoverEntryId}"]`);
+          const hoverRect = hoverItem?.getBoundingClientRect();
+          const placeAfter = !hoverRect || event.clientY >= hoverRect.top + (hoverRect.height / 2);
+          moveTaskListRelative(listId, targetListId, placeAfter);
+        } else {
+          moveTaskListToTopLevelEnd(listId);
+        }
+      }
+
+      activeTaskListDrag = null;
+    }
+
+    function getTaskListOverviewHoverTargetId(clientX, clientY, dragState) {
+      const scopeSelector = dragState?.sourceGroupId
+        ? `.task-list-overview-group[data-task-list-group-id="${dragState.sourceGroupId}"] .task-list-overview-item.custom`
+        : ".task-list-overview-item.custom:not(.nested)";
+      if (dragState?.hoverListId) {
+        const lockedItem = elements.tasksList.querySelector(`${scopeSelector}[data-custom-task-list-id="${dragState.hoverListId}"]`);
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverListId;
+          }
+        }
+      }
+
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(scopeSelector);
+      if (hoveredItem?.dataset.customTaskListId && hoveredItem.dataset.customTaskListId !== dragState?.listId) {
+        return hoveredItem.dataset.customTaskListId;
+      }
+
+      return null;
+    }
+
+    function getTaskListOverviewHoverGroupId(clientX, clientY, hoverListId, dragState) {
+      const hoveredList = hoverListId ? getTaskListById(hoverListId) : null;
+      if (hoveredList?.groupId) {
+        return hoveredList.groupId;
+      }
+      if (dragState?.hoverGroupId) {
+        const lockedGroup = elements.tasksList.querySelector(`.task-list-overview-group[data-task-list-group-id="${dragState.hoverGroupId}"]`);
+        if (lockedGroup) {
+          const rect = lockedGroup.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return dragState.hoverGroupId;
+          }
+        }
+      }
+      const hoveredGroup = document.elementFromPoint(clientX, clientY)?.closest("[data-task-list-group-id]");
+      return hoveredGroup?.dataset.taskListGroupId || "";
+    }
+
+    function initializeTaskListOverviewNestedListDrag(dragState) {
+      const list = dragState.sourceGroupId
+        ? [...elements.tasksList.querySelectorAll(`.task-list-overview-group[data-task-list-group-id="${dragState.sourceGroupId}"] .task-list-overview-item.custom`)]
+        : [...elements.tasksList.querySelectorAll(".task-list-overview-item.custom:not(.nested)")];
+      const sourceIndex = list.findIndex((item) => item.dataset.customTaskListId === dragState.listId);
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => {
+        const rect = item.getBoundingClientRect();
+        return {
+          id: item.dataset.customTaskListId,
+          midpoint: rect.top + (rect.height / 2)
+        };
+      });
+      dragState.reducedOrder = list
+        .filter((item) => item.dataset.customTaskListId !== dragState.listId)
+        .map((item) => item.dataset.customTaskListId);
+      dragState.gapOffset = dragState.item.getBoundingClientRect().height + 8;
+      dragState.sourceIndex = sourceIndex >= 0 ? sourceIndex : dragState.reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+    }
+
+    function shouldEscapeTaskListGroupDrag(clientX, clientY, dragState) {
+      if (!dragState?.sourceGroupId) {
+        return false;
+      }
+      const groupElement = elements.tasksList.querySelector(`.task-list-overview-group[data-task-list-group-id="${dragState.sourceGroupId}"]`);
+      if (!groupElement) {
+        return true;
+      }
+      const rect = groupElement.getBoundingClientRect();
+      const verticalMargin = 18;
+      const horizontalMargin = 28;
+      return clientY < rect.top - verticalMargin
+        || clientY > rect.bottom + verticalMargin
+        || clientX < rect.left - horizontalMargin
+        || clientX > rect.right + horizontalMargin;
+    }
+
+    function initializeTaskListOverviewTopLevelEscapeDrag(dragState) {
+      const list = [...elements.tasksList.querySelectorAll(".task-list-overview-item.group-row, .task-list-overview-item.custom:not(.nested)")];
+      const sourceAnchorIndex = list.findIndex((item) => item.dataset.taskListEntryId === `group:${dragState.sourceGroupId}`);
+      dragState.dragEntryId = `list:${dragState.listId}`;
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => {
+        const rect = item.getBoundingClientRect();
+        return {
+          id: item.dataset.taskListEntryId,
+          midpoint: rect.top + (rect.height / 2)
+        };
+      });
+      dragState.reducedOrder = list.map((item) => item.dataset.taskListEntryId);
+      dragState.gapOffset = dragState.item.getBoundingClientRect().height + 8;
+      dragState.sourceIndex = sourceAnchorIndex >= 0 ? sourceAnchorIndex : dragState.reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+      dragState.hoverEntryId = "";
+      dragState.hoverGroupId = "";
+      dragState.hoverListId = null;
+      dragState.pendingGroupId = "";
+      clearTaskListOverviewDragPreview();
+    }
+
+    function initializeTaskListOverviewTopLevelDrag(dragState) {
+      const list = [...elements.tasksList.querySelectorAll(".task-list-overview-item.group-row, .task-list-overview-item.custom:not(.nested)")];
+      const dragEntryId = dragState.entryType === "group" ? `group:${dragState.groupId}` : `list:${dragState.listId}`;
+      dragState.dragEntryId = dragEntryId;
+      const sourceIndex = list.findIndex((item) => item.dataset.taskListEntryId === dragEntryId);
+      dragState.list = list;
+      dragState.itemOrder = list.map((item) => {
+        const rect = item.getBoundingClientRect();
+        return {
+          id: item.dataset.taskListEntryId,
+          midpoint: rect.top + (rect.height / 2)
+        };
+      });
+      dragState.reducedOrder = list
+        .filter((item) => item.dataset.taskListEntryId !== dragEntryId)
+        .map((item) => item.dataset.taskListEntryId);
+      dragState.gapOffset = dragState.item.getBoundingClientRect().height + 8;
+      dragState.sourceIndex = sourceIndex >= 0 ? sourceIndex : dragState.reducedOrder.length;
+      dragState.targetIndex = dragState.sourceIndex;
+    }
+
+    function getTaskListOverviewTopLevelHoverEntryId(clientX, clientY, dragState) {
+      const lockedEntryId = dragState?.hoverEntryId;
+      if (lockedEntryId) {
+        const lockedItem = elements.tasksList.querySelector(`[data-task-list-entry-id="${lockedEntryId}"]`);
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return lockedEntryId;
+          }
+        }
+      }
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".task-list-overview-item.group-row, .task-list-overview-item.custom:not(.nested)");
+      if (hoveredItem?.dataset.taskListEntryId && hoveredItem.dataset.taskListEntryId !== dragState?.dragEntryId) {
+        return hoveredItem.dataset.taskListEntryId;
+      }
+      return "";
+    }
+
+    function getTaskListOverviewNestedHoverListId(clientX, clientY, dragState) {
+      const lockedListId = dragState?.hoverListId;
+      if (lockedListId) {
+        const lockedItem = elements.tasksList.querySelector(`.task-list-overview-item.custom.nested[data-custom-task-list-id="${lockedListId}"]`);
+        if (lockedItem) {
+          const rect = lockedItem.getBoundingClientRect();
+          if (clientY >= rect.top && clientY <= rect.bottom) {
+            return lockedListId;
+          }
+        }
+      }
+      const hoveredItem = document.elementFromPoint(clientX, clientY)?.closest(".task-list-overview-item.custom.nested");
+      if (!hoveredItem?.dataset.customTaskListId) {
+        return null;
+      }
+      if (hoveredItem.dataset.customTaskListId === dragState?.listId) {
+        return null;
+      }
+      return hoveredItem.dataset.customTaskListId;
+    }
+
+    function getTaskListOverviewTopLevelDropIndex(clientY, sourceEntryId, dragState = null) {
+      if (dragState?.itemOrder?.length) {
+        let insertionIndex = 0;
+        for (const entry of dragState.itemOrder) {
+          if (entry.id === sourceEntryId) {
+            continue;
+          }
+          if (clientY > entry.midpoint) {
+            insertionIndex += 1;
+          }
+        }
+        return insertionIndex;
+      }
+      return 0;
+    }
+
+    function getTaskListOverviewTopLevelTargetIndex(sourceEntryId, hoverEntryId, dragState = null) {
+      if (dragState?.itemOrder?.length) {
+        const hoverEntry = dragState.itemOrder.find((entry) => entry.id === hoverEntryId);
+        if (hoverEntry) {
+          return getTaskListOverviewTopLevelDropIndex(hoverEntry.midpoint + 1, sourceEntryId, dragState);
+        }
+      }
+      return 0;
+    }
+
+    function queueTaskListGroupingIntent(hoverListId, hoverGroupId) {
+      if (!activeTaskListDrag) {
+        return;
+      }
+      const sourceList = getTaskListById(activeTaskListDrag.listId);
+      const sourceGroupId = sourceList?.groupId || "";
+      const hoverList = hoverListId ? getTaskListById(hoverListId) : null;
+      const hoverListGroupId = hoverList?.groupId || "";
+      let nextIntentKey = "";
+      let intentAction = null;
+
+      if (hoverListId && hoverListId !== activeTaskListDrag.listId && !sourceGroupId && !hoverListGroupId) {
+        const snapshotListId = activeTaskListDrag.listId;
+        nextIntentKey = `create:${hoverListId}`;
+        intentAction = () => {
+          closeTaskListOverviewDragInteraction();
+          openAppDialog({
+            mode: "prompt",
+            title: "New Group",
+            message: "Enter a name for this task list group.",
+            confirmLabel: "Create",
+            cancelLabel: "Cancel",
+            placeholder: "Group name",
+            onConfirm: (value) => {
+              const trimmedName = String(value || "").trim();
+              if (!trimmedName) {
+                return;
+              }
+              createTaskListGroupFromLists(snapshotListId, hoverListId, trimmedName);
+            }
+          });
+        };
+      } else {
+        const targetGroupId = hoverListGroupId || hoverGroupId || "";
+        if (targetGroupId && targetGroupId !== sourceGroupId) {
+          nextIntentKey = `join:${targetGroupId}`;
+          intentAction = () => {
+            if (!activeTaskListDrag) {
+              return;
+            }
+            activeTaskListDrag.pendingGroupId = targetGroupId;
+            if (state.ui.collapsedTaskListGroups?.[targetGroupId]) {
+              state.ui.collapsedTaskListGroups = {
+                ...state.ui.collapsedTaskListGroups,
+                [targetGroupId]: false
+              };
+              persistState();
+              render();
+            }
+          };
+        }
+      }
+
+      if (activeTaskListDrag.groupingIntentKey === nextIntentKey) {
+        return;
+      }
+
+      window.clearTimeout(activeTaskListDrag.groupingIntentTimer);
+      activeTaskListDrag.groupingIntentKey = nextIntentKey;
+      if (!nextIntentKey || !intentAction) {
+        return;
+      }
+      activeTaskListDrag.groupingIntentTimer = window.setTimeout(() => {
+        if (!activeTaskListDrag || activeTaskListDrag.groupingIntentKey !== nextIntentKey) {
+          return;
+        }
+        intentAction();
+      }, TASK_LIST_GROUP_HOLD_DELAY_MS);
+    }
+
+    function closeTaskListOverviewDragInteraction() {
+      if (!activeTaskListDrag) {
+        return;
+      }
+      window.clearTimeout(activeTaskListDrag.activationTimer);
+      window.clearTimeout(activeTaskListDrag.groupingIntentTimer);
+      activeTaskListDrag.item.style.transform = "";
+      activeTaskListDrag.item.classList.remove("drag-ready");
+      activeTaskListDrag.item.classList.remove("dragging");
+      if (activeTaskListDrag.sourceGroupId && !activeTaskListDrag.escapedToTopLevel) {
+        clearTaskListOverviewDragPreview();
+      } else {
+        clearTaskListOverviewTopLevelDragPreview();
+      }
+      if (activeTaskListDrag.hasPointerCapture) {
+        activeTaskListDrag.item.releasePointerCapture(activeTaskListDrag.pointerId);
+      }
+      suppressClickUntil = Date.now() + 300;
+      activeTaskListDrag = null;
+    }
+
+    function getTaskListOverviewDropIndex(clientY, sourceListId, dragState = null) {
+      if (dragState?.itemOrder?.length) {
+        let insertionIndex = 0;
+        for (const entry of dragState.itemOrder) {
+          if (entry.id === sourceListId) {
+            continue;
+          }
+          if (clientY > entry.midpoint) {
+            insertionIndex += 1;
+          }
+        }
+        return insertionIndex;
+      }
+      const items = dragState?.list
+        ? dragState.list.filter((item) => item.dataset.customTaskListId !== sourceListId)
+        : [...elements.tasksList.querySelectorAll(".task-list-overview-item.custom")]
+            .filter((item) => item.dataset.customTaskListId !== sourceListId);
+      if (!items.length) {
+        return 0;
+      }
+      for (let index = 0; index < items.length; index += 1) {
+        const rect = items[index].getBoundingClientRect();
+        if (clientY < rect.top + (rect.height / 2)) {
+          return index;
+        }
+      }
+      return items.length;
+    }
+
+    function getTaskListOverviewTargetIndex(listId, hoverListId, dragState = null) {
+      if (dragState?.itemOrder?.length) {
+        const hoverEntry = dragState.itemOrder.find((entry) => entry.id === hoverListId);
+        if (hoverEntry) {
+          return getTaskListOverviewDropIndex(hoverEntry.midpoint + 1, listId, dragState);
+        }
+      }
+      const visibleListIds = dragState?.list
+        ? dragState.list.map((item) => item.dataset.customTaskListId).filter(Boolean)
+        : [...elements.tasksList.querySelectorAll(".task-list-overview-item.custom")]
+            .map((item) => item.dataset.customTaskListId)
+            .filter(Boolean);
+      const sourceIndex = visibleListIds.findIndex((id) => id === listId);
+      const hoverIndex = visibleListIds.findIndex((id) => id === hoverListId);
+      if (sourceIndex < 0 || hoverIndex < 0) {
+        return sourceIndex < 0 ? 0 : sourceIndex;
+      }
+      return hoverIndex;
+    }
+
+    function updateTaskListOverviewDragPreview(dragState, hoverGroupId = "") {
+      clearTaskListOverviewDragPreview();
+      if (!dragState?.moved) {
+        return;
+      }
+      const items = (dragState.list || []).filter((item) => item.dataset.customTaskListId !== dragState.listId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
+      if (hoverGroupId) {
+        const hoverGroup = elements.tasksList.querySelector(`.task-list-overview-group[data-task-list-group-id="${hoverGroupId}"]`);
+        hoverGroup?.classList.add("drop-target");
+      }
+    }
+
+    function updateTaskListOverviewGroupDragPreview(dragState) {
+      clearTaskListOverviewGroupDragPreview();
+      if (!dragState?.moved) {
+        return;
+      }
+      const items = (dragState.list || []).filter((item) => item.dataset.taskListEntryId !== `group:${dragState.groupId}`);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
+    }
+
+    function updateTaskListOverviewTopLevelDragPreview(dragState) {
+      clearTaskListOverviewTopLevelDragPreview();
+      if (!dragState?.moved) {
+        return;
+      }
+      const items = (dragState.list || []).filter((item) => item.dataset.taskListEntryId !== dragState.dragEntryId);
+      const start = Math.min(dragState.sourceIndex, dragState.targetIndex);
+      const end = Math.max(dragState.sourceIndex, dragState.targetIndex);
+      const direction = dragState.targetIndex > dragState.sourceIndex ? -1 : 1;
+      items.forEach((item, reducedIndex) => {
+        if (reducedIndex >= start && reducedIndex < end) {
+          item.style.transform = `translateY(${direction * dragState.gapOffset}px)`;
+        }
+      });
+      if (dragState.hoverGroupId) {
+        const hoverGroup = elements.tasksList.querySelector(`.task-list-overview-group[data-task-list-group-id="${dragState.hoverGroupId}"]`);
+        hoverGroup?.classList.add("drop-target");
+      }
+    }
+
+    function clearTaskListOverviewDragPreview() {
+      elements.tasksList.querySelectorAll(".task-list-overview-item.custom").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+      elements.tasksList.querySelectorAll(".task-list-overview-group.drop-target").forEach((group) => {
+        group.classList.remove("drop-target");
+      });
+    }
+
+    function clearTaskListOverviewGroupDragPreview() {
+      elements.tasksList.querySelectorAll(".task-list-overview-item.group-row, .task-list-overview-item.custom:not(.nested)").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+    }
+
+    function clearTaskListOverviewTopLevelDragPreview() {
+      elements.tasksList.querySelectorAll(".task-list-overview-item.group-row, .task-list-overview-item.custom:not(.nested)").forEach((item) => {
+        if (!item.classList.contains("dragging")) {
+          item.style.transform = "";
+        }
+      });
+      elements.tasksList.querySelectorAll(".task-list-overview-group.drop-target").forEach((group) => {
+        group.classList.remove("drop-target");
+      });
+    }
+
+    function rebuildTaskListsWithCustomOrder(customLists) {
+      const inboxList = state.taskLists.find((list) => list.id === INBOX_LIST_ID) || { id: INBOX_LIST_ID, name: "Inbox" };
+      const completedList = state.taskLists.find((list) => list.id === COMPLETED_LIST_ID) || { id: COMPLETED_LIST_ID, name: "Completed" };
+      state.taskLists = [inboxList, ...customLists, completedList];
+    }
+
+    function moveTaskListRelative(listId, targetListId, placeAfter) {
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const sourceIndex = customLists.findIndex((list) => list.id === listId);
+      const targetIndex = customLists.findIndex((list) => list.id === targetListId);
+      if (sourceIndex < 0 || targetIndex < 0 || listId === targetListId) {
+        return;
+      }
+      const [movedList] = customLists.splice(sourceIndex, 1);
+      const targetList = customLists.find((list) => list.id === targetListId);
+      const insertionBaseIndex = customLists.findIndex((list) => list.id === targetListId);
+      customLists.splice(insertionBaseIndex + (placeAfter ? 1 : 0), 0, {
+        ...movedList,
+        groupId: targetList?.groupId || ""
+      });
+      rebuildTaskListsWithCustomOrder(customLists);
+      cleanupTaskListGroupsState();
+      persistState({ immediate: true });
+      render();
+    }
+
+    function moveTaskListToGroupEnd(listId, groupId) {
+      if (!groupId) {
+        moveTaskListToTopLevelEnd(listId);
+        return;
+      }
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const sourceIndex = customLists.findIndex((list) => list.id === listId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const [movedList] = customLists.splice(sourceIndex, 1);
+      const groupIndexes = customLists.reduce((indexes, list, index) => {
+        if (list.groupId === groupId) {
+          indexes.push(index);
+        }
+        return indexes;
+      }, []);
+      const insertionIndex = groupIndexes.length ? groupIndexes[groupIndexes.length - 1] + 1 : customLists.length;
+      customLists.splice(insertionIndex, 0, { ...movedList, groupId });
+      rebuildTaskListsWithCustomOrder(customLists);
+      cleanupTaskListGroupsState();
+      persistState({ immediate: true });
+      render();
+    }
+
+    function reorderTaskListWithinGroup(listId, groupId, targetIndex) {
+      if (!groupId) {
+        return;
+      }
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const groupLists = customLists.filter((list) => list.groupId === groupId);
+      const sourceIndex = groupLists.findIndex((list) => list.id === listId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const nextGroupLists = [...groupLists];
+      const [movedList] = nextGroupLists.splice(sourceIndex, 1);
+      const safeIndex = Math.max(0, Math.min(targetIndex, nextGroupLists.length));
+      nextGroupLists.splice(safeIndex, 0, movedList);
+      if (sourceIndex === safeIndex) {
+        return;
+      }
+      const iterator = nextGroupLists[Symbol.iterator]();
+      const nextCustomLists = customLists.map((list) =>
+        list.groupId === groupId ? iterator.next().value : list
+      );
+      rebuildTaskListsWithCustomOrder(nextCustomLists);
+      persistState({ immediate: true });
+      render();
+    }
+
+    function moveTaskListBesideGroup(listId, groupId, placeAfter) {
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const sourceIndex = customLists.findIndex((list) => list.id === listId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const [movedList] = customLists.splice(sourceIndex, 1);
+      const groupIndexes = customLists.reduce((indexes, list, index) => {
+        if (list.groupId === groupId) {
+          indexes.push(index);
+        }
+        return indexes;
+      }, []);
+      if (!groupIndexes.length) {
+        customLists.push({ ...movedList, groupId: "" });
+      } else {
+        const insertionIndex = placeAfter ? groupIndexes[groupIndexes.length - 1] + 1 : groupIndexes[0];
+        customLists.splice(insertionIndex, 0, { ...movedList, groupId: "" });
+      }
+      rebuildTaskListsWithCustomOrder(customLists);
+      cleanupTaskListGroupsState();
+      persistState({ immediate: true });
+      render();
+    }
+
+    function moveTaskListToTopLevelEnd(listId) {
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const sourceIndex = customLists.findIndex((list) => list.id === listId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const [movedList] = customLists.splice(sourceIndex, 1);
+      customLists.push({ ...movedList, groupId: "" });
+      rebuildTaskListsWithCustomOrder(customLists);
+      cleanupTaskListGroupsState();
+      persistState({ immediate: true });
+      render();
+    }
+
+    function moveTaskListGroupRelative(groupId, targetEntryId, placeAfter) {
+      if (!groupId || !targetEntryId || targetEntryId === `group:${groupId}`) {
+        return;
+      }
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const movingIndexes = customLists.reduce((indexes, list, index) => {
+        if (list.groupId === groupId) {
+          indexes.push(index);
+        }
+        return indexes;
+      }, []);
+      if (!movingIndexes.length) {
+        return;
+      }
+      const movingLists = movingIndexes.map((index) => customLists[index]);
+      const remainingLists = customLists.filter((list) => list.groupId !== groupId);
+      let insertionIndex = remainingLists.length;
+      if (targetEntryId.startsWith("group:")) {
+        const targetGroupId = targetEntryId.slice(6);
+        const targetIndexes = remainingLists.reduce((indexes, list, index) => {
+          if (list.groupId === targetGroupId) {
+            indexes.push(index);
+          }
+          return indexes;
+        }, []);
+        if (targetIndexes.length) {
+          insertionIndex = placeAfter ? targetIndexes[targetIndexes.length - 1] + 1 : targetIndexes[0];
+        }
+      } else if (targetEntryId.startsWith("list:")) {
+        const targetListId = targetEntryId.slice(5);
+        const targetIndex = remainingLists.findIndex((list) => list.id === targetListId);
+        if (targetIndex >= 0) {
+          insertionIndex = targetIndex + (placeAfter ? 1 : 0);
+        }
+      }
+      remainingLists.splice(insertionIndex, 0, ...movingLists);
+      rebuildTaskListsWithCustomOrder(remainingLists);
+      persistState({ immediate: true });
+      render();
+    }
+
+    function moveTaskListGroupToTopLevelEnd(groupId) {
+      if (!groupId) {
+        return;
+      }
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const movingLists = customLists.filter((list) => list.groupId === groupId);
+      if (!movingLists.length) {
+        return;
+      }
+      const remainingLists = customLists.filter((list) => list.groupId !== groupId);
+      remainingLists.push(...movingLists);
+      rebuildTaskListsWithCustomOrder(remainingLists);
+      persistState({ immediate: true });
+      render();
+    }
+
+    function createTaskListGroupFromLists(sourceListId, targetListId, groupName) {
+      const trimmedName = String(groupName || "").trim();
+      if (!trimmedName || !sourceListId || !targetListId || sourceListId === targetListId) {
+        return;
+      }
+      const customLists = state.taskLists.filter((list) => ![INBOX_LIST_ID, COMPLETED_LIST_ID].includes(list.id));
+      const sourceIndex = customLists.findIndex((list) => list.id === sourceListId);
+      if (sourceIndex < 0) {
+        return;
+      }
+      const groupId = crypto.randomUUID();
+      const [sourceList] = customLists.splice(sourceIndex, 1);
+      const targetIndex = customLists.findIndex((list) => list.id === targetListId);
+      if (targetIndex < 0) {
+        return;
+      }
+      customLists[targetIndex] = {
+        ...customLists[targetIndex],
+        groupId
+      };
+      customLists.splice(targetIndex + 1, 0, {
+        ...sourceList,
+        groupId
+      });
+      state.taskListGroups = [
+        ...state.taskListGroups,
+        { id: groupId, name: trimmedName }
+      ];
+      rebuildTaskListsWithCustomOrder(customLists);
+      cleanupTaskListGroupsState();
+      persistState({ immediate: true });
+      render();
     }
 
     function getChildTasks(parentTaskId) {
@@ -13887,12 +15371,25 @@
       return true;
     }
 
-    function normalizeSavedTaskLists(taskLists) {
+    function normalizeSavedTaskListGroups(taskListGroups) {
+      return Array.isArray(taskListGroups)
+        ? taskListGroups
+            .map((group) => ({
+              id: typeof group?.id === "string" && group.id ? group.id : crypto.randomUUID(),
+              name: typeof group?.name === "string" && group.name.trim() ? group.name.trim() : ""
+            }))
+            .filter((group) => group.name)
+        : [];
+    }
+
+    function normalizeSavedTaskLists(taskLists, taskListGroups = state.taskListGroups) {
+      const validGroupIds = new Set(taskListGroups.map((group) => group.id));
       const normalizedLists = Array.isArray(taskLists)
         ? taskLists
             .map((list) => ({
               id: typeof list?.id === "string" && list.id ? list.id : crypto.randomUUID(),
-              name: typeof list?.name === "string" && list.name.trim() ? list.name.trim() : ""
+              name: typeof list?.name === "string" && list.name.trim() ? list.name.trim() : "",
+              groupId: typeof list?.groupId === "string" && validGroupIds.has(list.groupId) ? list.groupId : ""
             }))
             .filter((list) => list.name)
         : [];
@@ -13902,8 +15399,8 @@
       );
       return [
         { id: INBOX_LIST_ID, name: "Inbox" },
-        { id: COMPLETED_LIST_ID, name: "Completed" },
-        ...withoutDefaults
+        ...withoutDefaults,
+        { id: COMPLETED_LIST_ID, name: "Completed" }
       ];
     }
 
@@ -14121,6 +15618,7 @@
         phases: state.phases,
         blocks: state.blocks,
         taskLists: state.taskLists,
+        taskListGroups: state.taskListGroups,
         sections: state.sections,
         tasks: state.tasks,
         milestones: state.milestones,
@@ -14144,6 +15642,8 @@
           activeTimelineId: state.ui.activeTimelineId,
           activeTheme: state.ui.activeTheme,
           todayCollapsedByBlock: state.ui.todayCollapsedByBlock,
+          collapsedTaskSections: state.ui.collapsedTaskSections,
+          collapsedTaskListGroups: state.ui.collapsedTaskListGroups,
           lastBlockTaskResetDateKey: state.ui.lastBlockTaskResetDateKey,
           milestoneDeadlineFilterByPhaseId: state.ui.milestoneDeadlineFilterByPhaseId,
           lastNonSettingsTab: state.ui.lastNonSettingsTab,
@@ -14160,7 +15660,8 @@
         allowInference: !hasExplicitPhaseTabs
       });
       const savedBlocks = Array.isArray(parsed?.blocks) ? parsed.blocks : [];
-      const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists);
+      const savedTaskListGroups = normalizeSavedTaskListGroups(parsed?.taskListGroups);
+      const savedTaskLists = normalizeSavedTaskLists(parsed?.taskLists, savedTaskListGroups);
       const savedSections = normalizeSavedSections(parsed?.sections, savedTaskLists);
       const savedTasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];
       const savedMilestones = normalizeSavedMilestones(parsed?.milestones, savedPhases);
@@ -14177,7 +15678,9 @@
           || parsed?.ui?.milestoneDeadlineFilterByPhaseId?.[phase.id]
         )
       }));
+      state.taskListGroups = savedTaskListGroups;
       state.taskLists = savedTaskLists;
+      cleanupTaskListGroupsState();
       state.sections = savedSections;
       state.milestones = savedMilestones;
       state.milestoneTasks = savedMilestoneTasks;
@@ -14256,6 +15759,12 @@
       state.ui.activeTheme = typeof parsed?.ui?.activeTheme === "string" ? parsed.ui.activeTheme : "default";
       state.ui.todayCollapsedByBlock = parsed?.ui?.todayCollapsedByBlock && typeof parsed.ui.todayCollapsedByBlock === "object"
         ? parsed.ui.todayCollapsedByBlock
+        : {};
+      state.ui.collapsedTaskSections = parsed?.ui?.collapsedTaskSections && typeof parsed.ui.collapsedTaskSections === "object"
+        ? parsed.ui.collapsedTaskSections
+        : {};
+      state.ui.collapsedTaskListGroups = parsed?.ui?.collapsedTaskListGroups && typeof parsed.ui.collapsedTaskListGroups === "object"
+        ? parsed.ui.collapsedTaskListGroups
         : {};
       state.ui.lastBlockTaskResetDateKey = typeof parsed?.ui?.lastBlockTaskResetDateKey === "string"
         ? parsed.ui.lastBlockTaskResetDateKey
@@ -14777,8 +16286,45 @@
       }
 
       window.addEventListener("load", () => {
-        const serviceWorkerUrl = `./sw.js${window.APP_ASSET_SUFFIX || ""}`;
-        navigator.serviceWorker.register(serviceWorkerUrl).catch((error) => {
+        navigator.serviceWorker.register("./sw.js").then((registration) => {
+          activeServiceWorkerRegistration = registration;
+          checkForServiceWorkerUpdate();
+
+          if (registration.waiting) {
+            showPwaUpdatePrompt(registration);
+          }
+
+          registration.addEventListener("updatefound", () => {
+            const newWorker = registration.installing;
+            if (!newWorker) {
+              return;
+            }
+
+            newWorker.addEventListener("statechange", () => {
+              if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                showPwaUpdatePrompt(registration);
+              }
+            });
+          });
+
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            reloadForServiceWorkerUpdate();
+          });
+
+          navigator.serviceWorker.addEventListener("message", (event) => {
+            if (event.data?.type !== "SW_ACTIVATED") {
+              return;
+            }
+            reloadForServiceWorkerUpdate();
+          });
+
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState !== "visible") {
+              return;
+            }
+            checkForServiceWorkerUpdate();
+          });
+        }).catch((error) => {
           console.error("Service worker registration failed", error);
         });
       });
